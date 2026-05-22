@@ -534,7 +534,7 @@ function routeTable(): array
             'handler' => __DIR__ . '/auth/profile.php'
         ],
 
-        'reviews/list' => [
+        'reviews/list.php' => [
             'methods' => ['GET'],
             'type' => 'file',
             'handler' => __DIR__ . '/reviews/list.php'
