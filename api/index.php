@@ -315,6 +315,27 @@ function sampleDocs(): array
                 'response' => ['success' => true, 'message' => 'Review submitted successfully and is pending approval']
             ],
         ],
+        'Coupons' => [
+            ['method' => 'GET', 'path' => 'coupons/list.php', 'title' => 'List Coupons', 'description' => 'Get all coupons', 'query' => [], 'body' => null, 'response' => ['success' => true, 'data' => []]],
+            ['method' => 'POST|PUT|DELETE', 'path' => 'coupons/manage.php', 'title' => 'Manage Coupons', 'description' => 'Create/Update/Delete coupons', 'query' => [], 'body' => ['code' => 'DISCOUNT10', 'discount' => 10], 'response' => ['success' => true, 'message' => 'Coupon created successfully']]
+        ],
+        'Offers' => [
+            ['method' => 'GET', 'path' => 'offers/list.php', 'title' => 'List Offers', 'description' => 'Get all offers', 'query' => [], 'body' => null, 'response' => ['success' => true, 'data' => []]],
+            ['method' => 'POST|PUT|DELETE', 'path' => 'offers/manage.php', 'title' => 'Manage Offers', 'description' => 'Create/Update/Delete offers', 'query' => [], 'body' => ['offer_name' => 'Summer Sale', 'offer_value' => 20], 'response' => ['success' => true, 'message' => 'Offer created successfully']]
+        ],
+        'Settings' => [
+            ['method' => 'GET', 'path' => 'settings/get.php', 'title' => 'Get Settings', 'description' => 'Get all settings', 'query' => [], 'body' => null, 'response' => ['success' => true, 'data' => ['site_name' => 'Store']]],
+            ['method' => 'POST', 'path' => 'settings/update.php', 'title' => 'Update Settings', 'description' => 'Update site settings', 'query' => [], 'body' => ['site_name' => 'My New Store'], 'response' => ['success' => true, 'message' => 'Settings updated successfully']]
+        ],
+        'Policies' => [
+            ['method' => 'GET', 'path' => 'policies/list.php', 'title' => 'List Policies', 'description' => 'Get all policies', 'query' => [], 'body' => null, 'response' => ['success' => true, 'data' => []]],
+            ['method' => 'GET', 'path' => 'policies/detail.php?slug=privacy-policy', 'title' => 'Policy Detail', 'description' => 'Get single policy', 'query' => ['slug' => 'privacy-policy'], 'body' => null, 'response' => ['success' => true, 'data' => []]],
+            ['method' => 'POST|PUT|DELETE', 'path' => 'policies/manage.php', 'title' => 'Manage Policies', 'description' => 'Create/Update/Delete policies', 'query' => [], 'body' => ['title' => 'Privacy', 'content' => 'Data...'], 'response' => ['success' => true, 'message' => 'Policy created successfully']]
+        ],
+        'Age Verifications' => [
+            ['method' => 'GET', 'path' => 'age_verifications/list.php', 'title' => 'List Verifications', 'description' => 'Get verifications', 'query' => [], 'body' => null, 'response' => ['success' => true, 'data' => []]],
+            ['method' => 'POST|PUT', 'path' => 'age_verifications/manage', 'title' => 'Manage Verifications', 'description' => 'Submit/Review verifications', 'query' => [], 'body' => ['user_id' => 1, 'full_name' => 'John Doe'], 'response' => ['success' => true, 'message' => 'Verification submitted successfully']]
+        ],
     ];
 }
 
@@ -545,6 +566,22 @@ function routeTable(): array
             'type' => 'file',
             'handler' => __DIR__ . '/reviews/add.php'
         ],
+
+        'coupons/list' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/coupons/list.php'],
+        'coupons/manage' => ['methods' => ['POST', 'PUT', 'DELETE'], 'type' => 'file', 'handler' => __DIR__ . '/coupons/manage.php', 'before' => function(?string $id) { $_GET['id'] = $id ?: ($_GET['id'] ?? null); }],
+        
+        'offers/list' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/offers/list.php'],
+        'offers/manage' => ['methods' => ['POST', 'PUT', 'DELETE'], 'type' => 'file', 'handler' => __DIR__ . '/offers/manage.php', 'before' => function(?string $id) { $_GET['id'] = $id ?: ($_GET['id'] ?? null); }],
+        
+        'settings/get' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/settings/get.php'],
+        'settings/update' => ['methods' => ['POST', 'PUT'], 'type' => 'file', 'handler' => __DIR__ . '/settings/update.php'],
+        
+        'policies/list' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/policies/list.php'],
+        'policies/detail' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/policies/detail.php', 'before' => function(?string $id) { $_GET['id'] = $id ?: ($_GET['id'] ?? null); }],
+        'policies/manage' => ['methods' => ['POST', 'PUT', 'DELETE'], 'type' => 'file', 'handler' => __DIR__ . '/policies/manage.php', 'before' => function(?string $id) { $_GET['id'] = $id ?: ($_GET['id'] ?? null); }],
+        
+        'age_verifications/list' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/age_verifications/list.php'],
+        'age_verifications/manage' => ['methods' => ['POST', 'PUT'], 'type' => 'file', 'handler' => __DIR__ . '/age_verifications/manage.php', 'before' => function(?string $id) { $_GET['id'] = $id ?: ($_GET['id'] ?? null); }],
     ];
 }
 
