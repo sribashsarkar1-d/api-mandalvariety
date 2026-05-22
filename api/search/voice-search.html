@@ -79,8 +79,8 @@
 
             statusDiv.innerText = "Searching...";
             try {
-                // Pointing to the new Advanced Search Router we built
-                const response = await fetch(`index.php/api/search?q=${encodeURIComponent(query)}`);
+                // Pointing to the new Advanced Search route in index.php
+                const response = await fetch(`../search?q=${encodeURIComponent(query)}`);
                 const data = await response.json();
                 displayResults(data);
             } catch (err) {
@@ -91,7 +91,7 @@
         async function performVoiceSearch(query) {
             statusDiv.innerText = "Processing Voice Search...";
             try {
-                const response = await fetch(`index.php/api/search/voice`, {
+                const response = await fetch(`../search/voice`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ query: query })

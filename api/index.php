@@ -336,6 +336,15 @@ function sampleDocs(): array
             ['method' => 'GET', 'path' => 'age_verifications/list.php', 'title' => 'List Verifications', 'description' => 'Get verifications', 'query' => [], 'body' => null, 'response' => ['success' => true, 'data' => []]],
             ['method' => 'POST|PUT', 'path' => 'age_verifications/manage', 'title' => 'Manage Verifications', 'description' => 'Submit/Review verifications', 'query' => [], 'body' => ['user_id' => 1, 'full_name' => 'John Doe'], 'response' => ['success' => true, 'message' => 'Verification submitted successfully']]
         ],
+        'Advanced Search' => [
+            ['method' => 'GET', 'path' => 'search/global.php', 'title' => 'Global Search', 'description' => 'Search across products and categories with typo handling', 'query' => ['q' => 'milk'], 'body' => null, 'response' => ['success' => true, 'data' => []]],
+            ['method' => 'GET', 'path' => 'search/products.php', 'title' => 'Product Search', 'description' => 'Search only products', 'query' => ['q' => 'milk'], 'body' => null, 'response' => ['success' => true, 'data' => []]],
+            ['method' => 'GET', 'path' => 'search/categories.php', 'title' => 'Category Search', 'description' => 'Search only categories', 'query' => ['q' => 'milk'], 'body' => null, 'response' => ['success' => true, 'data' => []]],
+            ['method' => 'GET', 'path' => 'search/suggestions.php', 'title' => 'Suggestions', 'description' => 'Get autocomplete suggestions', 'query' => ['q' => 'sh'], 'body' => null, 'response' => ['success' => true, 'data' => []]],
+            ['method' => 'GET', 'path' => 'search/related.php', 'title' => 'Related Results', 'description' => 'Fallback related products', 'query' => [], 'body' => null, 'response' => ['success' => true, 'data' => []]],
+            ['method' => 'GET', 'path' => 'search/popular.php', 'title' => 'Popular Searches', 'description' => 'Get popular search terms', 'query' => [], 'body' => null, 'response' => ['success' => true, 'data' => []]],
+            ['method' => 'POST', 'path' => 'search/voice.php', 'title' => 'Voice Search', 'description' => 'Process voice query', 'query' => [], 'body' => ['query' => 'milk shake'], 'response' => ['success' => true, 'data' => []]]
+        ],
     ];
 }
 
@@ -582,6 +591,15 @@ function routeTable(): array
         
         'age_verifications/list' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/age_verifications/list.php'],
         'age_verifications/manage' => ['methods' => ['POST', 'PUT'], 'type' => 'file', 'handler' => __DIR__ . '/age_verifications/manage.php', 'before' => function(?string $id) { $_GET['id'] = $id ?: ($_GET['id'] ?? null); }],
+        
+        'search' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/search/global.php'],
+        'search/global' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/search/global.php'],
+        'search/products' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/search/products.php'],
+        'search/categories' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/search/categories.php'],
+        'search/suggestions' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/search/suggestions.php'],
+        'search/related' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/search/related.php'],
+        'search/popular' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/search/popular.php'],
+        'search/voice' => ['methods' => ['POST'], 'type' => 'file', 'handler' => __DIR__ . '/search/voice.php'],
     ];
 }
 

@@ -1,13 +1,15 @@
 <?php
-namespace Models;
-use Config\Database;
-use PDO;
-
-class Search {
+class SearchService {
     private $pdo;
 
-    public function __construct() {
-        $this->pdo = Database::getInstance();
+    public function __construct($pdo) {
+        $this->pdo = $pdo;
+    }
+
+    public function normalize($string) {
+        if (!$string) return '';
+        $string = strtolower(trim($string));
+        return preg_replace('/[^a-z0-9\s-]/', '', $string);
     }
 
     public function logSearch($query, $normalized, $count, $type, $user_id = null) {
@@ -77,8 +79,11 @@ class Search {
                 LIMIT ? OFFSET ?";
 
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->fetchAll();
+        foreach ($params as $i => $val) {
+            $stmt->bindValue($i + 1, $val, is_int($val) ? PDO::PARAM_INT : PDO::PARAM_STR);
+        }
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function searchCategories($q, $limit = 10) {
@@ -86,12 +91,12 @@ class Search {
         $stmt->bindValue(1, "%$q%");
         $stmt->bindValue(2, (int)$limit, PDO::PARAM_INT);
         $stmt->execute();
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getPopularSearches($limit = 10) {
         $stmt = $this->pdo->query("SELECT normalized_query, COUNT(*) as count FROM search_logs WHERE result_count > 0 GROUP BY normalized_query ORDER BY count DESC LIMIT " . (int)$limit);
-        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getClosestMatch($q) {
@@ -122,6 +127,6 @@ class Search {
 
     public function getRelatedProductsByCategoryFallback($limit = 5) {
         $stmt = $this->pdo->query("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id WHERE p.is_active = 1 ORDER BY RAND() LIMIT " . (int)$limit);
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
