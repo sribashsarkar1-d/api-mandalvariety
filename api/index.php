@@ -108,7 +108,7 @@ function sampleDocs(): array
         'Products' => [
             [
                 'method' => 'GET',
-                'path' => 'products/list',
+                'path' => 'products/list.php',
                 'title' => 'All Products',
                 'description' => 'Get all products.',
                 'query' => [],
@@ -117,7 +117,7 @@ function sampleDocs(): array
             ],
             [
                 'method' => 'GET',
-                'path' => 'products/detail/1',
+                'path' => 'products/detail.php/1',
                 'title' => 'Product Detail',
                 'description' => 'Get one product by id.',
                 'query' => [],
@@ -126,7 +126,7 @@ function sampleDocs(): array
             ],
             [
                 'method' => 'POST|PUT',
-                'path' => 'products/manage/1',
+                'path' => 'products/manage.php/1',
                 'title' => 'Manage Product',
                 'description' => 'Create or update a product.',
                 'query' => [],
@@ -137,7 +137,7 @@ function sampleDocs(): array
         'Cart' => [
             [
                 'method' => 'GET',
-                'path' => 'cart?user_id=1',
+                'path' => 'cart.php?user_id=1',
                 'title' => 'Get Cart',
                 'description' => 'Get cart items of a user.',
                 'query' => ['user_id' => 1],
@@ -146,7 +146,7 @@ function sampleDocs(): array
             ],
             [
                 'method' => 'POST',
-                'path' => 'cart/add?user_id=1',
+                'path' => 'cart/add.php?user_id=1',
                 'title' => 'Add to Cart',
                 'description' => 'Add product to cart.',
                 'query' => ['user_id' => 1],
@@ -155,7 +155,7 @@ function sampleDocs(): array
             ],
             [
                 'method' => 'PUT',
-                'path' => 'cart/update?user_id=1',
+                'path' => 'cart/update.php?user_id=1',
                 'title' => 'Update Cart',
                 'description' => 'Update cart quantity.',
                 'query' => ['user_id' => 1],
@@ -164,7 +164,7 @@ function sampleDocs(): array
             ],
             [
                 'method' => 'DELETE',
-                'path' => 'cart/remove/1?user_id=1',
+                'path' => 'cart/remove.php/1?user_id=1',
                 'title' => 'Remove Cart Item',
                 'description' => 'Remove one item from cart.',
                 'query' => ['user_id' => 1],
@@ -173,7 +173,7 @@ function sampleDocs(): array
             ],
             [
                 'method' => 'DELETE',
-                'path' => 'cart/clear?user_id=1',
+                'path' => 'cart/clear.php?user_id=1',
                 'title' => 'Clear Cart',
                 'description' => 'Remove all cart items.',
                 'query' => ['user_id' => 1],
@@ -184,7 +184,7 @@ function sampleDocs(): array
         'Wishlist' => [
             [
                 'method' => 'GET',
-                'path' => 'wishlist?user_id=1',
+                'path' => 'wishlist.php?user_id=1',
                 'title' => 'Get Wishlist',
                 'description' => 'Get wishlist data.',
                 'query' => ['user_id' => 1],
@@ -193,7 +193,7 @@ function sampleDocs(): array
             ],
             [
                 'method' => 'POST',
-                'path' => 'wishlist/add?user_id=1',
+                'path' => 'wishlist/add.php?user_id=1',
                 'title' => 'Add Wishlist Item',
                 'description' => 'Add product to wishlist.',
                 'query' => ['user_id' => 1],
@@ -202,7 +202,7 @@ function sampleDocs(): array
             ],
             [
                 'method' => 'DELETE',
-                'path' => 'wishlist/remove/1?user_id=1',
+                'path' => 'wishlist/remove.php/1?user_id=1',
                 'title' => 'Remove Wishlist Item',
                 'description' => 'Remove product from wishlist.',
                 'query' => ['user_id' => 1],
@@ -213,7 +213,7 @@ function sampleDocs(): array
         'Orders' => [
             [
                 'method' => 'GET',
-                'path' => 'orders?user_id=1',
+                'path' => 'orders.php?user_id=1',
                 'title' => 'List Orders',
                 'description' => 'Get all orders for one user.',
                 'query' => ['user_id' => 1],
@@ -222,7 +222,7 @@ function sampleDocs(): array
             ],
             [
                 'method' => 'GET',
-                'path' => 'orders/detail/1?user_id=1',
+                'path' => 'orders/detail.php/1?user_id=1',
                 'title' => 'Order Detail',
                 'description' => 'Get one order detail.',
                 'query' => ['user_id' => 1],
@@ -231,7 +231,7 @@ function sampleDocs(): array
             ],
             [
                 'method' => 'POST',
-                'path' => 'orders/create?user_id=1',
+                'path' => 'orders/create.php?user_id=1',
                 'title' => 'Create Order',
                 'description' => 'Create order from cart.',
                 'query' => ['user_id' => 1],
@@ -240,7 +240,7 @@ function sampleDocs(): array
             ],
             [
                 'method' => 'POST',
-                'path' => 'orders/cancel/1?user_id=1',
+                'path' => 'orders/cancel.php/1?user_id=1',
                 'title' => 'Cancel Order',
                 'description' => 'Cancel pending order.',
                 'query' => ['user_id' => 1],
@@ -251,7 +251,7 @@ function sampleDocs(): array
         'Auth' => [
             [
                 'method' => 'POST',
-                'path' => 'auth/register',
+                'path' => 'auth/register.php',
                 'title' => 'Register',
                 'description' => 'Register customer account.',
                 'query' => [],
@@ -260,7 +260,7 @@ function sampleDocs(): array
             ],
             [
                 'method' => 'POST',
-                'path' => 'auth/verify',
+                'path' => 'auth/verify.php',
                 'title' => 'Verify OTP',
                 'description' => 'Verify OTP and complete registration.',
                 'query' => [],
@@ -269,7 +269,7 @@ function sampleDocs(): array
             ],
             [
                 'method' => 'POST',
-                'path' => 'auth/login',
+                'path' => 'auth/login.php',
                 'title' => 'Login',
                 'description' => 'Login with email and password.',
                 'query' => [],
@@ -278,7 +278,7 @@ function sampleDocs(): array
             ],
             [
                 'method' => 'POST',
-                'path' => 'auth/logout',
+                'path' => 'auth/logout.php',
                 'title' => 'Logout',
                 'description' => 'Logout current user.',
                 'query' => [],
@@ -287,7 +287,7 @@ function sampleDocs(): array
             ],
             [
                 'method' => 'GET',
-                'path' => 'auth/profile',
+                'path' => 'auth/profile.php',
                 'title' => 'Profile',
                 'description' => 'Get logged in user profile.',
                 'query' => [],
@@ -307,7 +307,7 @@ function sampleDocs(): array
             ],
             [
                 'method' => 'POST',
-                'path' => 'reviews/add',
+                'path' => 'reviews/add.php',
                 'title' => 'Add Review',
                 'description' => 'Submit a new review.',
                 'query' => ['user_id' => 1],
