@@ -1,0 +1,211 @@
+[08-Mar-2026 04:04:49 Europe/Berlin] PHP Warning:  require_once(config/database.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\auth-api\api\index.php on line 22
+[08-Mar-2026 04:04:49 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required 'config/database.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\auth-api\api\index.php:22
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\index.php on line 22
+[08-Mar-2026 04:05:08 Europe/Berlin] PHP Warning:  require_once(config/database.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\auth-api\api\index.php on line 22
+[08-Mar-2026 04:05:08 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required 'config/database.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\auth-api\api\index.php:22
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\index.php on line 22
+[08-Mar-2026 04:06:01 Europe/Berlin] PHP Warning:  require_once(config/database.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\auth-api\api\index.php on line 22
+[08-Mar-2026 04:06:01 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required 'config/database.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\auth-api\api\index.php:22
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\index.php on line 22
+[08-Mar-2026 04:07:15 Europe/Berlin] PHP Warning:  require_once(config/database.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\auth-api\api\index.php on line 22
+[08-Mar-2026 04:07:15 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required 'config/database.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\auth-api\api\index.php:22
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\index.php on line 22
+[08-Mar-2026 04:28:13 Europe/Berlin] DEBUG: Requested ID = NO_ID
+[08-Mar-2026 04:28:21 Europe/Berlin] DEBUG: Requested ID = NO_ID
+[08-Mar-2026 04:28:33 Europe/Berlin] DEBUG: Requested ID = NO_ID
+[08-Mar-2026 04:28:37 Europe/Berlin] DEBUG: Requested ID = NO_ID
+[08-Mar-2026 04:29:16 Europe/Berlin] PHP Warning:  require_once(../../config/database.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\auth-api\api\products\detail.php on line 3
+[08-Mar-2026 04:29:16 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../config/database.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\auth-api\api\products\detail.php:3
+Stack trace:
+#0 C:\xampp\htdocs\auth-api\api\index.php(53): require_once()
+#1 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\products\detail.php on line 3
+[08-Mar-2026 04:29:31 Europe/Berlin] DEBUG: Requested ID = NO_ID
+[08-Mar-2026 04:34:44 Europe/Berlin] PHP Warning:  require_once(../../config/database.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\auth-api\api\products\detail.php on line 3
+[08-Mar-2026 04:34:44 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../config/database.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\auth-api\api\products\detail.php:3
+Stack trace:
+#0 C:\xampp\htdocs\auth-api\api\index.php(53): require_once()
+#1 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\products\detail.php on line 3
+[08-Mar-2026 05:07:20 Europe/Berlin] PHP Warning:  Undefined variable $pdo in C:\xampp\htdocs\auth-api\api\cart\list.php on line 6
+[08-Mar-2026 05:07:20 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in C:\xampp\htdocs\auth-api\api\cart\list.php:6
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\cart\list.php on line 6
+[08-Mar-2026 20:07:53 Europe/Berlin] PHP Warning:  Undefined variable $pdo in C:\xampp\htdocs\auth-api\api\cart\list.php on line 6
+[08-Mar-2026 20:07:53 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in C:\xampp\htdocs\auth-api\api\cart\list.php:6
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\cart\list.php on line 6
+[08-Mar-2026 20:08:09 Europe/Berlin] PHP Warning:  Undefined variable $pdo in C:\xampp\htdocs\auth-api\api\cart\list.php on line 6
+[08-Mar-2026 20:08:09 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in C:\xampp\htdocs\auth-api\api\cart\list.php:6
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\cart\list.php on line 6
+[08-Mar-2026 20:30:54 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[23000]: Integrity constraint violation: 1052 Column 'id' in field list is ambiguous in C:\xampp\htdocs\auth-api\api\orders\create.php:9
+Stack trace:
+#0 C:\xampp\htdocs\auth-api\api\orders\create.php(9): PDOStatement->execute(Array)
+#1 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\orders\create.php on line 9
+[08-Mar-2026 20:42:03 Europe/Berlin] PHP Warning:  require_once(../../config/database.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\auth-api\api\orders\cancel.php on line 3
+[08-Mar-2026 20:42:03 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../config/database.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\auth-api\api\orders\cancel.php:3
+Stack trace:
+#0 C:\xampp\htdocs\auth-api\api\index.php(172): require_once()
+#1 C:\xampp\htdocs\auth-api\api\index.php(39): routeDispatcher('orders', 'cancel', '1', 'POST')
+#2 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\orders\cancel.php on line 3
+[08-Mar-2026 20:49:10 Europe/Berlin] PHP Warning:  require_once(../../config/database.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\auth-api\api\orders\cancel.php on line 3
+[08-Mar-2026 20:49:10 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../config/database.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\auth-api\api\orders\cancel.php:3
+Stack trace:
+#0 C:\xampp\htdocs\auth-api\api\index.php(172): require_once()
+#1 C:\xampp\htdocs\auth-api\api\index.php(39): routeDispatcher('orders', 'cancel', '1', 'POST')
+#2 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\orders\cancel.php on line 3
+[08-Mar-2026 20:51:02 Europe/Berlin] PHP Warning:  Undefined variable $pdo in C:\xampp\htdocs\auth-api\api\orders\cancel.php on line 14
+[08-Mar-2026 20:51:02 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function prepare() on null in C:\xampp\htdocs\auth-api\api\orders\cancel.php:14
+Stack trace:
+#0 C:\xampp\htdocs\auth-api\api\index.php(172): require_once()
+#1 C:\xampp\htdocs\auth-api\api\index.php(39): routeDispatcher('orders', 'cancel', '1', 'POST')
+#2 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\orders\cancel.php on line 14
+[08-Mar-2026 20:51:16 Europe/Berlin] PHP Warning:  require_once(../../config/database.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\auth-api\api\orders\cancel.php on line 3
+[08-Mar-2026 20:51:16 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../config/database.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\auth-api\api\orders\cancel.php:3
+Stack trace:
+#0 C:\xampp\htdocs\auth-api\api\index.php(172): require_once()
+#1 C:\xampp\htdocs\auth-api\api\index.php(39): routeDispatcher('orders', 'cancel', '1', 'POST')
+#2 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\orders\cancel.php on line 3
+[08-Mar-2026 20:51:49 Europe/Berlin] PHP Warning:  require_once(../../config/database.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\auth-api\api\orders\cancel.php on line 3
+[08-Mar-2026 20:51:49 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../config/database.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\auth-api\api\orders\cancel.php:3
+Stack trace:
+#0 C:\xampp\htdocs\auth-api\api\index.php(172): require_once()
+#1 C:\xampp\htdocs\auth-api\api\index.php(39): routeDispatcher('orders', 'cancel', '1', 'POST')
+#2 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\orders\cancel.php on line 3
+[08-Mar-2026 20:51:51 Europe/Berlin] PHP Warning:  require_once(../../config/database.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\auth-api\api\orders\cancel.php on line 3
+[08-Mar-2026 20:51:51 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../config/database.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\auth-api\api\orders\cancel.php:3
+Stack trace:
+#0 C:\xampp\htdocs\auth-api\api\index.php(172): require_once()
+#1 C:\xampp\htdocs\auth-api\api\index.php(39): routeDispatcher('orders', 'cancel', '1', 'POST')
+#2 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\orders\cancel.php on line 3
+[08-Mar-2026 21:00:17 Europe/Berlin] REQUEST_URI: /auth-api/api/orders/cancel.php1?user_id=5
+[08-Mar-2026 21:00:17 Europe/Berlin] Segments: ["api","orders","cancel.php1"]
+[08-Mar-2026 21:00:17 Europe/Berlin] Module: orders, Action: cancel.php1, ID: , Method: POST
+[08-Mar-2026 21:00:19 Europe/Berlin] REQUEST_URI: /auth-api/api/orders/cancel.php1?user_id=5
+[08-Mar-2026 21:00:19 Europe/Berlin] Segments: ["api","orders","cancel.php1"]
+[08-Mar-2026 21:00:19 Europe/Berlin] Module: orders, Action: cancel.php1, ID: , Method: POST
+[08-Mar-2026 21:01:21 Europe/Berlin] REQUEST_URI: /auth-api/api/orders/cancel/1?user_id=5
+[08-Mar-2026 21:01:21 Europe/Berlin] Segments: ["api","orders","cancel","1"]
+[08-Mar-2026 21:01:21 Europe/Berlin] Module: orders, Action: cancel, ID: 1, Method: POST
+[08-Mar-2026 21:03:21 Europe/Berlin] REQUEST_URI: /auth-api/api/orders/detail/1?user_id=5
+[08-Mar-2026 21:03:21 Europe/Berlin] Segments: ["api","orders","detail","1"]
+[08-Mar-2026 21:03:21 Europe/Berlin] Module: orders, Action: detail, ID: 1, Method: GET
+[08-Mar-2026 21:03:21 Europe/Berlin] PHP Warning:  require_once(../../config/database.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\auth-api\api\orders\detail.php on line 3
+[08-Mar-2026 21:03:21 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../config/database.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\auth-api\api\orders\detail.php:3
+Stack trace:
+#0 C:\xampp\htdocs\auth-api\api\index.php(119): require_once()
+#1 C:\xampp\htdocs\auth-api\api\index.php(48): routeRequest('orders', 'detail', '1', 'GET')
+#2 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\orders\detail.php on line 3
+[08-Mar-2026 21:03:39 Europe/Berlin] REQUEST_URI: /auth-api/api/orders/detail/1?user_id=1
+[08-Mar-2026 21:03:39 Europe/Berlin] Segments: ["api","orders","detail","1"]
+[08-Mar-2026 21:03:39 Europe/Berlin] Module: orders, Action: detail, ID: 1, Method: GET
+[08-Mar-2026 21:03:39 Europe/Berlin] PHP Warning:  require_once(../../config/database.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\auth-api\api\orders\detail.php on line 3
+[08-Mar-2026 21:03:39 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../config/database.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\auth-api\api\orders\detail.php:3
+Stack trace:
+#0 C:\xampp\htdocs\auth-api\api\index.php(119): require_once()
+#1 C:\xampp\htdocs\auth-api\api\index.php(48): routeRequest('orders', 'detail', '1', 'GET')
+#2 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\orders\detail.php on line 3
+[08-Mar-2026 21:04:13 Europe/Berlin] REQUEST_URI: /auth-api/api/orders/detail/1?user_id=1
+[08-Mar-2026 21:04:13 Europe/Berlin] Segments: ["api","orders","detail","1"]
+[08-Mar-2026 21:04:13 Europe/Berlin] Module: orders, Action: detail, ID: 1, Method: GET
+[08-Mar-2026 21:04:23 Europe/Berlin] REQUEST_URI: /auth-api/api/orders/detail/1?user_id=5
+[08-Mar-2026 21:04:23 Europe/Berlin] Segments: ["api","orders","detail","1"]
+[08-Mar-2026 21:04:23 Europe/Berlin] Module: orders, Action: detail, ID: 1, Method: GET
+[08-Mar-2026 21:05:28 Europe/Berlin] REQUEST_URI: /auth-api/api/orders/create?user_id=5
+[08-Mar-2026 21:05:28 Europe/Berlin] Segments: ["api","orders","create"]
+[08-Mar-2026 21:05:28 Europe/Berlin] Module: orders, Action: create, ID: , Method: POST
+[08-Mar-2026 21:05:28 Europe/Berlin] PHP Warning:  require_once(../../config/database.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\auth-api\api\orders\create.php on line 3
+[08-Mar-2026 21:05:28 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../config/database.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\auth-api\api\orders\create.php:3
+Stack trace:
+#0 C:\xampp\htdocs\auth-api\api\index.php(121): require_once()
+#1 C:\xampp\htdocs\auth-api\api\index.php(48): routeRequest('orders', 'create', NULL, 'POST')
+#2 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\orders\create.php on line 3
+[08-Mar-2026 21:05:41 Europe/Berlin] REQUEST_URI: /auth-api/api/orders/create?user_id=5
+[08-Mar-2026 21:05:41 Europe/Berlin] Segments: ["api","orders","create"]
+[08-Mar-2026 21:05:41 Europe/Berlin] Module: orders, Action: create, ID: , Method: POST
+[08-Mar-2026 21:06:01 Europe/Berlin] REQUEST_URI: /auth-api/api/orders/create?user_id=5
+[08-Mar-2026 21:06:01 Europe/Berlin] Segments: ["api","orders","create"]
+[08-Mar-2026 21:06:01 Europe/Berlin] Module: orders, Action: create, ID: , Method: POST
+[08-Mar-2026 21:06:21 Europe/Berlin] REQUEST_URI: /auth-api/api/orders/create?user_id=1
+[08-Mar-2026 21:06:21 Europe/Berlin] Segments: ["api","orders","create"]
+[08-Mar-2026 21:06:21 Europe/Berlin] Module: orders, Action: create, ID: , Method: POST
+[08-Mar-2026 21:08:32 Europe/Berlin] REQUEST_URI: /auth-api/api/orders/create?user_id=5
+[08-Mar-2026 21:08:32 Europe/Berlin] Segments: ["api","orders","create"]
+[08-Mar-2026 21:08:32 Europe/Berlin] Module: orders, Action: create, ID: , Method: POST
+[08-Mar-2026 21:09:19 Europe/Berlin] REQUEST_URI: /auth-api/api/orders/create?user_id=5
+[08-Mar-2026 21:09:19 Europe/Berlin] Segments: ["api","orders","create"]
+[08-Mar-2026 21:09:19 Europe/Berlin] Module: orders, Action: create, ID: , Method: POST
+[08-Mar-2026 21:20:56 Europe/Berlin] PHP Warning:  require_once(../../config/database.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\auth-api\api\orders\create.php on line 3
+[08-Mar-2026 21:20:56 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../config/database.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\auth-api\api\orders\create.php:3
+Stack trace:
+#0 C:\xampp\htdocs\auth-api\api\index.php(94): require_once()
+#1 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\orders\create.php on line 3
+[08-Mar-2026 21:23:04 Europe/Berlin] PHP Warning:  require_once(../../config/database.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\auth-api\api\cart\add.php on line 3
+[08-Mar-2026 21:23:04 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../config/database.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\auth-api\api\cart\add.php:3
+Stack trace:
+#0 C:\xampp\htdocs\auth-api\api\index.php(63): require_once()
+#1 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\cart\add.php on line 3
+[08-Mar-2026 21:29:33 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'stock' in 'field list' in C:\xampp\htdocs\auth-api\api\cart\add.php:22
+Stack trace:
+#0 C:\xampp\htdocs\auth-api\api\cart\add.php(22): PDOStatement->execute(Array)
+#1 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\cart\add.php on line 22
+[08-Mar-2026 21:32:41 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'mondal-vr.cart' doesn't exist in C:\xampp\htdocs\auth-api\api\cart\add.php:46
+Stack trace:
+#0 C:\xampp\htdocs\auth-api\api\cart\add.php(46): PDOStatement->execute(Array)
+#1 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\cart\add.php on line 46
+[30-Apr-2026 12:32:38 Asia/Kolkata] PHP Warning:  require_once(../../config/database.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\auth-api\api\categories\list.php on line 3
+[30-Apr-2026 12:32:38 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Failed opening required '../../config/database.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\auth-api\api\categories\list.php:3
+Stack trace:
+#0 C:\xampp\htdocs\auth-api\api\index.php(652): require_once()
+#1 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\categories\list.php on line 3
+[30-Apr-2026 12:42:29 Asia/Kolkata] PHP Warning:  require_once(../../config/database.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\auth-api\api\categories\list.php on line 3
+[30-Apr-2026 12:42:29 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Failed opening required '../../config/database.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\auth-api\api\categories\list.php:3
+Stack trace:
+#0 C:\xampp\htdocs\auth-api\api\index.php(857): require_once()
+#1 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\categories\list.php on line 3
+[30-Apr-2026 12:43:37 Asia/Kolkata] PHP Warning:  require_once(../../config/database.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\auth-api\api\categories\list.php on line 3
+[30-Apr-2026 12:43:37 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Failed opening required '../../config/database.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\auth-api\api\categories\list.php:3
+Stack trace:
+#0 C:\xampp\htdocs\auth-api\api\index.php(857): require_once()
+#1 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\categories\list.php on line 3
+[30-Apr-2026 12:45:31 Asia/Kolkata] PHP Warning:  require_once(../../config/database.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\auth-api\api\products\list.php on line 3
+[30-Apr-2026 12:45:31 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Failed opening required '../../config/database.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\auth-api\api\products\list.php:3
+Stack trace:
+#0 C:\xampp\htdocs\auth-api\api\index.php(857): require_once()
+#1 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\products\list.php on line 3
+[30-Apr-2026 09:21:46 Europe/Berlin] PHP Warning:  require_once(C:\xampp\htdocs\auth-api\api/PHPMailer/src/Exception.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\auth-api\api\config\smtp.php on line 4
+[30-Apr-2026 09:21:46 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required 'C:\xampp\htdocs\auth-api\api/PHPMailer/src/Exception.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\auth-api\api\config\smtp.php:4
+Stack trace:
+#0 C:\xampp\htdocs\auth-api\api\auth\register.php(4): require()
+#1 {main}
+  thrown in C:\xampp\htdocs\auth-api\api\config\smtp.php on line 4
