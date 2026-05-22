@@ -298,7 +298,7 @@ function sampleDocs(): array
         'Reviews' => [
             [
                 'method' => 'GET',
-                'path' => 'reviews/list',
+                'path' => 'reviews/list.php',
                 'title' => 'List Reviews',
                 'description' => 'Get reviews for a product or user.',
                 'query' => ['product_id' => 1],
