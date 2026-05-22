@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Search Demo</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
+        .search-container { max-width: 500px; margin: 0 auto; display: flex; gap: 10px; }
+        input[type="text"] { flex: 1; padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 10px 15px; font-size: 16px; cursor: pointer; border: none; border-radius: 4px; background: #007bff; color: white; }
+        .btn-mic { background: #dc3545; }
+        .btn-mic.listening { background: #28a745; animation: pulse 1.5s infinite; }
+        #results { margin-top: 20px; text-align: left; }
+        pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <h2>Advanced Voice Search API Demo</h2>
+    
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search products, categories...">
+        <button id="micBtn" class="btn-mic" title="Voice Search">🎙️</button>
+        <button onclick="performSearch()">Search</button>
+    </div>
+
+    <div id="status"></div>
+    <div id="results"></div>
+
+    <script>
+        const micBtn = document.getElementById('micBtn');
+        const searchInput = document.getElementById('searchInput');
+        const statusDiv = document.getElementById('status');
+        const resultsDiv = document.getElementById('results');
+
+        // Check for browser support
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            // Configurable language
+            recognition.lang = 'en-US';
+
+            micBtn.addEventListener('click', () => {
+                recognition.start();
+                micBtn.classList.add('listening');
+                statusDiv.innerText = "Listening... Speak now.";
+            });
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                searchInput.value = transcript;
+                statusDiv.innerText = `Recognized: "${transcript}"`;
+                
+                // Immediately call the Voice API endpoint
+                performVoiceSearch(transcript);
+            };
+
+            recognition.onerror = (event) => {
+                statusDiv.innerText = `Error occurred in recognition: ${event.error}`;
+                micBtn.classList.remove('listening');
+            };
+
+            recognition.onend = () => {
+                micBtn.classList.remove('listening');
+            };
+        } else {
+            micBtn.style.display = 'none';
+            statusDiv.innerText = "Speech Recognition API not supported in this browser. Please use Chrome.";
+        }
+
+        async function performSearch() {
+            const query = searchInput.value;
+            if (!query) return;
+
+            statusDiv.innerText = "Searching...";
+            try {
+                // Pointing to the new Advanced Search Router we built
+                const response = await fetch(`index.php/api/search?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                displayResults(data);
+            } catch (err) {
+                statusDiv.innerText = "Search API error.";
+            }
+        }
+
+        async function performVoiceSearch(query) {
+            statusDiv.innerText = "Processing Voice Search...";
+            try {
+                const response = await fetch(`index.php/api/search/voice`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query })
+                });
+                const data = await response.json();
+                displayResults(data);
+            } catch (err) {
+                statusDiv.innerText = "Voice Search API error.";
+            }
+        }
+
+        function displayResults(data) {
+            statusDiv.innerText = data.message;
+            resultsDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+    </script>
+</body>
+</html>
