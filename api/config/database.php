@@ -1,9 +1,9 @@
 
 <?php
 $host = 'localhost';
-$db = 'mondal-vr';
-$user = 'root';
-$pass = '';
+$db = 'u391326945_mandalvariety';
+$user = 'u391326945_mandalvr';
+$pass = 'Mandal@1234567890';  
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass);
