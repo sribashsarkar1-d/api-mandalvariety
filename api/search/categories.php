@@ -1,4 +1,5 @@
 <?php
+header('Content-Type: application/json');
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/SearchService.php';
 
@@ -11,9 +12,10 @@ $limit = min(100, max(1, (int)($_GET['limit'] ?? 20)));
 $categories = $service->searchCategories($raw_q, $limit);
 $service->logSearch($raw_q, $q, count($categories), 'categories', $_GET['user_id'] ?? null);
 
-responseJson([
+echo json_encode([
     'success' => true,
     'data' => [
         'categories' => $categories
     ]
-]);
+], JSON_UNESCAPED_UNICODE);
+exit;

@@ -1,4 +1,5 @@
 <?php
+header('Content-Type: application/json');
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/SearchService.php';
 
@@ -22,9 +23,10 @@ $sort = $_GET['sort'] ?? 'relevance';
 $products = $service->globalSearch($raw_q, $limit, $offset, $filters, $sort);
 $service->logSearch($raw_q, $q, count($products), 'products', $_GET['user_id'] ?? null);
 
-responseJson([
+echo json_encode([
     'success' => true,
     'data' => [
         'products' => $products
     ]
-]);
+], JSON_UNESCAPED_UNICODE);
+exit;

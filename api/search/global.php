@@ -1,4 +1,5 @@
 <?php
+header('Content-Type: application/json');
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/SearchService.php';
 
@@ -46,7 +47,7 @@ $service->logSearch($raw_q, $q, $total_results, 'global', $_GET['user_id'] ?? nu
 
 $time_ms = round((microtime(true) - $start_time) * 1000, 2);
 
-responseJson([
+echo json_encode([
     'success' => true,
     'message' => empty($products) && empty($categories) ? 'No exact match found, showing related results' : 'Search results found',
     'query' => $raw_q,
@@ -65,4 +66,5 @@ responseJson([
         'page' => $page,
         'limit' => $limit
     ]
-]);
+], JSON_UNESCAPED_UNICODE);
+exit;

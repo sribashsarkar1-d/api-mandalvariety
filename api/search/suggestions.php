@@ -1,4 +1,5 @@
 <?php
+header('Content-Type: application/json');
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/SearchService.php';
 
@@ -8,14 +9,15 @@ $raw_q = $_GET['q'] ?? '';
 $q = $service->normalize($raw_q);
 
 if (strlen($q) < 2) {
-    responseJson([
+    echo json_encode([
         'success' => true,
         'data' => [
             'products' => [],
             'categories' => [],
             'keywords' => []
         ]
-    ]);
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
 }
 
 $products = $service->globalSearch($raw_q, 5, 0, [], 'relevance');
@@ -29,11 +31,12 @@ if (!empty($p_names)) {
     $keywords[] = strtolower($p_names[0]);
 }
 
-responseJson([
+echo json_encode([
     'success' => true,
     'data' => [
         'products' => $p_names,
         'categories' => $c_names,
         'keywords' => $keywords
     ]
-]);
+], JSON_UNESCAPED_UNICODE);
+exit;
