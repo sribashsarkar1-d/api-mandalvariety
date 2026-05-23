@@ -390,7 +390,7 @@ try {
 <div class="topbar">
     <div class="topbar-left">
         <button class="menu-btn" type="button" onclick="toggleSidebar()">
-            <i class="fa-solid fa-bars"></i>
+            <svg class="icon"><use href="#icon-bars"></use></svg>
         </button>
 
         <h5 class="page-title mb-0">Admin Panel</h5>
@@ -416,7 +416,7 @@ try {
                 data-bs-auto-close="outside"
                 aria-expanded="false"
             >
-                <i class="fa-regular fa-bell"></i>
+                <svg class="icon"><use href="#icon-bell"></use></svg>
 
                 <?php if ($totalUnreadCount > 0): ?>
                     <span class="notification-badge" id="notificationBadge"><?= (int)$totalUnreadCount ?></span>
@@ -436,7 +436,7 @@ try {
                         data-bs-target="#newOrdersModal"
                     >
                         <div class="notification-icon order">
-                            <i class="fa-solid fa-cart-shopping"></i>
+                            <svg class="icon"><use href="#icon-orders"></use></svg>
                         </div>
                         <div>
                             <div class="notification-title">New order received</div>
@@ -454,7 +454,7 @@ try {
                         data-bs-target="#newCustomersModal"
                     >
                         <div class="notification-icon customer">
-                            <i class="fa-solid fa-user-plus"></i>
+                            <svg class="icon"><use href="#icon-customers"></use></svg>
                         </div>
                         <div>
                             <div class="notification-title">New customer joined</div>
@@ -474,7 +474,7 @@ try {
         </div>
 
         <button type="button" onclick="toggleDark()" class="icon-btn" aria-label="Toggle dark mode">
-            <i class="fa-solid fa-moon" id="themeIcon"></i>
+            <svg class="icon"><use id="themeIcon" href="#icon-moon"></use></svg>
         </button>
 
         <div class="dropdown">
@@ -486,12 +486,12 @@ try {
             <ul class="dropdown-menu dropdown-menu-end shadow">
                 <li>
                     <a class="dropdown-item" href="<?= e($profileUrl) ?>">
-                        <i class="fa fa-user me-2"></i> Profile
+                        <svg class="icon me-2"><use href="#icon-user"></use></svg> Profile
                     </a>
                 </li>
                 <li>
                     <a class="dropdown-item" href="<?= e($logoutUrl) ?>">
-                        <i class="fa fa-sign-out-alt me-2"></i> Logout
+                        <svg class="icon me-2"><use href="#icon-logout"></use></svg> Logout
                     </a>
                 </li>
             </ul>
@@ -641,7 +641,7 @@ function applyTheme(theme) {
     currentTheme = theme;
 
     if (icon) {
-        icon.className = theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        icon.setAttribute('href', theme === 'dark' ? '#icon-sun' : '#icon-moon');
     }
 }
 

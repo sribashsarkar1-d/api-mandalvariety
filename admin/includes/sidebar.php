@@ -301,14 +301,14 @@ $adminEmail = $_SESSION['admin_email'] ?? 'admin@example.com';
         <ul class="sidebar-menu">
             <li>
                 <a href="<?= $basePath ?>dashboard.php" class="<?= isMenuActive(['dashboard.php']) ? 'active' : '' ?>">
-                    <i class="fa-solid fa-house"></i>
+                    <svg class="icon"><use href="#icon-dashboard"></use></svg>
                     <span>Dashboard</span>
                 </a>
             </li>
 
             <li>
                 <a href="<?= $basePath ?>analytics/index.php" class="<?= isMenuActive(['analytics']) ? 'active' : '' ?>">
-                    <i class="fa-solid fa-chart-simple"></i>
+                    <svg class="icon"><use href="#icon-analytics"></use></svg>
                     <span>Analytics</span>
                 </a>
             </li>
@@ -318,14 +318,14 @@ $adminEmail = $_SESSION['admin_email'] ?? 'admin@example.com';
         <ul class="sidebar-menu">
             <li>
                 <a href="<?= $basePath ?>products/list.php" class="<?= isMenuActive(['products']) ? 'active' : '' ?>">
-                    <i class="fa-solid fa-box-open"></i>
+                    <svg class="icon"><use href="#icon-products"></use></svg>
                     <span>Products</span>
                 </a>
             </li>
 
             <li>
                 <a href="<?= $basePath ?>orders/list.php" class="<?= isMenuActive(['orders']) ? 'active' : '' ?>">
-                    <i class="fa-solid fa-bag-shopping"></i>
+                    <svg class="icon"><use href="#icon-orders"></use></svg>
                     <span>Orders</span>
                 </a>
             </li>
@@ -339,14 +339,14 @@ $adminEmail = $_SESSION['admin_email'] ?? 'admin@example.com';
 
             <li>
                 <a href="<?= $basePath ?>cart/list.php" class="<?= isMenuActive(['cart']) ? 'active' : '' ?>">
-                    <i class="fa-solid fa-cart-plus"></i>
+                    <svg class="icon"><use href="#icon-cart"></use></svg>
                     <span>Cart</span>
                 </a>
             </li>
 
             <li>
                 <a href="<?= $basePath ?>wishlist/list.php" class="<?= isMenuActive(['wishlist']) ? 'active' : '' ?>">
-                    <i class="fa-regular fa-heart"></i>
+                    <svg class="icon"><use href="#icon-wishlist"></use></svg>
                     <span>Wishlist</span>
                 </a>
             </li>
@@ -356,14 +356,14 @@ $adminEmail = $_SESSION['admin_email'] ?? 'admin@example.com';
         <ul class="sidebar-menu">
             <li>
                 <a href="<?= $basePath ?>customers/list.php" class="<?= isMenuActive(['customer', 'customers']) ? 'active' : '' ?>">
-                    <i class="fa-solid fa-users"></i>
+                    <svg class="icon"><use href="#icon-customers"></use></svg>
                     <span>Customers</span>
                 </a>
             </li>
 
             <li>
                 <a href="<?= $basePath ?>review/list.php" class="<?= isMenuActive(['review', 'reviews']) ? 'active' : '' ?>">
-                    <i class="fa-regular fa-star"></i>
+                    <svg class="icon"><use href="#icon-review"></use></svg>
                     <span>Review</span>
                 </a>
             </li>
@@ -373,21 +373,21 @@ $adminEmail = $_SESSION['admin_email'] ?? 'admin@example.com';
         <ul class="sidebar-menu">
             <li>
                 <a href="<?= $basePath ?>settings/index.php" class="<?= isMenuActive(['settings']) ? 'active' : '' ?>">
-                    <i class="fa-solid fa-gear"></i>
+                    <svg class="icon"><use href="#icon-settings"></use></svg>
                     <span>Settings</span>
                 </a>
             </li>
 
             <li>
                 <a href="<?= $basePath ?>policies/list.php" class="<?= isMenuActive(['policies', 'policy']) ? 'active' : '' ?>">
-                    <i class="fa-solid fa-shield-halved"></i>
+                    <svg class="icon"><use href="#icon-policies"></use></svg>
                     <span>Policies</span>
                 </a>
             </li>
 
             <li>
                 <a href="<?= $basePath ?>age-verify/index.php" class="<?= isMenuActive(['age-verify', 'age_verify']) ? 'active' : '' ?>">
-                    <i class="fa-solid fa-id-card"></i>
+                    <svg class="icon"><use href="#icon-age-verify"></use></svg>
                     <span>Age Verify</span>
                 </a>
             </li>
@@ -406,7 +406,7 @@ $adminEmail = $_SESSION['admin_email'] ?? 'admin@example.com';
             </div>
 
             <a href="<?= $basePath ?>logout.php" class="sidebar-user-logout" title="Logout">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                <svg class="icon"><use href="#icon-logout"></use></svg>
             </a>
         </div>
     </div>
