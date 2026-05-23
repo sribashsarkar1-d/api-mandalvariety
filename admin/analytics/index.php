@@ -2,80 +2,206 @@
 <?php include '../includes/sidebar.php'; ?>
 
 <style>
-    :root{
-        --bg:#f4f7fb;
-        --card:#ffffff;
-        --text:#1f2937;
-        --muted:#6b7280;
-        --border:#e5e7eb;
-        --primary:#2563eb;
-        --primary-soft:rgba(37,99,235,.10);
-        --success:#198754;
-        --warning:#f59e0b;
-        --danger:#dc3545;
-        --shadow:0 8px 24px rgba(15,23,42,.06);
-        --radius:18px;
+    .analytics-container {
+        padding: 24px;
+        background-color: #f8fafc;
+        min-height: calc(100vh - 70px);
     }
-    body{background:var(--bg);}
-    .analytics-page{padding:24px;}
-    .page-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:24px;}
-    .page-title{font-size:26px;font-weight:800;color:var(--text);margin:0;}
-    .page-subtitle{font-size:14px;color:var(--muted);margin:6px 0 0;}
-    .card-box,.stat-card{
-        background:var(--card);
-        border:1px solid var(--border);
-        border-radius:var(--radius);
-        box-shadow:var(--shadow);
+    .stat-card {
+        border-radius: 20px;
+        border: none;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        position: relative;
+        z-index: 1;
+        padding: 24px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        background: #fff;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
     }
-    .stat-card{padding:20px;height:100%;transition:.2s ease;}
-    .stat-card:hover{transform:translateY(-2px);}
-    .stat-label{font-size:13px;color:var(--muted);margin-bottom:8px;display:block;}
-    .stat-value{font-size:28px;font-weight:800;color:var(--text);line-height:1.1;margin:0;}
-    .stat-meta{font-size:12px;color:var(--muted);margin-top:6px;}
-    .stat-icon{
-        width:44px;height:44px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;
-        background:var(--primary-soft);color:var(--primary);font-size:18px;margin-bottom:14px;
+    .stat-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.12);
     }
-    .card-head{
-        padding:18px 20px;border-bottom:1px solid var(--border);
-        display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+    .stat-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        margin-bottom: 16px;
     }
-    .card-title{font-size:16px;font-weight:700;color:var(--text);margin:0;}
-    .badge-soft{
-        background:var(--primary-soft);color:var(--primary);
-        padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;
+    .stat-icon.primary { background: linear-gradient(135deg, rgba(79,70,229,0.1) 0%, rgba(59,130,246,0.1) 100%); color: #4f46e5; }
+    .stat-icon.success { background: linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(52,211,153,0.1) 100%); color: #10b981; }
+    .stat-icon.warning { background: linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(251,191,36,0.1) 100%); color: #f59e0b; }
+    .stat-icon.info { background: linear-gradient(135deg, rgba(14,165,233,0.1) 0%, rgba(56,189,248,0.1) 100%); color: #0ea5e9; }
+    .stat-icon.danger { background: linear-gradient(135deg, rgba(220,38,38,0.1) 0%, rgba(248,113,113,0.1) 100%); color: #dc2626; }
+    
+    .stat-label {
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #64748b;
+        margin-bottom: 8px;
     }
-    .table-wrap{padding:0;}
-    .table.analytics-table{margin:0;}
-    .analytics-table thead th{
-        background:#f8fafc;color:#667085;font-size:12px;text-transform:uppercase;
-        letter-spacing:.04em;font-weight:700;padding:14px 16px;border-bottom:1px solid var(--border);
-        white-space:nowrap;
+    .stat-value {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 4px;
+        line-height: 1.1;
     }
-    .analytics-table tbody td{
-        padding:15px 16px;vertical-align:middle;border-top:1px solid #f1f5f9;
+    .stat-meta {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        margin-top: auto;
     }
-    .analytics-table tbody tr:hover{background:#fbfdff;}
-    .mini-text{font-size:12px;color:var(--muted);}
-    .strong-text{font-size:14px;font-weight:700;color:var(--text);}
-    .status-pill{
-        display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;
-        font-size:12px;font-weight:700;background:#f3f4f6;color:#374151;
+    
+    .card-box {
+        border-radius: 20px;
+        border: none;
+        background: #fff;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
     }
-    .price{font-size:14px;font-weight:800;color:var(--success);}
-    .total{font-size:14px;font-weight:800;color:var(--primary);}
-    .product-box{display:flex;align-items:center;gap:12px;min-width:220px;}
-    .product-img{
-        width:56px;height:56px;object-fit:cover;border-radius:12px;
-        border:1px solid var(--border);background:#fff;flex-shrink:0;
+    .card-head {
+        background: transparent;
+        border-bottom: 1px solid #f1f5f9;
+        padding: 24px 28px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
     }
-    .chart-box{padding:20px;}
-    .chart-holder{position:relative;height:320px;}
-    .empty-box{padding:38px 18px;text-align:center;color:var(--muted);font-size:14px;}
-    .alert{border:none;border-radius:14px;box-shadow:var(--shadow);}
+    .card-title {
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    .badge-soft {
+        background: #f1f5f9;
+        color: #475569;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+    .chart-box {
+        padding: 24px;
+        flex-grow: 1;
+    }
+    .chart-holder {
+        position: relative;
+        height: 350px;
+        width: 100%;
+    }
+    .table-wrap {
+        padding: 0;
+        flex-grow: 1;
+        overflow-x: auto;
+    }
+    .analytics-table {
+        margin-bottom: 0;
+        width: 100%;
+    }
+    .analytics-table th {
+        background: #f8fafc;
+        border-bottom: 2px solid #e2e8f0;
+        color: #64748b;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 18px 28px;
+        border-top: none;
+        white-space: nowrap;
+    }
+    .analytics-table td {
+        padding: 18px 28px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+        color: #334155;
+        font-weight: 500;
+    }
+    .analytics-table tbody tr {
+        transition: background-color 0.2s ease;
+    }
+    .analytics-table tbody tr:hover {
+        background-color: #f8fafc;
+    }
+    .empty-box {
+        padding: 48px 24px;
+        text-align: center;
+        color: #94a3b8;
+        font-size: 0.95rem;
+    }
+    .product-box {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        min-width: 240px;
+    }
+    .product-img {
+        width: 54px;
+        height: 54px;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        flex-shrink: 0;
+    }
+    .strong-text {
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 0.95rem;
+        margin-bottom: 2px;
+    }
+    .mini-text {
+        font-size: 0.85rem;
+        color: #64748b;
+    }
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        background: #f1f5f9;
+        color: #475569;
+        text-transform: uppercase;
+    }
+    .price {
+        font-weight: 700;
+        color: #059669;
+        font-size: 0.95rem;
+    }
+    .total {
+        font-weight: 800;
+        color: #2563eb;
+        font-size: 0.95rem;
+    }
+    
+    .dark-mode .analytics-container { background: #0f172a; }
+    .dark-mode .stat-card, .dark-mode .card-box { background: #1e293b; box-shadow: none; }
+    .dark-mode .stat-value, .dark-mode .card-title, .dark-mode .strong-text { color: #f8fafc; }
+    .dark-mode .card-head { border-bottom-color: #334155; }
+    .dark-mode .analytics-table th { background: #0f172a; border-bottom-color: #334155; color: #94a3b8; }
+    .dark-mode .analytics-table td { border-bottom-color: #334155; color: #cbd5e1; }
+    .dark-mode .analytics-table tbody tr:hover { background-color: #0f172a; }
+    .dark-mode .badge-soft, .dark-mode .status-pill { background: #334155; color: #e2e8f0; }
+    .dark-mode .product-img { border-color: #334155; }
     @media (max-width: 768px){
-        .analytics-page{padding:16px;}
-        .page-title{font-size:22px;}
         .chart-holder{height:260px;}
     }
 </style>
@@ -393,16 +519,16 @@ try {
 <div class="w-100">
     <?php include '../includes/topbar.php'; ?>
 
-    <div class="container-fluid analytics-page">
-        <div class="page-head">
+    <div class="analytics-container">
+        <div class="d-flex justify-content-between align-items-center mb-5">
             <div>
-                <h4 class="page-title">📊 Store Analytics Dashboard</h4>
-                <p class="page-subtitle">Live metrics, recent activity, and top-performing products.</p>
+                <h3 class="mb-1 fw-bold" style="color: var(--bs-heading-color);">Store Analytics Dashboard</h3>
+                <p class="text-muted mb-0 fs-6">Live metrics, recent activity, and top-performing products.</p>
             </div>
         </div>
 
         <?php if (!empty($errors)): ?>
-            <div class="alert alert-danger">
+            <div class="alert alert-danger" style="border-radius: 16px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                 <ul class="mb-0 ps-3">
                     <?php foreach ($errors as $error): ?>
                         <li><?= e($error) ?></li>
@@ -414,7 +540,7 @@ try {
         <div class="row g-4 mb-4">
             <div class="col-md-6 col-xl-3">
                 <div class="stat-card">
-                    <div class="stat-icon"><i class="fa fa-users"></i></div>
+                    <div class="stat-icon primary"><svg class="icon"><use href="#icon-customers"></use></svg></div>
                     <span class="stat-label">Total Users</span>
                     <h3 class="stat-value"><?= number_format($totalUsers) ?></h3>
                     <div class="stat-meta">Registered accounts</div>
@@ -422,7 +548,7 @@ try {
             </div>
             <div class="col-md-6 col-xl-3">
                 <div class="stat-card">
-                    <div class="stat-icon"><i class="fa fa-box"></i></div>
+                    <div class="stat-icon info"><svg class="icon"><use href="#icon-products"></use></svg></div>
                     <span class="stat-label">Products</span>
                     <h3 class="stat-value"><?= number_format($totalProducts) ?></h3>
                     <div class="stat-meta"><?= number_format($totalCategories) ?> categories</div>
@@ -430,7 +556,7 @@ try {
             </div>
             <div class="col-md-6 col-xl-3">
                 <div class="stat-card">
-                    <div class="stat-icon"><i class="fa fa-heart"></i></div>
+                    <div class="stat-icon warning"><svg class="icon"><use href="#icon-wishlist"></use></svg></div>
                     <span class="stat-label">Wishlist Items</span>
                     <h3 class="stat-value"><?= number_format($totalWishlists) ?></h3>
                     <div class="stat-meta"><?= number_format($activeWishlistUsers) ?> active users</div>
@@ -438,7 +564,7 @@ try {
             </div>
             <div class="col-md-6 col-xl-3">
                 <div class="stat-card">
-                    <div class="stat-icon"><i class="fa fa-shopping-cart"></i></div>
+                    <div class="stat-icon success"><svg class="icon"><use href="#icon-cart"></use></svg></div>
                     <span class="stat-label">Cart Items</span>
                     <h3 class="stat-value"><?= number_format($totalCartItems) ?></h3>
                     <div class="stat-meta"><?= number_format($totalCarts) ?> carts</div>
@@ -446,42 +572,42 @@ try {
             </div>
         </div>
 
-        <div class="row g-4 mb-4">
+        <div class="row g-4 mb-5">
             <div class="col-md-6 col-xl-3">
                 <div class="stat-card">
-                    <div class="stat-icon"><i class="fa fa-file-invoice"></i></div>
+                    <div class="stat-icon primary"><svg class="icon"><use href="#icon-orders"></use></svg></div>
                     <span class="stat-label">Orders</span>
                     <h3 class="stat-value"><?= number_format($totalOrders) ?></h3>
-                    <div class="stat-meta">From orders table</div>
+                    <div class="stat-meta">Total orders placed</div>
                 </div>
             </div>
             <div class="col-md-6 col-xl-3">
                 <div class="stat-card">
-                    <div class="stat-icon"><i class="fa fa-indian-rupee-sign"></i></div>
+                    <div class="stat-icon success"><svg class="icon"><use href="#icon-analytics"></use></svg></div>
                     <span class="stat-label">Revenue</span>
                     <h3 class="stat-value">₹<?= number_format($totalRevenue, 2) ?></h3>
-                    <div class="stat-meta">Detected total column</div>
+                    <div class="stat-meta">Total generated revenue</div>
                 </div>
             </div>
             <div class="col-md-6 col-xl-3">
                 <div class="stat-card">
-                    <div class="stat-icon"><i class="fa fa-clock"></i></div>
+                    <div class="stat-icon warning"><svg class="icon"><use href="#icon-review"></use></svg></div>
                     <span class="stat-label">Pending Orders</span>
                     <h3 class="stat-value"><?= number_format($pendingOrders) ?></h3>
-                    <div class="stat-meta">Pending or processing</div>
+                    <div class="stat-meta">Awaiting processing</div>
                 </div>
             </div>
             <div class="col-md-6 col-xl-3">
                 <div class="stat-card">
-                    <div class="stat-icon"><i class="fa fa-check-circle"></i></div>
+                    <div class="stat-icon info"><svg class="icon"><use href="#icon-settings"></use></svg></div>
                     <span class="stat-label">Completed Orders</span>
                     <h3 class="stat-value"><?= number_format($completedOrders) ?></h3>
-                    <div class="stat-meta">Completed, delivered, or paid</div>
+                    <div class="stat-meta">Successfully delivered</div>
                 </div>
             </div>
         </div>
 
-        <div class="row g-4 mb-4">
+        <div class="row g-4 mb-5">
             <div class="col-12">
                 <div class="card-box">
                     <div class="card-head">
@@ -501,9 +627,9 @@ try {
             </div>
         </div>
 
-        <div class="row g-4 mb-4">
-            <div class="col-lg-6">
-                <div class="card-box">
+        <div class="row g-4 mb-5">
+            <div class="col-lg-6 d-flex">
+                <div class="card-box w-100">
                     <div class="card-head">
                         <h5 class="card-title">Recent Orders</h5>
                         <span class="badge-soft"><?= count($recentOrders) ?> Rows</span>
@@ -545,8 +671,8 @@ try {
                 </div>
             </div>
 
-            <div class="col-lg-6">
-                <div class="card-box">
+            <div class="col-lg-6 d-flex">
+                <div class="card-box w-100">
                     <div class="card-head">
                         <h5 class="card-title">Recent Carts</h5>
                         <span class="badge-soft"><?= count($recentCarts) ?> Rows</span>
@@ -589,9 +715,9 @@ try {
             </div>
         </div>
 
-        <div class="row g-4 mb-4">
-            <div class="col-lg-6">
-                <div class="card-box">
+        <div class="row g-4 mb-5">
+            <div class="col-lg-6 d-flex">
+                <div class="card-box w-100">
                     <div class="card-head">
                         <h5 class="card-title">Top Wishlist Products</h5>
                         <span class="badge-soft"><?= count($topWishlistProducts) ?> Products</span>
@@ -621,7 +747,7 @@ try {
                                             </td>
                                             <td><span class="status-pill"><?= e($product['category_name'] ?? 'N/A') ?></span></td>
                                             <td><span class="price">₹<?= number_format((float)($product['price'] ?? 0), 2) ?></span></td>
-                                            <td><div class="strong-text"><?= (int)($product['total_wishlist'] ?? 0) ?></div></td>
+                                            <td><div class="strong-text text-center"><?= (int)($product['total_wishlist'] ?? 0) ?></div></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 <?php else: ?>
@@ -633,8 +759,8 @@ try {
                 </div>
             </div>
 
-            <div class="col-lg-6">
-                <div class="card-box">
+            <div class="col-lg-6 d-flex">
+                <div class="card-box w-100">
                     <div class="card-head">
                         <h5 class="card-title">Top Wishlist Users</h5>
                         <span class="badge-soft"><?= count($topWishlistUsers) ?> Users</span>
@@ -645,7 +771,7 @@ try {
                                 <tr>
                                     <th>User</th>
                                     <th>Email</th>
-                                    <th>Wishlist Items</th>
+                                    <th class="text-center">Wishlist Items</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -657,7 +783,7 @@ try {
                                                 <div class="mini-text">User ID: <?= (int)($user['user_id'] ?? 0) ?></div>
                                             </td>
                                             <td><div class="mini-text"><?= e($user['user_email'] ?? '') ?></div></td>
-                                            <td><div class="strong-text"><?= (int)($user['wishlist_items'] ?? 0) ?></div></td>
+                                            <td class="text-center"><div class="strong-text"><?= (int)($user['wishlist_items'] ?? 0) ?></div></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 <?php else: ?>
@@ -682,8 +808,8 @@ try {
                             <thead>
                                 <tr>
                                     <th>Product</th>
-                                    <th>Order Lines</th>
-                                    <th>Quantity Sold</th>
+                                    <th class="text-center">Order Lines</th>
+                                    <th class="text-center">Quantity Sold</th>
                                     <th>Total Sales</th>
                                 </tr>
                             </thead>
@@ -700,8 +826,8 @@ try {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td><div class="strong-text"><?= (int)($product['total_lines'] ?? 0) ?></div></td>
-                                            <td><div class="strong-text"><?= (int)($product['total_qty'] ?? 0) ?></div></td>
+                                            <td class="text-center"><div class="strong-text"><?= (int)($product['total_lines'] ?? 0) ?></div></td>
+                                            <td class="text-center"><div class="strong-text"><?= (int)($product['total_qty'] ?? 0) ?></div></td>
                                             <td><span class="total">₹<?= number_format((float)($product['total_sales'] ?? 0), 2) ?></span></td>
                                         </tr>
                                     <?php endforeach; ?>
