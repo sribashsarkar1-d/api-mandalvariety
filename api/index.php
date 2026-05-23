@@ -592,14 +592,14 @@ function routeTable(): array
         'age_verifications/list' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/age_verifications/list.php'],
         'age_verifications/manage' => ['methods' => ['POST', 'PUT'], 'type' => 'file', 'handler' => __DIR__ . '/age_verifications/manage.php', 'before' => function(?string $id) { $_GET['id'] = $id ?: ($_GET['id'] ?? null); }],
         
-        'search' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/search/global.php'],
-        'search/global' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/search/global.php'],
-        'search/products' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/search/products.php'],
-        'search/categories' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/search/categories.php'],
-        'search/suggestions' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/search/suggestions.php'],
-        'search/related' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/search/related.php'],
-        'search/popular' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/search/popular.php'],
-        'search/voice' => ['methods' => ['POST'], 'type' => 'file', 'handler' => __DIR__ . '/search/voice.php'],
+        'search' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/search_module/global.php'],
+        'search/global' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/search_module/global.php'],
+        'search/products' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/search_module/products.php'],
+        'search/categories' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/search_module/categories.php'],
+        'search/suggestions' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/search_module/suggestions.php'],
+        'search/related' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/search_module/related.php'],
+        'search/popular' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/search_module/popular.php'],
+        'search/voice' => ['methods' => ['POST'], 'type' => 'file', 'handler' => __DIR__ . '/search_module/voice.php'],
     ];
 }
 
