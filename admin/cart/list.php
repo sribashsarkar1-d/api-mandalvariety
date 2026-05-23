@@ -342,64 +342,7 @@ function productImage($imagesJson) {
         <?php endif; ?>
 
         <div class="row g-4">
-            <div class="col-lg-5">
-                <div class="cart-main-card">
-                    <div class="cart-main-header">
-                        <h5 class="cart-main-title">Cart Summary</h5>
-                        <span class="cart-badge-count"><?= count($carts) ?> Carts</span>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table cart-table align-middle">
-                            <thead>
-                                <tr>
-                                    <th>Cart</th>
-                                    <th>User</th>
-                                    <th>Items</th>
-                                    <th>Total</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (!empty($carts)): ?>
-                                    <?php foreach ($carts as $cart): ?>
-                                        <tr>
-                                            <td>
-                                                <strong>#<?= (int)$cart['cart_id'] ?></strong><br>
-                                                <span class="cart-small-text">User ID: <?= (int)$cart['user_id'] ?></span>
-                                            </td>
-                                            <td>
-                                                <div class="cart-user-name"><?= e($cart['user_name'] ?: 'N/A') ?></div>
-                                                <span class="cart-small-text"><?= e($cart['user_email'] ?: 'No email') ?></span>
-                                            </td>
-                                            <td>
-                                                <strong><?= (int)$cart['total_items'] ?></strong>
-                                            </td>
-                                            <td>
-                                                <span class="cart-price">₹<?= number_format((float)$cart['cart_total'], 2) ?></span>
-                                            </td>
-                                            <td>
-                                                <form method="POST" onsubmit="return confirm('Clear all items from this cart?');" class="d-inline-block">
-                                                    <input type="hidden" name="action" value="clear_cart">
-                                                    <input type="hidden" name="cart_id" value="<?= (int)$cart['cart_id'] ?>">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger cart-action-btn">
-                                                        <i class="fas fa-trash me-1"></i>Clear
-                                                    </button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="5" class="text-center py-5">
-                                            <div class="cart-empty">No carts found</div>
-                                        </td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            
 
             <div class="col-lg-7">
                 <div class="cart-main-card">
