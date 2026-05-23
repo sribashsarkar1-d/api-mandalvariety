@@ -344,7 +344,7 @@ function productImage($imagesJson) {
         <div class="row g-4">
             
 
-            <div class="col-lg-7">
+            <div class="row g-4">
                 <div class="cart-main-card">
                     <div class="cart-main-header">
                         <h5 class="cart-main-title">Cart Items Details</h5>
