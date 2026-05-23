@@ -11,7 +11,7 @@ if (session_status() === PHP_SESSION_NONE) {
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'u391326945_mandalvariety');
 define('DB_USER', 'u391326945_mandalvr');
-define('DB_PASS', 'Mandal@1234567890000');
+define('DB_PASS', 'Mandal@1234567890');
 
 /*
 |--------------------------------------------------------------------------
