@@ -1,0 +1,1382 @@
+{
+    "info": {
+        "name": "Mandal Variety E-Commerce API",
+        "description": "Complete REST API documentation for the E-Commerce platform.",
+        "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
+    },
+    "item": [
+        {
+            "name": "System",
+            "item": [
+                {
+                    "name": "Health Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/health",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "health"
+                            ]
+                        },
+                        "description": "Returns API uptime\/basic health information."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Categories",
+            "item": [
+                {
+                    "name": "All Categories",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/categories\/list.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "categories",
+                                "list.php"
+                            ]
+                        },
+                        "description": "Get all active categories."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Products",
+            "item": [
+                {
+                    "name": "All Products",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/products\/list.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "list.php"
+                            ]
+                        },
+                        "description": "Get all products."
+                    }
+                },
+                {
+                    "name": "Product Detail",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/products\/detail.php?id=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "detail.php"
+                            ],
+                            "query": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Get one product by id."
+                    }
+                },
+                {
+                    "name": "Manage Product",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/products\/manage.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "products",
+                                "manage.php"
+                            ]
+                        },
+                        "description": "Create or update a product.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Demo Product\",\n    \"price\": 999,\n    \"stock_quantity\": 10\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Cart",
+            "item": [
+                {
+                    "name": "Get Cart",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/cart\/cart.php?user_id=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "cart",
+                                "cart.php"
+                            ],
+                            "query": [
+                                {
+                                    "key": "user_id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Get cart items of a user."
+                    }
+                },
+                {
+                    "name": "Add to Cart",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/cart\/add.php?user_id=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "cart",
+                                "add.php"
+                            ],
+                            "query": [
+                                {
+                                    "key": "user_id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Add product to cart.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"product_id\": 1,\n    \"quantity\": 2\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Update Cart",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/cart\/update.php?user_id=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "cart",
+                                "update.php"
+                            ],
+                            "query": [
+                                {
+                                    "key": "user_id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Update cart quantity.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"cart_item_id\": 1,\n    \"quantity\": 3\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Remove Cart Item",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/cart\/remove.php?user_id=1&cart_item_id=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "cart",
+                                "remove.php"
+                            ],
+                            "query": [
+                                {
+                                    "key": "user_id",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "cart_item_id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Remove one item from cart."
+                    }
+                },
+                {
+                    "name": "Clear Cart",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/cart\/clear.php?user_id=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "cart",
+                                "clear.php"
+                            ],
+                            "query": [
+                                {
+                                    "key": "user_id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Remove all cart items."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Wishlist",
+            "item": [
+                {
+                    "name": "Get Wishlist",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/wishlist\/list.php?user_id=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "wishlist",
+                                "list.php"
+                            ],
+                            "query": [
+                                {
+                                    "key": "user_id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Get wishlist data."
+                    }
+                },
+                {
+                    "name": "Add Wishlist Item",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/wishlist\/add.php?user_id=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "wishlist",
+                                "add.php"
+                            ],
+                            "query": [
+                                {
+                                    "key": "user_id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Add product to wishlist.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"product_id\": 1\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Remove Wishlist Item",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/wishlist\/remove.php?user_id=1&product_id=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "wishlist",
+                                "remove.php"
+                            ],
+                            "query": [
+                                {
+                                    "key": "user_id",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "product_id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Remove product from wishlist."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Orders",
+            "item": [
+                {
+                    "name": "List Orders",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/orders\/list.php?user_id=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "orders",
+                                "list.php"
+                            ],
+                            "query": [
+                                {
+                                    "key": "user_id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Get all orders for one user."
+                    }
+                },
+                {
+                    "name": "Order Detail",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/orders\/detail.php?user_id=1&order_id=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "orders",
+                                "detail.php"
+                            ],
+                            "query": [
+                                {
+                                    "key": "user_id",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "order_id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Get one order detail."
+                    }
+                },
+                {
+                    "name": "Create Order",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/orders\/create.php?user_id=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "orders",
+                                "create.php"
+                            ],
+                            "query": [
+                                {
+                                    "key": "user_id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Create order from cart.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"address\": \"Siliguri\",\n    \"payment_method\": \"cod\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Cancel Order",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/orders\/cancel.php?user_id=1&order_id=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "orders",
+                                "cancel.php"
+                            ],
+                            "query": [
+                                {
+                                    "key": "user_id",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "order_id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Cancel pending order."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Auth",
+            "item": [
+                {
+                    "name": "Register",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/auth\/register.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "register.php"
+                            ]
+                        },
+                        "description": "Register customer account.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Sribash\",\n    \"email\": \"sribash@example.com\",\n    \"phone\": \"9876543210\",\n    \"password\": \"123456\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Verify OTP",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/auth\/verify.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "verify.php"
+                            ]
+                        },
+                        "description": "Verify OTP and complete registration.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"otp\": \"123456\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/auth\/login.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login.php"
+                            ]
+                        },
+                        "description": "Login with email and password.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"sribash@example.com\",\n    \"password\": \"123456\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/auth\/logout.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "logout.php"
+                            ]
+                        },
+                        "description": "Logout current user."
+                    }
+                },
+                {
+                    "name": "Profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/auth\/profile.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "profile.php"
+                            ]
+                        },
+                        "description": "Get logged in user profile."
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Reviews",
+            "item": [
+                {
+                    "name": "List Reviews",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/reviews\/list.php?product_id=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "reviews",
+                                "list.php"
+                            ],
+                            "query": [
+                                {
+                                    "key": "product_id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Get reviews for a product or user."
+                    }
+                },
+                {
+                    "name": "Add Review",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/reviews\/add.php?user_id=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "reviews",
+                                "add.php"
+                            ],
+                            "query": [
+                                {
+                                    "key": "user_id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Submit a new review.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"product_id\": 1,\n    \"rating\": 5,\n    \"title\": \"Awesome\",\n    \"comment\": \"Great product!\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Coupons",
+            "item": [
+                {
+                    "name": "List Coupons",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/coupons\/list.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                "list.php"
+                            ]
+                        },
+                        "description": "Get all coupons"
+                    }
+                },
+                {
+                    "name": "Manage Coupons",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/coupons\/manage.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "coupons",
+                                "manage.php"
+                            ]
+                        },
+                        "description": "Create\/Update\/Delete coupons",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"code\": \"DISCOUNT10\",\n    \"discount\": 10\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Offers",
+            "item": [
+                {
+                    "name": "List Offers",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/offers\/list.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "offers",
+                                "list.php"
+                            ]
+                        },
+                        "description": "Get all offers"
+                    }
+                },
+                {
+                    "name": "Manage Offers",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/offers\/manage.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "offers",
+                                "manage.php"
+                            ]
+                        },
+                        "description": "Create\/Update\/Delete offers",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"offer_name\": \"Summer Sale\",\n    \"offer_value\": 20\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Settings",
+            "item": [
+                {
+                    "name": "Get Settings",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/settings\/get.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "settings",
+                                "get.php"
+                            ]
+                        },
+                        "description": "Get all settings"
+                    }
+                },
+                {
+                    "name": "Update Settings",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/settings\/update.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "settings",
+                                "update.php"
+                            ]
+                        },
+                        "description": "Update site settings",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"site_name\": \"My New Store\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Policies",
+            "item": [
+                {
+                    "name": "List Policies",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/policies\/list.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "policies",
+                                "list.php"
+                            ]
+                        },
+                        "description": "Get all policies"
+                    }
+                },
+                {
+                    "name": "Policy Detail",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/policies\/detail.php?slug=privacy-policy",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "policies",
+                                "detail.php"
+                            ],
+                            "query": [
+                                {
+                                    "key": "slug",
+                                    "value": "privacy-policy"
+                                }
+                            ]
+                        },
+                        "description": "Get single policy"
+                    }
+                },
+                {
+                    "name": "Manage Policies",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/policies\/manage.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "policies",
+                                "manage.php"
+                            ]
+                        },
+                        "description": "Create\/Update\/Delete policies",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Privacy\",\n    \"content\": \"Data...\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Age Verifications",
+            "item": [
+                {
+                    "name": "List Verifications",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/age_verifications\/list.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "age_verifications",
+                                "list.php"
+                            ]
+                        },
+                        "description": "Get verifications"
+                    }
+                },
+                {
+                    "name": "Manage Verifications",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/age_verifications\/manage.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "age_verifications",
+                                "manage.php"
+                            ]
+                        },
+                        "description": "Submit\/Review verifications",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"user_id\": 1,\n    \"full_name\": \"John Doe\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Advanced Search",
+            "item": [
+                {
+                    "name": "Global Search",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/search\/global.php?q=milk",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "search",
+                                "global.php"
+                            ],
+                            "query": [
+                                {
+                                    "key": "q",
+                                    "value": "milk"
+                                }
+                            ]
+                        },
+                        "description": "Search across products and categories with typo handling"
+                    }
+                },
+                {
+                    "name": "Product Search",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/search\/products.php?q=milk",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "search",
+                                "products.php"
+                            ],
+                            "query": [
+                                {
+                                    "key": "q",
+                                    "value": "milk"
+                                }
+                            ]
+                        },
+                        "description": "Search only products"
+                    }
+                },
+                {
+                    "name": "Category Search",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/search\/categories.php?q=milk",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "search",
+                                "categories.php"
+                            ],
+                            "query": [
+                                {
+                                    "key": "q",
+                                    "value": "milk"
+                                }
+                            ]
+                        },
+                        "description": "Search only categories"
+                    }
+                },
+                {
+                    "name": "Suggestions",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/search\/suggestions.php?q=sh",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "search",
+                                "suggestions.php"
+                            ],
+                            "query": [
+                                {
+                                    "key": "q",
+                                    "value": "sh"
+                                }
+                            ]
+                        },
+                        "description": "Get autocomplete suggestions"
+                    }
+                },
+                {
+                    "name": "Related Results",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/search\/related.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "search",
+                                "related.php"
+                            ]
+                        },
+                        "description": "Fallback related products"
+                    }
+                },
+                {
+                    "name": "Popular Searches",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/search\/popular.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "search",
+                                "popular.php"
+                            ]
+                        },
+                        "description": "Get popular search terms"
+                    }
+                },
+                {
+                    "name": "Voice Search",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}\/search\/voice.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "search",
+                                "voice.php"
+                            ]
+                        },
+                        "description": "Process voice query",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"query\": \"milk shake\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "https:\/\/api.mandal-variety.com",
+            "type": "string"
+        }
+    ]
+}
