@@ -343,6 +343,7 @@ require_once 'includes/sidebar.php';
                             <th>Total Amount</th>
                             <th>Status</th>
                             <th>Date</th>
+                            <th class="text-end">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -371,11 +372,16 @@ require_once 'includes/sidebar.php';
                                         </span>
                                     </td>
                                     <td class="text-muted"><?= date('d M Y, h:i A', strtotime($o['created_at'])) ?></td>
+                                    <td class="text-end">
+                                        <a href="orders/view.php?id=<?= (int)$o['id'] ?>" class="btn-custom text-decoration-none" style="padding: 6px 14px; font-size: 0.85rem;">
+                                            View Order
+                                        </a>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="5" class="text-center py-5 text-muted">No recent orders found.</td>
+                                <td colspan="6" class="text-center py-5 text-muted">No recent orders found.</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
