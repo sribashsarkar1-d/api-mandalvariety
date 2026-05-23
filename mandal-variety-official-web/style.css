@@ -1,0 +1,661 @@
+/* ==========================================
+   ১. রুট ভেরিয়েবল এবং গ্লোবাল রিসেট
+========================================== */
+:root {
+  /* ফ্লাটার AppColors এর বেস প্যালেট */
+  --tea-green: #C5EFCB;
+  --dusty-olive: #647A67;
+  --black: #020402;
+  --carbon-black: #1F241F;
+  --charcoal-brown: #3C433B;
+  --dusty-olive-2: #758173;
+  --muted-teal: #8FA38A;
+  --celadon-1: #A9C5A0;
+  --celadon-2: #B8D2B3;
+  --tea-green-soft: #C6DEC6;
+
+  /* সেমান্টিক কালারস (লাইট থিমের উপর ভিত্তি করে) */
+  --primary-color: var(--dusty-olive);
+  --accent-color: var(--muted-teal);
+  --bg-light: #F0F5F0;             /* lightSurface থেকে নেওয়া */
+  --text-main: var(--carbon-black);
+  --text-muted: var(--charcoal-brown);
+  --divider-color: var(--celadon-1);
+  
+  /* গ্রেডিয়েন্ট ও শ্যাডো */
+  --gradient-text: linear-gradient(135deg, var(--dusty-olive), var(--dusty-olive-2));
+  --gradient-bg: linear-gradient(135deg, var(--carbon-black), var(--charcoal-brown));
+  --card-shadow: 0 10px 30px rgba(100, 122, 103, 0.08);
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body {
+  font-family: 'Manrope', sans-serif;
+  color: var(--text-main);
+  background-color: #ffffff;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+/* টাইপোগ্রাফি ম্যাপিং (AppTextStyles এর Georgia হেডিং ফন্ট অনুসরণ করে) */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Georgia', serif;
+  color: var(--text-main);
+}
+
+/* ==========================================
+   ২. টপ বার ও নেভিগেশন বার
+========================================== */
+.topbar {
+  background-color: var(--dusty-olive-2);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.custom-navbar {
+  background-color: rgba(240, 245, 240, 0.95); /* lightSurface */
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.03);
+  padding: 15px 0;
+}
+
+.logo-box {
+  background: var(--primary-color);
+  color: var(--tea-green);
+  font-family: 'Georgia', serif;
+  font-weight: 700;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  box-shadow: 0 4px 10px rgba(100, 122, 103, 0.2);
+}
+
+.navbar-brand small {
+  color: var(--text-muted);
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.nav-link {
+  color: var(--text-main) !important;
+  font-weight: 600;
+  padding: 8px 16px !important;
+  transition: var(--transition-smooth);
+}
+
+.nav-link:hover {
+  color: var(--primary-color) !important;
+}
+
+.btn-dark {
+  background-color: var(--carbon-black) !important;
+  border-color: var(--carbon-black) !important;
+  color: #ffffff !important;
+}
+
+.btn-dark:hover {
+  background-color: var(--black) !important;
+  border-color: var(--black) !important;
+}
+
+/* ==========================================
+   ৩. হিরো সেকশন (Hero Section)
+========================================== */
+.hero-section {
+  padding: 80px 0;
+  background: linear-gradient(180deg, #ffffff 0%, var(--tea-green-soft) 100%);
+}
+
+.custom-badge {
+  background-color: rgba(100, 122, 103, 0.1) !important;
+  color: var(--primary-color) !important;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border-radius: 30px;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 10px;
+}
+
+.hero-gradient-text {
+  font-size: 2rem;
+  font-weight: 700;
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 20px;
+}
+
+.hero-text {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-bottom: 30px;
+}
+
+/* ইনফো কার্ড (Hero Stats) */
+.info-card {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--divider-color);
+  text-align: center;
+  transition: var(--transition-smooth);
+}
+
+.info-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--accent-color);
+}
+
+.info-card h4 {
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 5px;
+}
+
+.info-card p {
+  margin-bottom: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* ফোন ভিউ কার্ড (ডানদিকের ডিজাইন) */
+.phone-card {
+  background: #ffffff;
+  border-radius: 32px;
+  padding: 25px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+  border: 4px solid var(--carbon-black);
+}
+
+.delivery-box {
+  background: var(--gradient-bg);
+  color: var(--tea-green-soft);
+  padding: 20px;
+  border-radius: 20px;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.delivery-box h3 {
+  font-weight: 700;
+  color: #ffffff;
+  margin: 5px 0 0 0;
+}
+
+.app-badge {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: var(--primary-color);
+  color: var(--tea-green);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.service-box {
+  background: var(--bg-light);
+  padding: 20px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+}
+
+.service-box h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.service-box p {
+  color: var(--text-muted);
+}
+
+.tags span {
+  background: #ffffff;
+  border: 1px solid var(--divider-color);
+  padding: 5px 12px;
+  border-radius: 30px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.mini-category {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  padding: 15px;
+  text-align: center;
+  box-shadow: var(--card-shadow);
+  transition: var(--transition-smooth);
+}
+
+.mini-category:hover {
+  border-color: var(--primary-color);
+}
+
+.mini-category i {
+  font-size: 1.5rem;
+  color: var(--primary-color);
+}
+
+.mini-category p {
+  margin: 5px 0 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+/* ==========================================
+   ৪. কমন সেকশন লেআউট ও সার্ভিস হাইলাইটস
+========================================== */
+.section-padding {
+  padding: 80px 0;
+}
+
+.bg-light {
+  background-color: var(--bg-light) !important;
+}
+
+.section-title h2 {
+  font-weight: 700;
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.section-title p {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  margin-bottom: 50px;
+}
+
+.service-card {
+  background: #ffffff;
+  padding: 35px 25px;
+  border-radius: 20px;
+  box-shadow: var(--card-shadow);
+  text-align: center;
+  transition: var(--transition-smooth);
+  height: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.02);
+}
+
+.service-card:hover {
+  transform: translateY(-10px);
+  border-color: var(--celadon-1);
+}
+
+.service-card i {
+  font-size: 2.5rem;
+  color: var(--accent-color);
+  display: inline-block;
+  margin-bottom: 20px;
+}
+
+.service-card h4 {
+  font-weight: 700;
+  font-size: 1.25rem;
+  margin-bottom: 12px;
+}
+
+.service-card p {
+  color: var(--text-muted);
+  margin-bottom: 0;
+  font-size: 0.95rem;
+}
+
+/* ==========================================
+   ৫. ডেলিভারি এরিয়া সেকশন
+========================================== */
+.delivery-area-box {
+  background: #ffffff;
+  border-left: 5px solid var(--primary-color);
+  padding: 20px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  border-radius: 0 16px 16px 0;
+  box-shadow: var(--card-shadow);
+  margin-top: 15px;
+  color: var(--text-main);
+}
+
+.small-box {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid rgba(0, 0, 0, 0.02);
+}
+
+.small-box h4 {
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.small-box p {
+  margin: 0;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.map-card {
+  background: var(--gradient-bg);
+  height: 300px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 15px 35px rgba(100, 122, 103, 0.15);
+}
+
+.circle-main {
+  width: 90px;
+  height: 90px;
+  background: #ffffff;
+  color: var(--primary-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.5rem;
+  box-shadow: 0 0 0 15px rgba(255,255,255,0.15);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.3); }
+  70% { box-shadow: 0 0 0 20px rgba(255,255,255,0); }
+  100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+}
+
+/* ==========================================
+   ৬. ক্যাটাগরি সেকশন (Category Cards)
+========================================== */
+.category-card {
+  background: #ffffff;
+  padding: 30px 20px;
+  border-radius: 20px;
+  box-shadow: var(--card-shadow);
+  text-align: center;
+  transition: var(--transition-smooth);
+  border: 1px solid var(--divider-color);
+  cursor: pointer;
+}
+
+.category-card:hover {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  transform: translateY(-5px);
+}
+
+.category-card i {
+  font-size: 2.5rem;
+  color: var(--primary-color);
+  transition: var(--transition-smooth);
+}
+
+.category-card h5 {
+  margin-top: 15px;
+  margin-bottom: 0;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text-main);
+  transition: var(--transition-smooth);
+}
+
+.category-card:hover i,
+.category-card:hover h5 {
+  color: var(--tea-green) !important;
+}
+
+/* ==========================================
+   ৭. অ্যাবাউট সেকশন (About Section)
+========================================== */
+.about-box {
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 24px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid rgba(0, 0, 0, 0.02);
+}
+
+.about-box h4 {
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.about-box ul {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 0;
+}
+
+.about-box ul li {
+  position: relative;
+  padding-left: 30px;
+  margin-bottom: 12px;
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--text-muted);
+}
+
+.about-box ul li::before {
+  content: "\f26b"; /* Bootstrap check icon */
+  font-family: "bootstrap-icons";
+  position: absolute;
+  left: 0;
+  color: var(--accent-color);
+  font-weight: 900;
+}
+
+/* ==========================================
+   ৮. কন্ট্যাক্ট সেকশন (Contact Section)
+========================================== */
+.contact-card {
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: var(--card-shadow);
+  text-align: center;
+  border: 1px solid var(--divider-color);
+}
+
+.contact-card i {
+  font-size: 2rem;
+  color: var(--primary-color);
+  background: rgba(100, 122, 103, 0.1);
+  width: 60px;
+  height: 60px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-bottom: 15px;
+}
+
+.contact-card h5 {
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.contact-card p {
+  margin-bottom: 0;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ==========================================
+   ৯. ডাউনলোড সেকশন (Download Section)
+========================================== */
+.download-section {
+  background: var(--gradient-bg);
+  color: #ffffff;
+  padding: 80px 0;
+  border-radius: 30px;
+  margin: 0 20px 80px 20px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
+
+.download-section h2 {
+  font-weight: 700;
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+  color: #ffffff;
+}
+
+.download-section p {
+  font-size: 1.1rem;
+  color: var(--tea-green-soft);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.download-section .btn-light {
+  background-color: var(--tea-green) !important;
+  border-color: var(--tea-green) !important;
+  color: var(--black) !important;
+  font-weight: 600;
+}
+
+.download-section .btn-light:hover {
+  background-color: var(--tea-green-soft) !important;
+}
+
+.download-section .btn-outline-light {
+  border-color: var(--celadon-2) !important;
+  color: var(--celadon-2) !important;
+}
+
+.download-section .btn-outline-light:hover {
+  background-color: var(--celadon-2) !important;
+  color: var(--black) !important;
+}
+
+/* ==========================================
+   ১০. ফুটার এবং ফ্লোটিং হোয়াটসঅ্যাপ বাটন
+========================================== */
+.footer {
+  background-color: var(--black);
+  color: var(--celadon-1);
+  padding: 80px 0 30px 0;
+}
+
+.footer h4, .footer h5 {
+  color: #ffffff;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.footer-links {
+  list-style: none;
+  padding-left: 0;
+}
+
+.footer-links li {
+  margin-bottom: 12px;
+}
+
+.footer-links a {
+  color: var(--celadon-2);
+  text-decoration: none;
+  transition: var(--transition-smooth);
+}
+
+.footer-links a:hover {
+  color: var(--tea-green);
+  padding-left: 5px;
+}
+
+.footer hr {
+  border-color: var(--charcoal-brown);
+  margin: 40px 0 20px 0;
+}
+
+.footer .text-center {
+  color: var(--dusty-olive-2);
+  font-size: 0.9rem;
+}
+
+/* ফ্লোটিং হোয়াটসঅ্যাপ বাটন */
+.whatsapp-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background-color: var(--dusty-olive); /* ফরেস্ট থিমের সাথে ম্যাচ করে */
+  color: var(--tea-green);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  box-shadow: 0 4px 15px rgba(100, 122, 103, 0.4);
+  z-index: 1000;
+  transition: var(--transition-smooth);
+  border: 1px solid var(--tea-green-soft);
+}
+
+.whatsapp-btn:hover {
+  transform: scale(1.1);
+  background-color: var(--carbon-black);
+  color: var(--tea-green-soft);
+}
+
+/* ==========================================
+   ১১. রেসপন্সিভ মিডিয়া কোয়েরি (Mobile & Tablet)
+========================================== */
+@media (max-width: 991.98px) {
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  .hero-gradient-text {
+    font-size: 1.6rem;
+  }
+  .section-padding {
+    padding: 60px 0;
+  }
+  .download-section {
+    margin: 0 10px 60px 10px;
+    padding: 60px 20px;
+  }
+  .download-section h2 {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .hero-section {
+    padding: 45px 0;
+    text-align: center;
+  }
+  .hero-buttons {
+    justify-content: center;
+  }
+  .info-card {
+    margin-bottom: 10px;
+  }
+  .phone-card {
+    margin-top: 20px;
+    padding: 15px;
+  }
+}
