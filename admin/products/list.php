@@ -196,410 +196,117 @@ function stockHtml($qty, $lowStockLimit)
     return '<span class="badge rounded-pill bg-success">In stock: ' . $qty . '</span>';
 }
 ?>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
 <style>
-    .product-cell {
-    min-width: 220px;
-}
-
-.product-slider-wrap {
-    width: 100%;
-    max-width: 220px;
-}
-
-.product-slider {
-    position: relative;
-    border-radius: 18px;
-    overflow: hidden;
-    background: #f8fafc;
-    border: 1px solid #e9edf3;
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
-}
-
-.product-slide-img-wrap {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
-    overflow: hidden;
-}
-
-.product-slide-img {
-    width: 100%;
-    height: 100%;
-    display: block;
-    object-fit: cover;
-    transition: transform .35s ease;
-}
-
-.product-slider:hover .product-slide-img {
-    transform: scale(1.04);
-}
-
-.product-slider-control {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    background: rgba(15, 23, 42, 0.72);
-    color: #fff;
-    display: grid;
-    place-items: center;
-    font-size: 14px;
-    backdrop-filter: blur(6px);
-    transition: all .25s ease;
-}
-
-.product-slider .carousel-control-prev,
-.product-slider .carousel-control-next {
-    width: 16%;
-    opacity: 1;
-}
-
-.product-slider .carousel-control-prev:hover .product-slider-control,
-.product-slider .carousel-control-next:hover .product-slider-control {
-    background: rgba(37, 99, 235, 0.95);
-    transform: scale(1.05);
-}
-
-.product-slider-indicators {
-    margin-bottom: 8px;
-    gap: 4px;
-}
-
-.product-slider-indicators [data-bs-target] {
-    width: 8px;
-    height: 8px;
-    border-radius: 999px;
-    border: 0;
-    background-color: rgba(255,255,255,.7);
-    opacity: 1;
-}
-
-.product-slider-indicators .active {
-    width: 22px;
-    background-color: #2563eb;
-}
-
-.product-slider-count {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    padding: 4px 9px;
-    border-radius: 999px;
-    background: rgba(15, 23, 42, .75);
-    color: #fff;
-    font-size: .72rem;
-    font-weight: 600;
-    line-height: 1;
-    backdrop-filter: blur(4px);
-    z-index: 3;
-}
-
-.no-image-box {
-    max-width: 220px;
-    border-radius: 18px;
-    border: 1px solid #e9edf3;
-    overflow: hidden;
-    background: #f8fafc;
-}
-
-@media (max-width: 1199.98px) {
-    .product-slider-wrap,
-    .no-image-box {
-        max-width: 180px;
+    .page-container {
+        padding: 24px;
+        background-color: #f8fafc;
+        min-height: calc(100vh - 70px);
     }
-
-    .product-cell {
-        min-width: 190px;
+    .summary-card {
+        border-radius: 20px;
+        border: none;
+        background: #fff;
+        padding: 24px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
     }
-}
-
-@media (max-width: 767.98px) {
-    .product-slider-wrap,
-    .no-image-box {
-        max-width: 140px;
+    .summary-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
-
-    .product-cell {
-        min-width: 150px;
+    .summary-label {
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #64748b;
+        margin-bottom: 8px;
     }
-
-    .product-slider-control {
-        width: 28px;
-        height: 28px;
-        font-size: 12px;
+    .summary-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.1;
     }
-
-    .product-slider-count {
-        font-size: .65rem;
-        padding: 4px 7px;
-    }
-}
-html, body {
-    overflow-x: hidden;
-}
-
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
-}
-
-.product-page {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
-    --card-radius: 16px;
-}
-
-.product-page .container-fluid {
-    width: 100%;
-    max-width: 100%;
-    padding-left: 16px;
-    padding-right: 16px;
-}
-
-.product-page .summary-card,
-.product-page .filter-card,
-.product-page .table-card {
-    border: 0;
-    border-radius: var(--card-radius);
-    box-shadow: 0 8px 24px rgba(16, 24, 40, .06);
-    overflow: hidden;
-}
-
-.product-page .page-title {
-    font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.75rem);
-    font-weight: 700;
-    letter-spacing: -.02em;
-    margin-bottom: 4px;
-}
-
-.product-page .page-subtitle {
-    color: #6c757d;
-    font-size: .95rem;
-}
-
-.product-page .summary-card .icon-wrap {
-    width: 46px;
-    height: 46px;
-    border-radius: 12px;
-    display: grid;
-    place-items: center;
-    font-size: 18px;
-    flex-shrink: 0;
-}
-
-.product-page .summary-label {
-    font-size: .8rem;
-    color: #6c757d;
-    margin-bottom: 4px;
-}
-
-.product-page .summary-value {
-    font-size: 1.4rem;
-    font-weight: 700;
-    line-height: 1;
-}
-
-.product-page .filter-card .card-body,
-.product-page .table-card .card-body {
-    padding: 16px;
-}
-
-.product-page .filter-card .form-label {
-    font-size: .82rem;
-    font-weight: 600;
-    margin-bottom: 6px;
-}
-
-.product-page .filter-card .form-control,
-.product-page .filter-card .form-select,
-.product-page .filter-card .btn {
-    min-height: 44px;
-    border-radius: 12px;
-}
-
-.product-page .table-card .table-responsive {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: auto;
-    overflow-y: visible;
-    -webkit-overflow-scrolling: touch;
-}
-
-.product-page .table-card table {
-    width: 100%;
-    min-width: 1180px;
-    margin-bottom: 0;
-}
-
-.product-page .table-card thead th {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    white-space: nowrap;
-    font-size: .78rem;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    background: #0f172a !important;
-    color: #fff !important;
-}
-
-.product-page .table-card tbody td {
-    vertical-align: middle;
-    font-size: .92rem;
-    white-space: nowrap;
-}
-
-.product-page .table-card tbody td:nth-child(2),
-.product-page .table-card tbody td:nth-child(6) {
-    white-space: normal;
-}
-
-.product-page .product-name {
-    font-weight: 700;
-    color: #212529;
-    line-height: 1.25;
-}
-
-.product-page .product-meta {
-    font-size: .8rem;
-    color: #6c757d;
-    margin-top: 4px;
-    max-width: 240px;
-    line-height: 1.45;
-}
-
-.product-page .table-thumb {
-    width: 68px;
-    height: 68px;
-    min-width: 68px;
-    object-fit: cover;
-    border-radius: 12px;
-    border: 1px solid #eef1f4;
-    background: #f8f9fa;
-}
-
-.product-page .offer-box {
-    min-width: 170px;
-}
-
-.product-page .price-main {
-    font-weight: 700;
-    color: #111827;
-}
-
-.product-page .price-cut {
-    color: #6c757d;
-    text-decoration: line-through;
-    font-size: .84rem;
-}
-
-.product-page .code-chip {
-    display: inline-block;
-    padding: 4px 8px;
-    background: #f3f4f6;
-    border-radius: 8px;
-    font-size: .8rem;
-    max-width: 170px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    vertical-align: middle;
-}
-
-.product-page .action-group {
-    flex-wrap: wrap;
-}
-
-.product-page .action-group .btn {
-    border-radius: 10px;
-    min-width: 74px;
-}
-
-.product-page .pagination {
-    flex-wrap: wrap;
-    gap: 6px;
-}
-
-.product-page .pagination .page-link {
-    border-radius: 10px;
-    margin: 0;
-}
-
-@media (max-width: 1399.98px) {
-    .product-page .table-card table {
-        min-width: 1080px;
-    }
-}
-
-@media (max-width: 1199.98px) {
-    .product-page .container-fluid {
-        padding-left: 14px;
-        padding-right: 14px;
-    }
-
-    .product-page .table-card table {
-        min-width: 1020px;
-    }
-}
-
-@media (max-width: 991.98px) {
-    html, body {
-        overflow-x: hidden;
-    }
-
-    .product-page .container-fluid {
-        padding-left: 12px;
-        padding-right: 12px;
-    }
-
-    .product-page .table-card table {
-        min-width: 980px;
-    }
-
-    .product-page .page-title {
-        font-size: 1.35rem;
-    }
-
-    .product-page .summary-value {
-        font-size: 1.2rem;
-    }
-}
-
-@media (max-width: 767.98px) {
-    .product-page .container-fluid {
-        padding-left: 10px;
-        padding-right: 10px;
-    }
-
-    .product-page .filter-card .card-body,
-    .product-page .table-card .card-body {
-        padding: 12px;
-    }
-
-    .product-page .table-thumb {
+    .icon-wrap {
         width: 56px;
         height: 56px;
-        min-width: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
     }
-
-    .product-page .product-meta {
-        max-width: 180px;
+    .filter-card, .table-card {
+        border-radius: 20px;
+        border: none;
+        background: #fff;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+        margin-bottom: 24px;
     }
-
-    .product-page .table-card table {
-        min-width: 920px;
+    .filter-card .card-body, .table-card .card-body {
+        padding: 24px;
     }
-}
+    .form-control, .form-select {
+        border-radius: 12px;
+        padding: 10px 16px;
+        border: 1px solid #e2e8f0;
+        font-size: 0.95rem;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    .table-modern {
+        margin-bottom: 0;
+        width: 100%;
+    }
+    .table-modern th {
+        background: #f8fafc;
+        border-bottom: 2px solid #e2e8f0;
+        color: #64748b;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 18px 24px;
+        white-space: nowrap;
+    }
+    .table-modern td {
+        padding: 18px 24px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+        color: #334155;
+    }
+    .table-modern tbody tr:hover {
+        background-color: #f8fafc;
+    }
+    .badge-modern {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    .btn-custom {
+        border-radius: 12px;
+        font-weight: 600;
+        padding: 8px 20px;
+        transition: all 0.2s;
+    }
+    .btn-action {
+        border-radius: 10px;
+        padding: 6px 14px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
 </style>
 
-<div class="w-100 product-page">
+<div class="w-100">
     <?php include '../includes/topbar.php'; ?>
 
-    <div class="container-fluid mt-4 mb-4">
+    <div class="page-container">
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
             <div>
                 <h4 class="page-title mb-1">Product Inventory</h4>
@@ -661,16 +368,16 @@ html, body {
             </div>
         </div>
 
-        <div class="card filter-card mb-4">
+        <div class="filter-card mb-4">
             <div class="card-body">
-                <form method="GET" class="row g-3 align-items-end">
-                    <div class="col-lg-3 col-md-6">
-                        <label class="form-label">Search</label>
-                        <input type="text" name="search" value="<?= e($search) ?>" class="form-control" placeholder="Name, slug, SKU, description">
+                <form method="GET" class="row g-3">
+                    <div class="col-lg-4 col-md-6">
+                        <label class="form-label text-muted small fw-bold">SEARCH</label>
+                        <input type="text" name="search" value="<?= e($search) ?>" class="form-control" placeholder="Name, slug, SKU...">
                     </div>
 
-                    <div class="col-lg-2 col-md-6">
-                        <label class="form-label">Category</label>
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label text-muted small fw-bold">CATEGORY</label>
                         <select name="category" class="form-select">
                             <option value="">All Categories</option>
                             <?php foreach ($cats as $c): ?>
@@ -681,8 +388,8 @@ html, body {
                         </select>
                     </div>
 
-                    <div class="col-lg-2 col-md-4">
-                        <label class="form-label">Stock Status</label>
+                    <div class="col-lg-2 col-md-6">
+                        <label class="form-label text-muted small fw-bold">STOCK STATUS</label>
                         <select name="status" class="form-select">
                             <option value="">All</option>
                             <option value="active" <?= ($status === 'active') ? 'selected' : '' ?>>Active</option>
@@ -693,8 +400,8 @@ html, body {
                         </select>
                     </div>
 
-                    <div class="col-lg-3 col-md-4">
-                        <label class="form-label">Sort By</label>
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label text-muted small fw-bold">SORT BY</label>
                         <select name="sort" class="form-select">
                             <option value="latest" <?= ($sort === 'latest') ? 'selected' : '' ?>>Latest</option>
                             <option value="oldest" <?= ($sort === 'oldest') ? 'selected' : '' ?>>Oldest</option>
@@ -707,39 +414,37 @@ html, body {
                         </select>
                     </div>
 
-                    <div class="col-lg-9 col-md-2 d-flex gap-0">
-                        <button type="submit" class="btn btn-dark w-100">Apply</button>
-                        <a href="list.php" class="btn btn-outline-secondary w-100">Reset</a>
+                    <div class="col-12 mt-4 d-flex justify-content-end gap-3">
+                        <a href="list.php" class="btn btn-light btn-custom px-4">Reset</a>
+                        <button type="submit" class="btn btn-primary btn-custom px-4">Apply Filters</button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <div class="card table-card">
-            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
+        <div class="table-card">
+            <div class="card-header bg-transparent border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2 py-4 px-4">
                 <div>
-                    <h6 class="mb-1 fw-bold">Products</h6>
+                    <h5 class="mb-0 fw-bold text-dark">Product Inventory</h5>
                     <small class="text-muted">Showing <?= count($products) ?> of <?= (int)$total ?> items</small>
                 </div>
-                <div class="small text-muted">Low stock threshold: <?= (int)$lowStockLimit ?></div>
             </div>
 
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table align-middle table-hover bg-white">
-                        <thead class="table-light">
+                    <table class="table table-modern">
+                        <thead>
                             <tr>
                                 <th>#</th>
-                                <th>Product</th>
+                                <th>Product Details</th>
                                 <th>Category</th>
-                                <th>Slug / SKU</th>
                                 <th>Price</th>
                                 <th>Offer</th>
                                 <th>Stock</th>
                                 <th>Weight</th>
                                 <th>Status</th>
                                 <th>Dates</th>
-                                <th class="text-end pe-3">Action</th>
+                                <th class="text-end">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -751,81 +456,32 @@ html, body {
                                     $updatedAt = $row['updatedat'] ?? ($row['updated_at'] ?? '');
                                     ?>
                                     <tr id="row-<?= (int)$row['id'] ?>">
-                                        <td class="fw-semibold"><?= (int)$row['id'] ?></td>
-
-                                        <td class="product-cell">
-    <?php if (!empty($imgs)): ?>
-        <div class="product-slider-wrap">
-            <div id="productSlider<?= (int)$row['id'] ?>"
-                 class="carousel slide product-slider"
-                 data-bs-ride="false"
-                 data-bs-touch="true"
-                 data-bs-interval="false">
-                
-                <div class="carousel-inner rounded-4">
-                    <?php foreach ($imgs as $index => $img): ?>
-                        <div class="carousel-item <?= $index === 0 ? 'active' : '' ?>">
-                            <div class="product-slide-img-wrap">
-                                <img
-                                    src="../uploads/<?= e($img) ?>"
-                                    alt="<?= e($row['name']) ?>"
-                                    class="product-slide-img img-fluid"
-                                    loading="lazy">
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-
-                <?php if (count($imgs) > 1): ?>
-                    <button class="carousel-control-prev" type="button" data-bs-target="#productSlider<?= (int)$row['id'] ?>" data-bs-slide="prev">
-                        <span class="product-slider-control">
-                            <i class="bi bi-chevron-left"></i>
-                        </span>
-                        <span class="visually-hidden">Previous</span>
-                    </button>
-
-                    <button class="carousel-control-next" type="button" data-bs-target="#productSlider<?= (int)$row['id'] ?>" data-bs-slide="next">
-                        <span class="product-slider-control">
-                            <i class="bi bi-chevron-right"></i>
-                        </span>
-                        <span class="visually-hidden">Next</span>
-                    </button>
-
-                    <div class="carousel-indicators product-slider-indicators">
-                        <?php foreach ($imgs as $index => $img): ?>
-                            <button type="button"
-                                    data-bs-target="#productSlider<?= (int)$row['id'] ?>"
-                                    data-bs-slide-to="<?= $index ?>"
-                                    class="<?= $index === 0 ? 'active' : '' ?>"
-                                    aria-current="<?= $index === 0 ? 'true' : 'false' ?>"
-                                    aria-label="Slide <?= $index + 1 ?>"></button>
-                        <?php endforeach; ?>
-                    </div>
-
-                    <div class="product-slider-count">
-                        <?= count($imgs) ?> photos
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
-    <?php else: ?>
-        <div class="product-slide-img-wrap no-image-box">
-            <img
-                src="../assets/img/no-image.png"
-                alt="No image"
-                class="product-slide-img img-fluid"
-                loading="lazy">
-        </div>
-    <?php endif; ?>
-</td>
+                                        <td class="fw-bold">#<?= (int)$row['id'] ?></td>
 
                                         <td>
-                                            <span class="badge bg-light text-dark border"><?= e($row['category_name'] ?? 'N/A') ?></span>
+                                            <div class="d-flex align-items-center gap-3">
+                                                <?php if (!empty($imgs)): ?>
+                                                    <div class="position-relative">
+                                                        <img src="../uploads/<?= e($imgs[0]) ?>" alt="img" class="rounded-3 border object-fit-cover" style="width: 54px; height: 54px; background: #fff;">
+                                                        <?php if(count($imgs) > 1): ?>
+                                                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark" style="font-size: 0.65rem;">+<?= count($imgs)-1 ?></span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <div class="bg-light rounded-3 border d-flex align-items-center justify-content-center text-muted" style="width: 54px; height: 54px; font-size: 0.8rem;">No Img</div>
+                                                <?php endif; ?>
+                                                <div>
+                                                    <div class="fw-bold text-dark mb-1" style="max-width: 250px; white-space: normal; line-height: 1.3;"><?= e($row['name']) ?></div>
+                                                    <div class="small text-muted d-flex gap-2">
+                                                        <span><i class="fa fa-tag me-1"></i><?= e($row['sku']) ?></span>
+                                                        <span><i class="fa fa-link me-1"></i><?= e($row['slug']) ?></span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </td>
 
                                         <td>
-                                            <div class="mb-1"><span class="code-chip"><?= e($row['slug']) ?></span></div>
-                                            <div class="small text-muted">SKU: <?= e($row['sku']) ?></div>
+                                            <span class="badge-modern bg-light text-dark border"><?= e($row['category_name'] ?? 'N/A') ?></span>
                                         </td>
 
                                         <td>
