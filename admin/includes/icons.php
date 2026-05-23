@@ -6,6 +6,12 @@
         <rect x="14" y="12" width="7" height="9" rx="1"></rect>
         <rect x="3" y="16" width="7" height="5" rx="1"></rect>
     </symbol>
+    <!-- Categories -->
+    <symbol id="icon-categories" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+        <polyline points="2 12 12 17 22 12"></polyline>
+        <polyline points="2 17 12 22 22 17"></polyline>
+    </symbol>
     <!-- Analytics -->
     <symbol id="icon-analytics" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="18" y1="20" x2="18" y2="10"></line>

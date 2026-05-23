@@ -317,6 +317,13 @@ $adminEmail = $_SESSION['admin_email'] ?? 'admin@example.com';
         <div class="sidebar-group-title">Commerce</div>
         <ul class="sidebar-menu">
             <li>
+                <a href="<?= $basePath ?>categories/list.php" class="<?= isMenuActive(['categories', 'category']) ? 'active' : '' ?>">
+                    <svg class="icon"><use href="#icon-categories"></use></svg>
+                    <span>Categories</span>
+                </a>
+            </li>
+
+            <li>
                 <a href="<?= $basePath ?>products/list.php" class="<?= isMenuActive(['products']) ? 'active' : '' ?>">
                     <svg class="icon"><use href="#icon-products"></use></svg>
                     <span>Products</span>
