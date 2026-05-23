@@ -137,7 +137,7 @@ function sampleDocs(): array
         'Cart' => [
             [
                 'method' => 'GET',
-                'path' => 'cart.php?user_id=1',
+                'path' => 'cart/cart.php?user_id=1',
                 'title' => 'Get Cart',
                 'description' => 'Get cart items of a user.',
                 'query' => ['user_id' => 1],
@@ -184,7 +184,7 @@ function sampleDocs(): array
         'Wishlist' => [
             [
                 'method' => 'GET',
-                'path' => 'wishlist.php?user_id=1',
+                'path' => 'wishlist/list.php?user_id=1',
                 'title' => 'Get Wishlist',
                 'description' => 'Get wishlist data.',
                 'query' => ['user_id' => 1],
