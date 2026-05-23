@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-require '../config/database.php';
+require_once __DIR__ . '/../config/database.php';
 
 $id = $_GET['id'] ?? null;
 $slug = $_GET['slug'] ?? null;

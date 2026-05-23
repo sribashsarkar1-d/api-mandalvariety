@@ -2,7 +2,7 @@
 header('Content-Type: application/json');
 
 session_start();
-require '../config/database.php';
+require_once __DIR__ . '/../config/database.php';
 
 $user_id = $_GET['user_id'] ?? $_SESSION['user_id'] ?? null;
 

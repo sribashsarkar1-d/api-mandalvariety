@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-require '../config/database.php';
+require_once __DIR__ . '/../config/database.php';
 require '../config/smtp.php';
 
 session_start(); // Start session to store temp data

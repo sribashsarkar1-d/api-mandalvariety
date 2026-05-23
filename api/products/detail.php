@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-require_once '../config/database.php';
+require_once __DIR__ . '/../config/database.php';
 
 // Get ID from ANY source - super flexible
 $id = $_GET['id'] ?? $_REQUEST['id'] ?? 1; // Default to 1 for testing

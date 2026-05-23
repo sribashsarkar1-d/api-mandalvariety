@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-require '../config/database.php';
+require_once __DIR__ . '/../config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $_SERVER['REQUEST_METHOD'] !== 'PUT') {
     http_response_code(405);

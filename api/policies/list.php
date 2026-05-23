@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-require '../config/database.php';
+require_once __DIR__ . '/../config/database.php';
 
 $query = "SELECT id, title, slug, type, short_description, status, visibility, is_featured, display_order FROM policies";
 $params = [];

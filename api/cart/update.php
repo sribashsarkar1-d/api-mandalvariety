@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-require_once '../config/database.php';
+require_once __DIR__ . '/../config/database.php';
 $user_id = (int)($_GET['user_id'] ?? 1);
 $cart_item_id = (int)($_POST['cart_item_id'] ?? 0);
 $quantity = (int)($_POST['quantity'] ?? 1);

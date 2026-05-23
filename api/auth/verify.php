@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-require '../config/database.php';
+require_once __DIR__ . '/../config/database.php';
 
 session_start();
 

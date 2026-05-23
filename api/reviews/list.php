@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
 
-require '../config/database.php';
+require_once __DIR__ . '/../config/database.php';
 
 $product_id = $_GET['product_id'] ?? null;
 $user_id = $_GET['user_id'] ?? null;

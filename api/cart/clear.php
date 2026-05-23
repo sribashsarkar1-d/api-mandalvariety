@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-require_once '../config/database.php';
+require_once __DIR__ . '/../config/database.php';
 $user_id = (int)($_GET['user_id'] ?? 1);
 
 // Delete all cart items

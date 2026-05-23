@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-require '../config/database.php';
+require_once __DIR__ . '/../config/database.php';
 
 $user_id = $_GET['user_id'] ?? null;
 $query = "SELECT * FROM age_verifications";

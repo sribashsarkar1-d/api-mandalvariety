@@ -1,6 +1,6 @@
     <?php
 header('Content-Type: application/json');
-require_once '../config/database.php';  // Fixed path
+require_once __DIR__ . '/../config/database.php';  // Fixed path
 
 $user_id = (int)($_GET['user_id'] ?? 0);
 $input = json_decode(file_get_contents('php://input'), true);
