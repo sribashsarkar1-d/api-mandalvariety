@@ -132,15 +132,6 @@ $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $cats = $conn->query("SELECT id, name FROM categories ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
 
-$summary = $conn->query("
-    SELECT
-        COUNT(*) AS total_products,
-        SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) AS active_products,
-        SUM(CASE WHEN COALESCE(stock_quantity,0) <= 0 THEN 1 ELSE 0 END) AS outstock_products,
-        SUM(CASE WHEN COALESCE(stock_quantity,0) > 0 AND COALESCE(stock_quantity,0) <= {$lowStockLimit} THEN 1 ELSE 0 END) AS lowstock_products
-    FROM products
-")->fetch(PDO::FETCH_ASSOC);
-
 function offerStatus($start, $end) {
     $today = date('Y-m-d');
     if (!empty($start) && $today < $start) return ['Upcoming', 'warning'];
@@ -151,7 +142,7 @@ function offerStatus($start, $end) {
 function offerHtml($row)
 {
     if (empty($row['offer_name']) || empty($row['offer_type']) || $row['offer_type'] === 'none') {
-        return '<span class="text-muted small">No offer</span>';
+        return '<span class="text-muted small"><i class="fa-solid fa-minus me-1"></i>No offer</span>';
     }
 
     [$label, $badge] = offerStatus($row['start_date'] ?? null, $row['end_date'] ?? null);
@@ -162,21 +153,10 @@ function offerHtml($row)
 
     $target = !empty($row['offer_product_id']) ? 'Product' : 'Category';
 
-    $dateLine = '';
-    if (!empty($row['start_date']) || !empty($row['end_date'])) {
-        $start = !empty($row['start_date']) ? date('d M Y', strtotime($row['start_date'])) : 'Open';
-        $end   = !empty($row['end_date']) ? date('d M Y', strtotime($row['end_date'])) : 'Open';
-        $dateLine = '<div class="small text-muted mt-1">' . $start . ' → ' . $end . '</div>';
-    }
-
     return '
-        <div class="offer-box">
-            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-                <span class="badge bg-info text-dark">' . e($row['offer_name']) . '</span>
-                <span class="badge bg-' . $badge . '">' . $label . '</span>
-            </div>
-            <div class="small fw-semibold">' . e($value) . ' <span class="text-muted fw-normal">(' . e($target) . ')</span></div>
-            ' . $dateLine . '
+        <div class="d-flex flex-column align-items-start gap-1">
+            <div class="badge bg-' . $badge . ' rounded-pill px-2 py-1"><i class="fa-solid fa-tag me-1"></i>' . e($row['offer_name']) . '</div>
+            <div class="small fw-bold text-dark mt-1">' . e($value) . ' Off</div>
         </div>
     ';
 }
@@ -186,151 +166,215 @@ function stockHtml($qty, $lowStockLimit)
     $qty = (int)$qty;
 
     if ($qty <= 0) {
-        return '<span class="badge rounded-pill bg-danger">Out of stock</span>';
+        return '<span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-2"><i class="fa-solid fa-circle-xmark me-1"></i>Out of Stock</span>';
     }
 
     if ($qty <= $lowStockLimit) {
-        return '<span class="badge rounded-pill bg-warning text-dark">Low stock: ' . $qty . '</span>';
+        return '<span class="badge rounded-pill bg-warning-subtle text-warning-emphasis px-3 py-2"><i class="fa-solid fa-triangle-exclamation me-1"></i>Low: ' . $qty . '</span>';
     }
 
-    return '<span class="badge rounded-pill bg-success">In stock: ' . $qty . '</span>';
+    return '<span class="badge rounded-pill bg-success-subtle text-success px-3 py-2"><i class="fa-solid fa-check-circle me-1"></i>' . $qty . ' in Stock</span>';
+}
+
+function getAttributesHtml($jsonAttr) {
+    if (empty($jsonAttr)) return '';
+    $arr = json_decode($jsonAttr, true);
+    if (json_last_error() !== JSON_ERROR_NONE || empty($arr)) return '';
+    
+    $html = '<div class="d-flex flex-wrap gap-1 mt-2">';
+    foreach($arr as $k => $v) {
+        $html .= '<span class="badge bg-light border text-dark" style="font-size:0.7rem; font-weight:500;">' . e($k) . ': ' . e($v) . '</span>';
+    }
+    $html .= '</div>';
+    return $html;
 }
 ?>
 <style>
-    .page-container {
-        padding: 24px;
-        background-color: #f8fafc;
-        min-height: calc(100vh - 70px);
+    :root {
+        --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        --secondary-bg: #f8fafc;
+        --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+        --glass-bg: rgba(255, 255, 255, 0.85);
+        --glass-border: rgba(255, 255, 255, 0.3);
     }
-    .summary-card {
+
+    body {
+        background-color: var(--secondary-bg);
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    .page-header-premium {
+        background: var(--primary-gradient);
         border-radius: 20px;
-        border: none;
-        background: #fff;
-        padding: 24px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        padding: 30px 40px;
+        color: white;
+        margin-bottom: 30px;
+        box-shadow: 0 15px 30px rgba(37, 99, 235, 0.2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .page-header-premium::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -20%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+        border-radius: 50%;
+        z-index: 1;
+    }
+
+    .page-header-premium > * {
+        z-index: 2;
+    }
+
+    .premium-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+    }
+
+    .premium-card-body {
+        padding: 25px;
+    }
+
+    .form-control-premium, .form-select-premium {
+        border-radius: 12px;
+        border: 1px solid #cbd5e1;
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        background: #ffffff;
         transition: all 0.3s ease;
     }
-    .summary-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    }
-    .summary-label {
-        font-size: 0.95rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: #64748b;
-        margin-bottom: 8px;
-    }
-    .summary-value {
-        font-size: 2rem;
-        font-weight: 800;
-        color: #0f172a;
-        line-height: 1.1;
-    }
-    .icon-wrap {
-        width: 56px;
-        height: 56px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-    }
-    .filter-card, .table-card {
-        border-radius: 20px;
-        border: none;
-        background: #fff;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.04);
-        margin-bottom: 24px;
-    }
-    .filter-card .card-body, .table-card .card-body {
-        padding: 24px;
-    }
-    .form-control, .form-select {
-        border-radius: 12px;
-        padding: 10px 16px;
-        border: 1px solid #e2e8f0;
-        font-size: 0.95rem;
-    }
-    .form-control:focus, .form-select:focus {
+
+    .form-control-premium:focus, .form-select-premium:focus {
         border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+        outline: none;
     }
-    .table-modern {
-        margin-bottom: 0;
+
+    .table-premium {
         width: 100%;
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
     }
-    .table-modern th {
+
+    .table-premium th {
         background: #f8fafc;
         border-bottom: 2px solid #e2e8f0;
-        color: #64748b;
-        font-size: 0.85rem;
+        color: #475569;
+        font-size: 0.8rem;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        padding: 18px 24px;
+        letter-spacing: 0.8px;
+        padding: 16px 20px;
         white-space: nowrap;
     }
-    .table-modern td {
-        padding: 18px 24px;
+
+    .table-premium td {
+        padding: 18px 20px;
         vertical-align: middle;
         border-bottom: 1px solid #f1f5f9;
         color: #334155;
     }
-    .table-modern tbody tr:hover {
+
+    .table-premium tbody tr {
+        transition: background-color 0.2s ease;
+    }
+
+    .table-premium tbody tr:hover {
         background-color: #f8fafc;
     }
-    .badge-modern {
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-    }
-    .btn-custom {
-        border-radius: 12px;
-        font-weight: 600;
-        padding: 8px 20px;
-        transition: all 0.2s;
-    }
+
     .btn-action {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         border-radius: 10px;
-        padding: 6px 14px;
+        border: none;
+        transition: all 0.2s ease;
+    }
+
+    .btn-edit {
+        background: #f0fdf4;
+        color: #16a34a;
+    }
+    .btn-edit:hover {
+        background: #16a34a;
+        color: white;
+    }
+
+    .btn-delete {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+    .btn-delete:hover {
+        background: #dc2626;
+        color: white;
+    }
+    
+    .product-img-thumb {
+        width: 60px; 
+        height: 60px; 
+        border-radius: 12px;
+        object-fit: cover;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        background: #fff;
+    }
+
+    .price-main {
+        font-weight: 800;
+        font-size: 1.1rem;
+        color: #1e293b;
+    }
+    
+    .price-cut {
         font-size: 0.85rem;
-        font-weight: 600;
+        text-decoration: line-through;
+        color: #94a3b8;
     }
 </style>
 
 <div class="w-100">
-    <?php include '../includes/topbar.php'; ?>
-
-    <div class="page-container">
-        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+    <div class="container-fluid mt-4 mb-5 px-4">
+        
+        <div class="page-header-premium">
             <div>
-                <h4 class="page-title mb-1">Product Inventory</h4>
-                <div class="page-subtitle">Manage products, offers, pricing, and stock from one place.</div>
+                <h3 class="mb-2 fw-bold"><i class="fa-solid fa-boxes-stacked me-2"></i> Product Inventory</h3>
+                <p class="mb-0 text-white-50">Manage all products, categories, stock, and offers.</p>
             </div>
             <div class="d-flex gap-2">
-                <a href="create.php" class="btn btn-primary px-3">+ Add Product</a>
-                <a href="list.php?status=lowstock" class="btn btn-outline-warning px-3">Low Stock</a>
+                <a href="list.php?status=lowstock" class="btn btn-warning rounded-pill px-4 fw-bold shadow-sm text-dark">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i> Low Stock
+                </a>
+                <a href="create.php" class="btn btn-light rounded-pill px-4 fw-bold shadow-sm" style="color: #2563eb;">
+                    <i class="fa-solid fa-plus me-2"></i> Add Product
+                </a>
             </div>
         </div>
 
-        
-
-        <div class="filter-card mb-4">
-            <div class="card-body">
+        <!-- Filters -->
+        <div class="premium-card mb-4">
+            <div class="premium-card-body pb-3">
                 <form method="GET" class="row g-3">
-                    <div class="col-lg-4 col-md-6">
-                        <label class="form-label text-muted small fw-bold">SEARCH</label>
-                        <input type="text" name="search" value="<?= e($search) ?>" class="form-control" placeholder="Name, slug, SKU...">
-                    </div>
-
                     <div class="col-lg-3 col-md-6">
-                        <label class="form-label text-muted small fw-bold">CATEGORY</label>
-                        <select name="category" class="form-select">
+                        <label class="form-label text-muted small fw-bold"><i class="fa-solid fa-magnifying-glass me-1"></i> SEARCH</label>
+                        <input type="text" name="search" value="<?= e($search) ?>" class="form-control-premium" placeholder="Name, SKU, Slug...">
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label text-muted small fw-bold"><i class="fa-solid fa-layer-group me-1"></i> CATEGORY</label>
+                        <select name="category" class="form-select-premium">
                             <option value="">All Categories</option>
                             <?php foreach ($cats as $c): ?>
                                 <option value="<?= (int)$c['id'] ?>" <?= ($category == $c['id']) ? 'selected' : '' ?>>
@@ -339,10 +383,9 @@ function stockHtml($qty, $lowStockLimit)
                             <?php endforeach; ?>
                         </select>
                     </div>
-
-                    <div class="col-lg-2 col-md-6">
-                        <label class="form-label text-muted small fw-bold">STOCK STATUS</label>
-                        <select name="status" class="form-select">
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label text-muted small fw-bold"><i class="fa-solid fa-box-open me-1"></i> STATUS</label>
+                        <select name="status" class="form-select-premium">
                             <option value="">All</option>
                             <option value="active" <?= ($status === 'active') ? 'selected' : '' ?>>Active</option>
                             <option value="inactive" <?= ($status === 'inactive') ? 'selected' : '' ?>>Inactive</option>
@@ -351,156 +394,134 @@ function stockHtml($qty, $lowStockLimit)
                             <option value="outstock" <?= ($status === 'outstock') ? 'selected' : '' ?>>Out of Stock</option>
                         </select>
                     </div>
-
                     <div class="col-lg-3 col-md-6">
-                        <label class="form-label text-muted small fw-bold">SORT BY</label>
-                        <select name="sort" class="form-select">
+                        <label class="form-label text-muted small fw-bold"><i class="fa-solid fa-sort me-1"></i> SORT</label>
+                        <select name="sort" class="form-select-premium">
                             <option value="latest" <?= ($sort === 'latest') ? 'selected' : '' ?>>Latest</option>
-                            <option value="oldest" <?= ($sort === 'oldest') ? 'selected' : '' ?>>Oldest</option>
                             <option value="name_az" <?= ($sort === 'name_az') ? 'selected' : '' ?>>Name A-Z</option>
-                            <option value="name_za" <?= ($sort === 'name_za') ? 'selected' : '' ?>>Name Z-A</option>
-                            <option value="price_low" <?= ($sort === 'price_low') ? 'selected' : '' ?>>Price Low to High</option>
-                            <option value="price_high" <?= ($sort === 'price_high') ? 'selected' : '' ?>>Price High to Low</option>
-                            <option value="qty_low" <?= ($sort === 'qty_low') ? 'selected' : '' ?>>Quantity Low to High</option>
-                            <option value="qty_high" <?= ($sort === 'qty_high') ? 'selected' : '' ?>>Quantity High to Low</option>
+                            <option value="price_low" <?= ($sort === 'price_low') ? 'selected' : '' ?>>Price Low - High</option>
+                            <option value="price_high" <?= ($sort === 'price_high') ? 'selected' : '' ?>>Price High - Low</option>
+                            <option value="qty_low" <?= ($sort === 'qty_low') ? 'selected' : '' ?>>Stock Low - High</option>
                         </select>
                     </div>
-
-                    <div class="col-12 mt-4 d-flex justify-content-end gap-3">
-                        <a href="list.php" class="btn btn-light btn-custom px-4">Reset</a>
-                        <button type="submit" class="btn btn-primary btn-custom px-4">Apply Filters</button>
+                    <div class="col-12 d-flex justify-content-end gap-2 mt-3">
+                        <a href="list.php" class="btn btn-light rounded-pill px-4 fw-bold text-muted border">Reset</a>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" style="background: var(--primary-gradient); border:none;">Apply Filters</button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <div class="table-card">
-            <div class="card-header bg-transparent border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2 py-4 px-4">
-                <div>
-                    <h5 class="mb-0 fw-bold text-dark">Product Inventory</h5>
-                    <small class="text-muted">Showing <?= count($products) ?> of <?= (int)$total ?> items</small>
-                </div>
-            </div>
-
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-modern">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Product Details</th>
-                                <th>Category</th>
-                                <th>Price</th>
-                                <th>Offer</th>
-                                <th>Stock</th>
-                                <th>Weight</th>
-                                <th>Status</th>
-                                <th>Dates</th>
-                                <th class="text-end">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (!empty($products)): ?>
-                                <?php foreach ($products as $row): ?>
-                                    <?php
-                                    $imgs = productImages($row['images'] ?? '');
-                                    $createdAt = $row['createdat'] ?? ($row['created_at'] ?? '');
-                                    $updatedAt = $row['updatedat'] ?? ($row['updated_at'] ?? '');
-                                    ?>
-                                    <tr id="row-<?= (int)$row['id'] ?>">
-                                        <td class="fw-bold">#<?= (int)$row['id'] ?></td>
-
-                                        <td>
-                                            <div class="d-flex align-items-center gap-3">
-                                                <?php if (!empty($imgs)): ?>
-                                                    <div class="position-relative">
-                                                        <img src="../uploads/<?= e($imgs[0]) ?>" alt="img" class="rounded-3 border object-fit-cover" style="width: 54px; height: 54px; background: #fff;">
-                                                        <?php if(count($imgs) > 1): ?>
-                                                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark" style="font-size: 0.65rem;">+<?= count($imgs)-1 ?></span>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                <?php else: ?>
-                                                    <div class="bg-light rounded-3 border d-flex align-items-center justify-content-center text-muted" style="width: 54px; height: 54px; font-size: 0.8rem;">No Img</div>
-                                                <?php endif; ?>
-                                                <div>
-                                                    <div class="fw-bold text-dark mb-1" style="max-width: 250px; white-space: normal; line-height: 1.3;"><?= e($row['name']) ?></div>
-                                                    <div class="small text-muted d-flex gap-2">
-                                                        <span><i class="fa fa-tag me-1"></i><?= e($row['sku']) ?></span>
-                                                        <span><i class="fa fa-link me-1"></i><?= e($row['slug']) ?></span>
-                                                    </div>
+        <!-- Table -->
+        <div class="premium-card">
+            <div class="table-responsive">
+                <table class="table table-premium mb-0">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Pricing</th>
+                            <th>Offer</th>
+                            <th>Inventory</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($products)): ?>
+                            <?php foreach ($products as $row): ?>
+                                <?php
+                                $imgs = productImages($row['images'] ?? '');
+                                ?>
+                                <tr id="row-<?= (int)$row['id'] ?>">
+                                    <td>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <?php if (!empty($imgs)): ?>
+                                                <div class="position-relative">
+                                                    <img src="../uploads/<?= e($imgs[0]) ?>" alt="img" class="product-img-thumb">
                                                 </div>
-                                            </div>
-                                        </td>
-
-                                        <td>
-                                            <span class="badge-modern bg-light text-dark border"><?= e($row['category_name'] ?? 'N/A') ?></span>
-                                        </td>
-
-                                        <td>
-                                            <div class="price-main">₹<?= number_format((float)$row['price'], 2) ?></div>
-                                            <?php if (!empty($row['discount_price'])): ?>
-                                                <div class="price-cut">₹<?= number_format((float)$row['discount_price'], 2) ?></div>
-                                            <?php endif; ?>
-                                        </td>
-
-                                        <td><?= offerHtml($row) ?></td>
-
-                                        <td><?= stockHtml($row['stock_quantity'] ?? 0, $lowStockLimit) ?></td>
-
-                                        <td>
-                                            <?= !empty($row['weight']) ? e($row['weight']) . ' kg' : '<span class="text-muted">—</span>' ?>
-                                        </td>
-
-                                        <td>
-                                            <?php if ((int)$row['is_active'] === 1): ?>
-                                                <span class="badge rounded-pill bg-success">Active</span>
                                             <?php else: ?>
-                                                <span class="badge rounded-pill bg-secondary">Inactive</span>
+                                                <div class="product-img-thumb d-flex align-items-center justify-content-center text-muted" style="background: #f1f5f9; font-size: 0.8rem;">
+                                                    <i class="fa-solid fa-image-slash"></i>
+                                                </div>
                                             <?php endif; ?>
-                                        </td>
-
-                                        <td>
-                                            <div class="small">
-                                                <div><strong>Created:</strong> <?= !empty($createdAt) ? date('d M Y', strtotime($createdAt)) : '—' ?></div>
-                                                <div class="text-muted"><strong>Updated:</strong> <?= !empty($updatedAt) ? date('d M Y', strtotime($updatedAt)) : '—' ?></div>
+                                            <div>
+                                                <div class="fw-bold text-dark mb-1" style="font-size: 1.05rem;"><?= e($row['name']) ?></div>
+                                                <div class="small text-muted d-flex gap-2 align-items-center">
+                                                    <span class="badge bg-light border text-secondary px-2"><i class="fa-solid fa-layer-group me-1"></i><?= e($row['category_name'] ?? 'N/A') ?></span>
+                                                    <span>SKU: <?= e($row['sku']) ?></span>
+                                                </div>
+                                                <?= getAttributesHtml($row['attributes'] ?? '') ?>
                                             </div>
-                                        </td>
+                                        </div>
+                                    </td>
 
-                                        <td class="text-end pe-3">
-                                            <div class="action-group d-flex justify-content-end gap-2">
-                                                <a href="edit.php?id=<?= (int)$row['id'] ?>" class="btn btn-warning btn-sm">Edit</a>
-                                                <button class="btn btn-outline-danger btn-sm deleteBtn" data-id="<?= (int)$row['id'] ?>">Delete</button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="11" class="text-center py-5">
-                                        <div class="text-muted mb-2">No products found.</div>
-                                        <a href="create.php" class="btn btn-primary btn-sm">Create Product</a>
+                                    <td>
+                                        <?php if (!empty($row['discount_price'])): ?>
+                                            <div class="price-cut">₹<?= number_format((float)$row['price'], 2) ?></div>
+                                            <div class="price-main text-success">₹<?= number_format((float)$row['discount_price'], 2) ?></div>
+                                        <?php else: ?>
+                                            <div class="price-main">₹<?= number_format((float)$row['price'], 2) ?></div>
+                                        <?php endif; ?>
+                                    </td>
+
+                                    <td><?= offerHtml($row) ?></td>
+
+                                    <td><?= stockHtml($row['stock_quantity'] ?? 0, $lowStockLimit) ?></td>
+
+                                    <td>
+                                        <?php if ((int)$row['is_active'] === 1): ?>
+                                            <span class="badge rounded-pill bg-success-subtle text-success px-3 py-1"><i class="fa-solid fa-eye me-1"></i>Active</span>
+                                        <?php else: ?>
+                                            <span class="badge rounded-pill bg-secondary-subtle text-secondary px-3 py-1"><i class="fa-solid fa-eye-slash me-1"></i>Hidden</span>
+                                        <?php endif; ?>
+                                    </td>
+
+                                    <td class="text-end">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <a href="edit.php?id=<?= (int)$row['id'] ?>" class="btn-action btn-edit" title="Edit Product">
+                                                <i class="fa-solid fa-pen"></i>
+                                            </a>
+                                            <button class="btn-action btn-delete deleteBtn" data-id="<?= (int)$row['id'] ?>" title="Delete Product">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="text-muted mb-3">
+                                        <i class="fa-solid fa-box-open fa-3x mb-3 text-light"></i><br>
+                                        No products found matching your criteria.
+                                    </div>
+                                    <a href="create.php" class="btn btn-primary rounded-pill px-4 shadow-sm" style="background: var(--primary-gradient); border:none;">
+                                        Create Your First Product
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
+            
+            <?php if ($pages > 1): ?>
+                <div class="card-footer bg-white border-top p-4 d-flex justify-content-between align-items-center">
+                    <span class="text-muted small">Showing page <?= $page ?> of <?= $pages ?></span>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0">
+                            <?php for ($i = 1; $i <= $pages; $i++): ?>
+                                <li class="page-item <?= ($page == $i) ? 'active' : '' ?>">
+                                    <a class="page-link" href="?page=<?= $i ?>&search=<?= urlencode($search) ?>&category=<?= $category ?>&status=<?= urlencode($status) ?>&sort=<?= urlencode($sort) ?>">
+                                        <?= $i ?>
+                                    </a>
+                                </li>
+                            <?php endfor; ?>
+                        </ul>
+                    </nav>
+                </div>
+            <?php endif; ?>
         </div>
-
-        <?php if ($pages > 1): ?>
-            <nav class="mt-4">
-                <ul class="pagination flex-wrap">
-                    <?php for ($i = 1; $i <= $pages; $i++): ?>
-                        <li class="page-item <?= ($page == $i) ? 'active' : '' ?>">
-                            <a class="page-link" href="?page=<?= $i ?>&search=<?= urlencode($search) ?>&category=<?= $category ?>&status=<?= urlencode($status) ?>&sort=<?= urlencode($sort) ?>">
-                                <?= $i ?>
-                            </a>
-                        </li>
-                    <?php endfor; ?>
-                </ul>
-            </nav>
-        <?php endif; ?>
     </div>
 </div>
 
@@ -510,16 +531,19 @@ function stockHtml($qty, $lowStockLimit)
 document.querySelectorAll('.deleteBtn').forEach(btn => {
     btn.addEventListener('click', function () {
         const id = this.dataset.id;
-
-        if (confirm('Delete this product?')) {
+        if (confirm('Are you absolutely sure you want to delete this product?')) {
             fetch('delete.php?id=' + id)
                 .then(res => res.text())
                 .then(() => {
                     const row = document.getElementById('row-' + id);
-                    if (row) row.remove();
+                    if (row) {
+                        row.style.transition = "opacity 0.3s";
+                        row.style.opacity = 0;
+                        setTimeout(() => row.remove(), 300);
+                    }
                 })
                 .catch(() => {
-                    alert('Delete failed!');
+                    alert('Delete failed! Please try again.');
                 });
         }
     });

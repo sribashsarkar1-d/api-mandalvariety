@@ -1,3 +1,31 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.2
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1:3306
+-- Generation Time: May 23, 2026 at 08:42 PM
+-- Server version: 11.8.6-MariaDB-log
+-- PHP Version: 7.2.34
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `u391326945_mandalvariety`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `age_verifications`
+--
 
 CREATE TABLE `age_verifications` (
   `id` int(11) NOT NULL,
@@ -31,7 +59,9 @@ INSERT INTO `age_verifications` (`id`, `user_id`, `order_id`, `full_name`, `emai
 (3, 9, '11', 'Rahul Sharma', 'rahul@example.com', '9876543210', '2008-03-10', 18, 16, 'document', 'PAN Card', 'ABCDE1234F', 'pan_front.jpg', NULL, NULL, 'rejected', 85.00, 'Underage user', '2026-04-26 17:09:34', '2026-04-26 17:09:34'),
 (4, 9, '11', 'Rahul Sharma', 'rahul@example.com', '9876543210', '1998-11-22', 18, 26, 'self_declaration', NULL, NULL, NULL, NULL, NULL, 'approved', 75.00, 'Self declaration accepted', '2026-04-26 17:09:34', '2026-04-26 17:22:20'),
 (5, 9, '11', 'Rahul Sharma', 'rahul@example.com', '9876543210', NULL, 18, NULL, 'facial_estimation', NULL, NULL, NULL, NULL, 'selfie1.jpg', 'under_review', 60.00, 'Waiting manual review', '2026-04-26 17:09:34', NULL),
-(6, 9, '11', 'Rahul Sharma', 'rahul@example.com', '9876543210', '2005-07-19', 18, 19, 'document', 'Driving License', 'DL-123456789', 'dl_front.jpg', 'dl_back.jpg', NULL, 'approved', 92.00, 'Valid license verified', '2026-04-26 17:09:34', '2026-04-26 17:09:34');
+(6, 9, '11', 'Rahul Sharma', 'rahul@example.com', '9876543210', '2005-07-19', 18, 19, 'document', 'Driving License', 'DL-123456789', 'dl_front.jpg', 'dl_back.jpg', NULL, 'approved', 92.00, 'Valid license verified', '2026-04-26 17:09:34', '2026-04-26 17:09:34'),
+(7, 1, NULL, 'John Doe', NULL, NULL, NULL, 18, NULL, 'document', NULL, NULL, NULL, NULL, NULL, 'pending', NULL, NULL, '2026-05-23 08:57:04', NULL),
+(8, 1, NULL, 'John Doe', NULL, NULL, NULL, 18, NULL, 'document', NULL, NULL, NULL, NULL, NULL, 'pending', NULL, NULL, '2026-05-23 09:16:57', NULL);
 
 -- --------------------------------------------------------
 
@@ -51,7 +81,9 @@ CREATE TABLE `carts` (
 --
 
 INSERT INTO `carts` (`id`, `user_id`, `created_at`, `updated_at`) VALUES
-(14, 9, '2026-04-26 15:16:20', '2026-04-26 15:16:20');
+(29, 13, '2026-05-21 05:08:07', '2026-05-21 05:08:07'),
+(30, 14, '2026-05-22 19:26:02', '2026-05-22 19:26:02'),
+(31, 1, '2026-05-23 07:58:30', '2026-05-23 07:58:30');
 
 -- --------------------------------------------------------
 
@@ -73,7 +105,8 @@ CREATE TABLE `cart_items` (
 --
 
 INSERT INTO `cart_items` (`id`, `cart_id`, `product_id`, `quantity`, `price_at_purchase`, `created_at`) VALUES
-(20, 14, 13, 1, 500.00, '2026-04-26 15:26:54');
+(28, 29, 1, 2, 999.00, '2026-05-21 05:08:07'),
+(29, 30, 1, 3, 999.00, '2026-05-22 19:26:02');
 
 -- --------------------------------------------------------
 
@@ -118,6 +151,13 @@ CREATE TABLE `coupons` (
   `expiry` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `coupons`
+--
+
+INSERT INTO `coupons` (`id`, `code`, `discount`, `expiry`) VALUES
+(1, 'DISCOUNT10', 10, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -149,7 +189,8 @@ INSERT INTO `offers` (`id`, `product_id`, `category_id`, `offer_name`, `offer_ty
 (3, 9, NULL, '2JHELKJF', 'flat', 45.00, '2026-04-23', '2026-04-29', 'active', 2, '2026-04-26 06:29:34', '2026-04-26 06:29:34'),
 (4, 10, NULL, 'kuhu', 'percent', 84.97, '2026-04-26', '2026-04-28', 'active', 1, '2026-04-26 06:35:12', '2026-04-26 06:35:12'),
 (5, 11, NULL, 'kuhu', 'percent', 84.97, '2026-04-26', '2026-04-28', 'active', 1, '2026-04-26 06:40:40', '2026-04-26 06:40:40'),
-(7, NULL, 8, '222', 'percent', 2.90, '2026-04-24', '2026-05-01', 'active', 0, '2026-04-26 06:50:50', '2026-04-26 06:50:50');
+(7, NULL, 8, '222', 'percent', 2.90, '2026-04-24', '2026-05-01', 'active', 0, '2026-04-26 06:50:50', '2026-04-26 06:50:50'),
+(9, NULL, NULL, 'Summer Sale', 'flat', 20.00, NULL, NULL, 'active', 0, '2026-05-23 09:16:30', '2026-05-23 09:16:30');
 
 -- --------------------------------------------------------
 
@@ -193,7 +234,8 @@ INSERT INTO `orders` (`id`, `user_id`, `order_number`, `total_amount`, `delivery
 (8, 8, 'ORD008', 2000.00, 0.00, 0.00, 0.00, 'pending', 'pending', '', '', NULL, NULL, NULL, '2026-04-22 09:54:22', '2026-04-22 09:54:22', 'Order Placed', NULL),
 (9, 9, 'ORD009', 600.00, 0.00, 0.00, 0.00, '', 'pending', '', '', NULL, NULL, NULL, '2026-04-22 09:54:22', '2026-04-22 09:54:22', 'Order Placed', NULL),
 (10, 10, 'ORD010', 2500.00, 0.00, 0.00, 0.00, '', 'pending', '', '', NULL, NULL, NULL, '2026-04-22 09:54:22', '2026-04-22 09:54:22', 'Order Placed', NULL),
-(11, 9, 'ORD-1777189755', 4.99, 40.00, 10.00, 54.99, 'confirmed', 'paid', 'Kolkata, West Bengal, India', '700001', '13:19:15', NULL, 'Auto test order for user 9 and product 13', '2026-04-26 07:49:15', '2026-04-27 07:06:36', 'delivered', 'thank you so much sribash sarkar for order this product');
+(11, 9, 'ORD-1777189755', 4.99, 40.00, 10.00, 54.99, 'confirmed', 'paid', 'Kolkata, West Bengal, India', '700001', '13:19:15', NULL, 'Auto test order for user 9 and product 13', '2026-04-26 07:49:15', '2026-04-27 07:06:36', 'delivered', 'thank you so much sribash sarkar for order this product'),
+(12, 14, 'NEX202605208229', 1998.00, 50.00, 359.64, 2407.64, 'cancelled', 'pending', 'Test Address - Siliguri', '734001', NULL, NULL, NULL, '2026-05-20 12:13:39', '2026-05-20 12:17:06', 'Order Placed', NULL);
 
 -- --------------------------------------------------------
 
@@ -214,7 +256,8 @@ CREATE TABLE `order_items` (
 --
 
 INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `quantity`, `price`) VALUES
-(6, 11, 13, 1, 4.99);
+(6, 11, 13, 1, 4.99),
+(7, 12, 1, 2, 999.00);
 
 -- --------------------------------------------------------
 
@@ -255,7 +298,11 @@ INSERT INTO `policies` (`id`, `title`, `slug`, `type`, `short_description`, `con
 (9, 'Return Policy', 'return-policy', 'custom', 'Return product conditions', 'Products can be returned within 7 days if unused and in original packaging.', 'published', 'public', 0, 9, 'Return Policy', 'return,product,policy', 'Return rules', '2026-04-26 16:32:04', '2026-04-26 16:32:04'),
 (10, 'User Agreement', 'user-agreement', 'custom', 'Agreement between user and platform', 'This agreement governs your use of our platform and services.', 'draft', 'private', 0, 10, 'User Agreement', 'agreement,user,terms', 'User agreement details', '2026-04-26 16:32:04', '2026-04-26 16:32:04'),
 (11, 'jfbbkj', 'jfbbkj', 'faq', 'dkjfj', 'fkjhfbwkj', 'archived', 'private', 0, 18, '', '', '', '2026-04-26 16:54:05', '2026-04-26 16:54:05'),
-(12, 'hhh', 'hhh', 'faq', 'dkjfj', 'fkjhfbwkj', 'archived', 'private', 0, 18, 'Terms & Conditions - My Store', 'terms,conditions,legal', 'jnlj', '2026-04-26 16:55:05', '2026-04-26 16:55:05');
+(12, 'hhh', 'hhh', 'faq', 'dkjfj', 'fkjhfbwkj', 'archived', 'private', 0, 18, 'Terms & Conditions - My Store', 'terms,conditions,legal', 'jnlj', '2026-04-26 16:55:05', '2026-04-26 16:55:05'),
+(13, 'Privacy', 'privacy', 'custom', NULL, 'Data...', 'draft', 'public', 0, 0, NULL, NULL, NULL, '2026-05-23 08:25:20', '2026-05-23 08:25:20'),
+(23, 'Privacy Policy', 'privacy-policy', '', 'How we collect and use your data.', '<p>Welcome to Mandal Variety. We value your privacy and this policy outlines how we protect your information...</p>', 'published', 'public', 1, 1, NULL, NULL, NULL, '2026-05-23 08:45:05', '2026-05-23 08:45:05'),
+(25, 'Updated Privacy Policy', 'updated-privacy-policy', 'custom', NULL, '<p>We have updated our terms. Please read carefully...</p>', 'published', 'public', 0, 0, NULL, NULL, NULL, '2026-05-23 08:45:45', '2026-05-23 08:45:45'),
+(44, 'Privacy PolicyY', 'privacy-policyy', 'custom', NULL, NULL, 'draft', 'public', 0, 0, NULL, NULL, NULL, '2026-05-23 14:00:56', '2026-05-23 14:00:56');
 
 -- --------------------------------------------------------
 
@@ -342,7 +389,7 @@ CREATE TABLE `settings` (
 --
 
 INSERT INTO `settings` (`id`, `setting_key`, `setting_value`, `created_at`, `updated_at`) VALUES
-(1, 'site_name', 'Mandal variety', '2026-04-26 16:25:48', '2026-04-26 16:25:48'),
+(1, 'site_name', 'My New Store', '2026-04-26 16:25:48', '2026-05-23 08:59:22'),
 (2, 'site_email', 'mandalvarietycustomerssupport@gmail.com', '2026-04-26 16:25:48', '2026-04-26 16:25:48'),
 (3, 'currency', 'INR', '2026-04-26 16:25:48', '2026-04-26 16:25:48'),
 (4, 'shipping_charge', '10', '2026-04-26 16:25:48', '2026-04-26 16:25:48'),
@@ -423,26 +470,30 @@ CREATE TABLE `users` (
   `otp_expires_at` timestamp NULL DEFAULT NULL,
   `is_verified` tinyint(1) DEFAULT 0,
   `email_verified_at` timestamp NULL DEFAULT NULL,
-  `last_login` datetime DEFAULT NULL
+  `last_login` datetime DEFAULT NULL,
+  `login_otp` varchar(10) DEFAULT NULL,
+  `otp_expiry` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `email`, `phone`, `password`, `role`, `address`, `city`, `state`, `country`, `profile_image`, `pincode`, `is_active`, `created_at`, `updated_at`, `otp`, `otp_expires_at`, `is_verified`, `email_verified_at`, `last_login`) VALUES
-(1, 'Bibek Sarkar', 'test@example.com', '9876543210', '$2y$10$Ow2svx9iKJnSLbratKX8R.59Xz1hJi6C4vfFhRwLaCV/G7UOCZLB.', 'customer', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2026-03-07 10:09:56', '2026-03-07 10:09:56', '252217', NULL, 0, NULL, NULL),
-(2, 'Admin User', 'admin@mondalvr.com', '9876543211', 'hashedpass2', 'admin', 'Admin Office, Siliguri', NULL, NULL, NULL, NULL, '734001', 1, '2026-04-22 04:30:00', '2026-04-22 04:30:00', NULL, NULL, 1, '2026-04-22 04:30:00', NULL),
-(3, 'Delivery Boy 1', 'delivery1@mondalvr.com', '9876543212', 'hashedpass3', 'delivery', 'Delivery Hub, Siliguri', NULL, NULL, NULL, NULL, '734001', 1, '2026-04-22 04:30:00', '2026-04-22 04:30:00', NULL, NULL, 1, NULL, NULL),
-(4, 'Ravi Kumar', 'ravi@example.com', '9876543213', 'hashedpass4', 'customer', 'Sevoke Road', NULL, NULL, NULL, NULL, '734005', 1, '2026-04-22 04:30:00', '2026-04-22 04:30:00', NULL, NULL, 0, NULL, NULL),
-(5, 'sribash Sarkar', 'sribashsarkarb', '9876543210', '$2y$10$9wxTrJf/JBKpDvCbQPeaOOozmitFI4RvSADHB/oiglLxDS0GUheEa', 'customer', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2026-03-07 11:16:23', '2026-04-26 13:23:11', NULL, NULL, 1, NULL, NULL),
-(6, 'Priya Das', 'priya@example.com', '9876543215', 'hashedpass6', 'customer', 'Uttarayan', NULL, NULL, NULL, NULL, '734007', 1, '2026-04-22 04:30:00', '2026-04-22 04:30:00', '123456', '2026-04-23 04:30:00', 0, NULL, NULL),
-(7, 'Amit Roy', 'amit@example.com', '9876543216', 'hashedpass7', 'customer', 'Matigara', NULL, NULL, NULL, NULL, '734010', 1, '2026-04-22 04:30:00', '2026-04-22 04:30:00', NULL, NULL, 1, '2026-04-22 05:30:00', NULL),
-(8, 'Sita Mandal', 'sita@example.com', '9876543217', 'hashedpass8', 'customer', 'Bagdogra', NULL, NULL, NULL, NULL, '734014', 1, '2026-04-22 04:30:00', '2026-04-22 04:30:00', NULL, NULL, 1, NULL, NULL),
-(9, 'Rajesh Singh', 'sribashsarkarblp@gmail.com', '9876543218', 'hashedpass9', 'customer', 'Donbosco', 'fbfh', 'fbdfhd', 'ffbdnfbdh', NULL, '734003', 1, '2026-04-22 04:30:00', '2026-04-26 14:04:13', NULL, NULL, 0, NULL, NULL),
-(10, 'Neha Bose', 'neha@example.com', '9876543219', 'hashedpass10', 'customer', 'Hill Cart Road', NULL, NULL, NULL, NULL, '734001', 1, '2026-04-22 04:30:00', '2026-04-22 04:30:00', NULL, NULL, 1, '2026-04-22 06:30:00', NULL),
-(11, 'ramji', 'a@gmail.com', '9083646603', '$2y$10$JuEK4xtLnGVlrPg9oRCEiOs1gk9VLNTSv1iSOkw6VeBeBQFNXEn9e', 'admin', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2026-04-24 07:19:19', '2026-04-24 07:19:19', NULL, NULL, 1, '2026-04-24 03:49:19', NULL),
-(12, 'ramji', 'sribash@gmail.com', '9083646603', '$2y$10$BICjieESrRlBjrydH4gqW.LIfijmGhQscHBg.y1xX3u7h5.iIr0Am', 'admin', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2026-04-24 07:19:57', '2026-04-24 07:19:57', NULL, NULL, 1, '2026-04-24 03:49:57', NULL);
+INSERT INTO `users` (`id`, `name`, `email`, `phone`, `password`, `role`, `address`, `city`, `state`, `country`, `profile_image`, `pincode`, `is_active`, `created_at`, `updated_at`, `otp`, `otp_expires_at`, `is_verified`, `email_verified_at`, `last_login`, `login_otp`, `otp_expiry`) VALUES
+(1, 'Bibek Sarkar', 'test@example.com', '9876543210', '$2y$10$Ow2svx9iKJnSLbratKX8R.59Xz1hJi6C4vfFhRwLaCV/G7UOCZLB.', 'customer', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2026-03-07 10:09:56', '2026-03-07 10:09:56', '252217', NULL, 0, NULL, NULL, NULL, NULL),
+(2, 'Admin User', 'admin@mondalvr.com', '9876543211', 'hashedpass2', 'admin', 'Admin Office, Siliguri', NULL, NULL, NULL, NULL, '734001', 1, '2026-04-22 04:30:00', '2026-04-22 04:30:00', NULL, NULL, 1, '2026-04-22 04:30:00', NULL, NULL, NULL),
+(3, 'Delivery Boy 1', 'delivery1@mondalvr.com', '9876543212', 'hashedpass3', 'delivery', 'Delivery Hub, Siliguri', NULL, NULL, NULL, NULL, '734001', 1, '2026-04-22 04:30:00', '2026-04-22 04:30:00', NULL, NULL, 1, NULL, NULL, NULL, NULL),
+(4, 'Ravi Kumar', 'ravi@example.com', '9876543213', 'hashedpass4', 'customer', 'Sevoke Road', NULL, NULL, NULL, NULL, '734005', 1, '2026-04-22 04:30:00', '2026-04-22 04:30:00', NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(5, 'sribash Sarkar', 'sribashsarkarb', '9876543210', '$2y$10$9wxTrJf/JBKpDvCbQPeaOOozmitFI4RvSADHB/oiglLxDS0GUheEa', 'customer', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2026-03-07 11:16:23', '2026-04-26 13:23:11', NULL, NULL, 1, NULL, NULL, NULL, NULL),
+(6, 'Priya Das', 'priya@example.com', '9876543215', 'hashedpass6', 'customer', 'Uttarayan', NULL, NULL, NULL, NULL, '734007', 1, '2026-04-22 04:30:00', '2026-04-22 04:30:00', '123456', '2026-04-23 04:30:00', 0, NULL, NULL, NULL, NULL),
+(7, 'Amit Roy', 'amit@example.com', '9876543216', 'hashedpass7', 'customer', 'Matigara', NULL, NULL, NULL, NULL, '734010', 1, '2026-04-22 04:30:00', '2026-04-22 04:30:00', NULL, NULL, 1, '2026-04-22 05:30:00', NULL, NULL, NULL),
+(8, 'Sita Mandal', 'sita@example.com', '9876543217', 'hashedpass8', 'customer', 'Bagdogra', NULL, NULL, NULL, NULL, '734014', 1, '2026-04-22 04:30:00', '2026-04-22 04:30:00', NULL, NULL, 1, NULL, NULL, NULL, NULL),
+(9, 'Rajesh Singh', 'sribashsarkarblp@gmail.com', '9876543218', 'hashedpass9', 'customer', 'Donbosco', 'fbfh', 'fbdfhd', 'ffbdnfbdh', NULL, '734003', 1, '2026-04-22 04:30:00', '2026-04-26 14:04:13', NULL, NULL, 0, NULL, NULL, NULL, NULL),
+(10, 'Neha Bose', 'neha@example.com', '9876543219', 'hashedpass10', 'customer', 'Hill Cart Road', NULL, NULL, NULL, NULL, '734001', 1, '2026-04-22 04:30:00', '2026-04-22 04:30:00', NULL, NULL, 1, '2026-04-22 06:30:00', NULL, NULL, NULL),
+(11, 'ramji', 'a@gmail.com', '9083646603', '$2y$10$JuEK4xtLnGVlrPg9oRCEiOs1gk9VLNTSv1iSOkw6VeBeBQFNXEn9e', 'admin', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2026-04-24 07:19:19', '2026-04-24 07:19:19', NULL, NULL, 1, '2026-04-24 03:49:19', NULL, NULL, NULL),
+(12, 'ramji', 'sribash@gmail.com', '9083646603', '$2y$10$BICjieESrRlBjrydH4gqW.LIfijmGhQscHBg.y1xX3u7h5.iIr0Am', 'admin', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2026-04-24 07:19:57', '2026-04-24 07:19:57', NULL, NULL, 1, '2026-04-24 03:49:57', NULL, NULL, NULL),
+(13, 'Sayan', 'sayanbanikcob@gmail.com', '8768412832', '$2y$10$P3aFk5manMgsE/s/hV3QGe3eyv8ze0kyLiThdStbuHCrilpKzL0Yu', 'customer', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2026-05-20 11:34:40', '2026-05-23 08:45:33', NULL, NULL, 1, NULL, NULL, NULL, NULL),
+(14, 'Sribash Updated', 'roy338004@gmail.com', '9876543210', '$2y$10$f3H/nzAmdDZpk.Y0kxrdK.iPxagexkdhhsmVPmxC7h7Nusa7W2cbi', 'customer', 'New Market Area', 'Kolkata', NULL, NULL, NULL, NULL, 1, '2026-05-20 11:37:55', '2026-05-23 10:05:29', NULL, NULL, 1, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -604,19 +655,19 @@ ALTER TABLE `wishlists`
 -- AUTO_INCREMENT for table `age_verifications`
 --
 ALTER TABLE `age_verifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `carts`
 --
 ALTER TABLE `carts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `cart_items`
 --
 ALTER TABLE `cart_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT for table `categories`
@@ -628,31 +679,31 @@ ALTER TABLE `categories`
 -- AUTO_INCREMENT for table `coupons`
 --
 ALTER TABLE `coupons`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `offers`
 --
 ALTER TABLE `offers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `policies`
 --
 ALTER TABLE `policies`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT for table `products`
@@ -670,19 +721,19 @@ ALTER TABLE `reviews`
 -- AUTO_INCREMENT for table `settings`
 --
 ALTER TABLE `settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=58;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `wishlist`
 --
 ALTER TABLE `wishlist`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `wishlists`
