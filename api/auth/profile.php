@@ -6,10 +6,24 @@ require_once __DIR__ . '/../config/database.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 $user_id = $_GET['user_id'] ?? $_SESSION['user_id'] ?? null;
+$auth_token = null;
+
+// Extract Bearer Token
+$headers = getallheaders();
+if (isset($headers['Authorization']) && preg_match('/Bearer\s(\S+)/', $headers['Authorization'], $matches)) {
+    $auth_token = $matches[1];
+    try {
+        $stmt = $pdo->prepare("SELECT user_id FROM user_tokens WHERE auth_token = ? AND (expires_at IS NULL OR expires_at > NOW())");
+        $stmt->execute([$auth_token]);
+        if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $user_id = $row['user_id'];
+        }
+    } catch (Exception $e) {}
+}
 
 if (!$user_id) {
     http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Unauthorized. Please provide ?user_id=1 in the URL or login first.']);
+    echo json_encode(['success' => false, 'message' => 'Unauthorized. Please provide a valid Bearer token or ?user_id=1.']);
     exit;
 }
 

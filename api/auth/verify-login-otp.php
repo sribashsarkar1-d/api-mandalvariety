@@ -66,9 +66,21 @@ unset($user['otp_expiry']);
 
 $_SESSION['user_id'] = $user['id'];
 
+// Generate Auth Token for Flutter App
+$auth_token = bin2hex(random_bytes(32));
+$expires_at = date('Y-m-d H:i:s', strtotime('+30 days'));
+
+try {
+    $token_stmt = $pdo->prepare("INSERT INTO user_tokens (user_id, auth_token, expires_at) VALUES (?, ?, ?)");
+    $token_stmt->execute([$user['id'], $auth_token, $expires_at]);
+} catch (Exception $e) {
+    // If table doesn't exist, ignore (fallback to session)
+}
+
 echo json_encode([
     'success' => true,
     'message' => 'Login successful',
+    'token' => $auth_token,
     'user' => $user
 ]);
 ?>

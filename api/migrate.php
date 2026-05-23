@@ -86,8 +86,21 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
     ");
 
+    // 6. User Tokens Table (For Flutter App Auth)
+    $pdo->exec("
+    CREATE TABLE IF NOT EXISTS `user_tokens` (
+      `id` int(11) NOT NULL AUTO_INCREMENT,
+      `user_id` int(11) NOT NULL,
+      `auth_token` varchar(255) NOT NULL UNIQUE,
+      `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+      `expires_at` datetime DEFAULT NULL,
+      PRIMARY KEY (`id`),
+      KEY `user_id_idx` (`user_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+    ");
+
     echo "<h1>Migration Successful!</h1>";
-    echo "<p>All 5 required database tables (coupons, offers, settings, policies, age_verifications) have been created successfully on your database.</p>";
+    echo "<p>All required database tables (coupons, offers, settings, policies, age_verifications, user_tokens) have been created successfully on your database.</p>";
     echo "<p>You can now test the API endpoints.</p>";
 
 } catch (Exception $e) {
