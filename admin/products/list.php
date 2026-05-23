@@ -318,55 +318,7 @@ function stockHtml($qty, $lowStockLimit)
             </div>
         </div>
 
-        <div class="row g-3 mb-4">
-            <div class="col-sm-6 col-xl-3">
-                <div class="card summary-card h-100">
-                    <div class="card-body d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="summary-label">Total Products</div>
-                            <div class="summary-value"><?= (int)($summary['total_products'] ?? 0) ?></div>
-                        </div>
-                        <div class="icon-wrap bg-primary-subtle text-primary">📦</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-xl-3">
-                <div class="card summary-card h-100">
-                    <div class="card-body d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="summary-label">Active</div>
-                            <div class="summary-value"><?= (int)($summary['active_products'] ?? 0) ?></div>
-                        </div>
-                        <div class="icon-wrap bg-success-subtle text-success">✅</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-xl-3">
-                <div class="card summary-card h-100">
-                    <div class="card-body d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="summary-label">Low Stock</div>
-                            <div class="summary-value"><?= (int)($summary['lowstock_products'] ?? 0) ?></div>
-                        </div>
-                        <div class="icon-wrap bg-warning-subtle text-warning">⚠️</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-sm-6 col-xl-3">
-                <div class="card summary-card h-100">
-                    <div class="card-body d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="summary-label">Out of Stock</div>
-                            <div class="summary-value"><?= (int)($summary['outstock_products'] ?? 0) ?></div>
-                        </div>
-                        <div class="icon-wrap bg-danger-subtle text-danger">⛔</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        
 
         <div class="filter-card mb-4">
             <div class="card-body">
