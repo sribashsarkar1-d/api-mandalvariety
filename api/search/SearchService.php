@@ -23,8 +23,7 @@ class SearchService {
         $params = [];
         
         if (!empty($q)) {
-            $where[] = "(p.name LIKE ? OR p.description LIKE ? OR c.name LIKE ? OR p.sku LIKE ? OR t.tag_name LIKE ?)";
-            $params[] = "%$q%";
+            $where[] = "(p.name LIKE ? OR p.description LIKE ? OR c.name LIKE ? OR p.sku LIKE ?)";
             $params[] = "%$q%";
             $params[] = "%$q%";
             $params[] = "%$q%";
@@ -73,7 +72,6 @@ class SearchService {
         $sql = "SELECT DISTINCT p.*, c.name as category_name 
                 FROM products p 
                 LEFT JOIN categories c ON p.category_id = c.id 
-                LEFT JOIN product_tags t ON p.id = t.product_id
                 WHERE $whereSql 
                 $orderSql 
                 LIMIT ? OFFSET ?";
