@@ -92,7 +92,7 @@ try {
             'cart_item_id' => $cart_item_id,
             'cart_id' => $cart_id,
             'product' => $product,
-            'quantity' => $quantity
+            'quantity' => isset($new_qty) ? $new_qty : $quantity // 🔥 RETURN THE ACTUAL TOTAL QUANTITY IN THE CART
         ]
     ], JSON_PRETTY_PRINT);
 
