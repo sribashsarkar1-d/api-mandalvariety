@@ -1,6 +1,6 @@
-    <?php
+<?php
 header('Content-Type: application/json');
-require_once __DIR__ . '/../config/database.php';  // Fixed path
+require_once __DIR__ . '/../config/database.php';
 
 try {
     $user_id = (int)($_GET['user_id'] ?? 0);
@@ -18,10 +18,10 @@ try {
         exit;
     }
 
-    // **1. VALIDATE PRODUCT EXISTS**
+    // **1. VALIDATE PRODUCT EXISTS & GET PRICE**
     $stmt = $pdo->prepare("SELECT id, name, price, stock_quantity FROM products WHERE id = ? AND stock_quantity > 0");
     $stmt->execute([$product_id]);
-    $product = $stmt->fetch();
+    $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$product) {
         http_response_code(404);
@@ -42,10 +42,23 @@ try {
         exit;
     }
 
-    // **3. CHECK IF ALREADY IN CART**
-    $stmt = $pdo->prepare("SELECT id, quantity FROM carts WHERE user_id = ? AND product_id = ?");
-    $stmt->execute([$user_id, $product_id]);
-    $existing = $stmt->fetch();
+    // **3. FIND OR CREATE CART FOR USER**
+    $stmt = $pdo->prepare("SELECT id FROM carts WHERE user_id = ?");
+    $stmt->execute([$user_id]);
+    $cart = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($cart) {
+        $cart_id = $cart['id'];
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO carts (user_id) VALUES (?)");
+        $stmt->execute([$user_id]);
+        $cart_id = $pdo->lastInsertId();
+    }
+
+    // **4. CHECK IF ITEM ALREADY IN CART_ITEMS**
+    $stmt = $pdo->prepare("SELECT id, quantity FROM cart_items WHERE cart_id = ? AND product_id = ?");
+    $stmt->execute([$cart_id, $product_id]);
+    $existing = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($existing) {
         // **UPDATE QUANTITY**
@@ -59,21 +72,22 @@ try {
             exit;
         }
         
-        $stmt = $pdo->prepare("UPDATE carts SET quantity = ? WHERE id = ?");
+        $stmt = $pdo->prepare("UPDATE cart_items SET quantity = ? WHERE id = ?");
         $stmt->execute([$new_qty, $existing['id']]);
         $cart_item_id = $existing['id'];
     } else {
         // **ADD NEW ITEM**
-        $stmt = $pdo->prepare("INSERT INTO carts (user_id, product_id, quantity) VALUES (?, ?, ?)");
-        $stmt->execute([$user_id, $product_id, $quantity]);
+        $stmt = $pdo->prepare("INSERT INTO cart_items (cart_id, product_id, quantity, price_at_purchase) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$cart_id, $product_id, $quantity, $product['price']]);
         $cart_item_id = $pdo->lastInsertId();
     }
 
     echo json_encode([
         'success' => true,
-        'message' => 'Added to carts!',
+        'message' => 'Added to cart!',
         'data' => [
             'cart_item_id' => $cart_item_id,
+            'cart_id' => $cart_id,
             'product' => $product,
             'quantity' => $quantity
         ]
