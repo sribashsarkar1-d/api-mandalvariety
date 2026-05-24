@@ -16,6 +16,11 @@ try {
     $stmt->execute([$user_id]);
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Explicitly add order_status to guarantee Flutter parses it
+    foreach ($orders as &$order) {
+        $order['order_status'] = $order['status'] ?? 'pending';
+    }
+
     echo json_encode([
         'success' => true,
         'data' => [

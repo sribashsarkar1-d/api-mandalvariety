@@ -20,6 +20,11 @@ $stmt = $pdo->prepare("
 $stmt->execute([$order_id, $user_id]);
 $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
+// Explicitly map order_status for Flutter
+if ($order) {
+    $order['order_status'] = $order['status'] ?? 'pending';
+}
+
 if (!$order) {
     echo json_encode(['success' => false, 'message' => 'Order not found']);
     exit;
