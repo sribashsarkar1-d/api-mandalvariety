@@ -3,7 +3,8 @@ header('Content-Type: application/json');
 require_once __DIR__ . '/../config/database.php';
 
 $user_id = (int)($_GET['user_id'] ?? 1);
-$product_id = (int)($_POST['product_id'] ?? 0);
+$input = json_decode(file_get_contents('php://input'), true);
+$product_id = (int)($input['product_id'] ?? $_POST['product_id'] ?? 0);
 
 if (!$product_id) {
     echo json_encode(['success' => false, 'message' => 'Product ID required']);
