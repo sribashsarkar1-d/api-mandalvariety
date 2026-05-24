@@ -40,7 +40,7 @@ try {
             p.id as product_id, 
             p.name, 
             p.price as current_price, 
-            p.image, 
+            p.images, 
             p.stock_quantity
         FROM cart_items ci
         JOIN products p ON ci.product_id = p.id
