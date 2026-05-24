@@ -23,10 +23,10 @@ try {
     ]);
 
 } catch (Exception $e) {
-    http_response_code(500);
+    http_response_code(200); // Changed to 200 so Flutter displays the message
     echo json_encode([
         'success' => false, 
-        'message' => 'Server Error: ' . $e->getMessage()
+        'message' => 'DB Error: ' . $e->getMessage()
     ]);
 }
 ?>
