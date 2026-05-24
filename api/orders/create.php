@@ -2,7 +2,11 @@
 header('Content-Type: application/json');
 require_once __DIR__ . '/../config/database.php';
 
-$user_id = (int)($_GET['user_id'] ?? 1);
+$input = json_decode(file_get_contents('php://input'), true);
+$user_id = (int)($input['user_id'] ?? $_GET['user_id'] ?? 1);
+
+$delivery_address = $input['delivery_address'] ?? $input['address'] ?? 'No Address Provided';
+$pincode = $input['pincode'] ?? $input['pin_code'] ?? '000000';
 
 // 🔥 FIXED: Use ci.id (cart_items.id) instead of just 'id'
 $stmt = $pdo->prepare("
@@ -40,7 +44,7 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([
     $user_id, $order_number, $total_amount, $delivery_charge, 
-    $tax_amount, $grand_total, 'Test Address - Siliguri', '734001'
+    $tax_amount, $grand_total, $delivery_address, $pincode
 ]);
 $order_id = $pdo->lastInsertId();
 
