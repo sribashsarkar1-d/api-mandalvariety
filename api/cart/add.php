@@ -18,10 +18,14 @@ try {
         exit;
     }
 
-    // **1. VALIDATE PRODUCT EXISTS & GET PRICE**
-    $stmt = $pdo->prepare("SELECT id, name, price, stock_quantity FROM products WHERE id = ? AND stock_quantity > 0");
-    $stmt->execute([$product_id]);
-    $product = $stmt->fetch(PDO::FETCH_ASSOC);
+    // QUERY 1: PRODUCTS
+    try {
+        $stmt = $pdo->prepare("SELECT id, name, price, stock_quantity FROM products WHERE id = ?");
+        $stmt->execute([$product_id]);
+        $product = $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        throw new Exception("Error in Query 1 (Products): " . $e->getMessage());
+    }
 
     if (!$product) {
         http_response_code(404);
@@ -32,54 +36,53 @@ try {
         exit;
     }
 
-    // **2. CHECK STOCK**
-    if ($product['stock_quantity'] < $quantity) {
-        http_response_code(400);
-        echo json_encode([
-            'success' => false, 
-            'message' => "Only {$product['stock_quantity']} available. Requested: $quantity"
-        ]);
-        exit;
+    // QUERY 2: CARTS
+    try {
+        $stmt = $pdo->prepare("SELECT id FROM carts WHERE user_id = ?");
+        $stmt->execute([$user_id]);
+        $cart = $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        throw new Exception("Error in Query 2 (Carts): " . $e->getMessage());
     }
-
-    // **3. FIND OR CREATE CART FOR USER**
-    $stmt = $pdo->prepare("SELECT id FROM carts WHERE user_id = ?");
-    $stmt->execute([$user_id]);
-    $cart = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($cart) {
         $cart_id = $cart['id'];
     } else {
-        $stmt = $pdo->prepare("INSERT INTO carts (user_id) VALUES (?)");
-        $stmt->execute([$user_id]);
-        $cart_id = $pdo->lastInsertId();
+        try {
+            $stmt = $pdo->prepare("INSERT INTO carts (user_id) VALUES (?)");
+            $stmt->execute([$user_id]);
+            $cart_id = $pdo->lastInsertId();
+        } catch (Exception $e) {
+            throw new Exception("Error in Query 3 (Insert Carts): " . $e->getMessage());
+        }
     }
 
-    // **4. CHECK IF ITEM ALREADY IN CART_ITEMS**
-    $stmt = $pdo->prepare("SELECT id, quantity FROM cart_items WHERE cart_id = ? AND product_id = ?");
-    $stmt->execute([$cart_id, $product_id]);
-    $existing = $stmt->fetch(PDO::FETCH_ASSOC);
+    // QUERY 4: CART_ITEMS (Check Existing)
+    try {
+        $stmt = $pdo->prepare("SELECT id, quantity FROM cart_items WHERE cart_id = ? AND product_id = ?");
+        $stmt->execute([$cart_id, $product_id]);
+        $existing = $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        throw new Exception("Error in Query 4 (Select Cart Items): " . $e->getMessage());
+    }
 
     if ($existing) {
-        // **UPDATE QUANTITY**
         $new_qty = $existing['quantity'] + $quantity;
-        if ($new_qty > $product['stock_quantity']) {
-            http_response_code(400);
-            echo json_encode([
-                'success' => false, 
-                'message' => "Max stock exceeded. Only {$product['stock_quantity']} available"
-            ]);
-            exit;
+        try {
+            $stmt = $pdo->prepare("UPDATE cart_items SET quantity = ? WHERE id = ?");
+            $stmt->execute([$new_qty, $existing['id']]);
+            $cart_item_id = $existing['id'];
+        } catch (Exception $e) {
+            throw new Exception("Error in Query 5 (Update Cart Items): " . $e->getMessage());
         }
-        
-        $stmt = $pdo->prepare("UPDATE cart_items SET quantity = ? WHERE id = ?");
-        $stmt->execute([$new_qty, $existing['id']]);
-        $cart_item_id = $existing['id'];
     } else {
-        // **ADD NEW ITEM**
-        $stmt = $pdo->prepare("INSERT INTO cart_items (cart_id, product_id, quantity, price_at_purchase) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$cart_id, $product_id, $quantity, $product['price']]);
-        $cart_item_id = $pdo->lastInsertId();
+        try {
+            $stmt = $pdo->prepare("INSERT INTO cart_items (cart_id, product_id, quantity, price_at_purchase) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$cart_id, $product_id, $quantity, $product['price']]);
+            $cart_item_id = $pdo->lastInsertId();
+        } catch (Exception $e) {
+            throw new Exception("Error in Query 6 (Insert Cart Items): " . $e->getMessage());
+        }
     }
 
     echo json_encode([
