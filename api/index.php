@@ -603,10 +603,16 @@ function routeTable(): array
     ];
 }
 
-function buildCurl(string $method, string $url, ?array $body = null): string
+function buildCurl(string $method, string $url, ?array $body = null, bool $needsAuth = false): string
 {
     $curl = "curl -X {$method} \"{$url}\"";
-    if (in_array($method, ['POST', 'PUT'], true)) {
+    $curl .= " \\\n  -H \"Accept: application/json\"";
+    
+    if ($needsAuth) {
+        $curl .= " \\\n  -H \"Authorization: Bearer YOUR_TOKEN_HERE\"";
+    }
+
+    if (in_array($method, ['POST', 'PUT', 'PATCH'], true)) {
         $curl .= " \\\n  -H \"Content-Type: application/json\"";
         if ($body) {
             $curl .= " \\\n  -d '" . json_encode($body, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "'";
@@ -615,12 +621,18 @@ function buildCurl(string $method, string $url, ?array $body = null): string
     return $curl;
 }
 
-function buildFlutterDio(string $method, string $url, ?array $body = null): string
+function buildFlutterDio(string $method, string $url, ?array $body = null, bool $needsAuth = false): string
 {
     $methodLower = strtolower(explode('|', $method)[0]);
     $bodyCode = $body ? json_encode($body, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) : 'null';
 
-    $options = "Options(headers: {'Content-Type': 'application/json'})";
+    $headers = "{\n      'Accept': 'application/json',\n      'Content-Type': 'application/json',";
+    if ($needsAuth) {
+        $headers .= "\n      'Authorization': 'Bearer YOUR_TOKEN_HERE',";
+    }
+    $headers .= "\n    }";
+
+    $options = "Options(headers: {$headers})";
 
     if ($methodLower === 'get' || $methodLower === 'delete') {
         return "final dio = Dio();\n\ntry {\n  final response = await dio.{$methodLower}(\n    '{$url}',\n    options: {$options},\n  );\n\n  print(response.data);\n} catch (e) {\n  print(e);\n}";
@@ -793,8 +805,9 @@ h1,h2,h3,h4,h5,h6,p,div,span{
                 <?php foreach ($items as $index => $item): 
                     $itemId = 'item-' . $accordionId . '-' . $index;
                     $fullUrl = $base . ltrim($item['path'], '/');
-                    $curl = buildCurl($item['method'], $fullUrl, $item['body']);
-                    $flutter = buildFlutterDio($item['method'], $fullUrl, $item['body']);
+                    $needsAuth = $item['auth'] ?? false;
+                    $curl = buildCurl($item['method'], $fullUrl, $item['body'], $needsAuth);
+                    $flutter = buildFlutterDio($item['method'], $fullUrl, $item['body'], $needsAuth);
                     $methodClass = 'bg-secondary';
                     if (str_contains($item['method'], 'GET')) $methodClass = 'bg-success';
                     if ($item['method'] === 'POST') $methodClass = 'bg-primary';
