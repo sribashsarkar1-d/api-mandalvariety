@@ -43,7 +43,7 @@ try {
     }
 
     // **3. CHECK IF ALREADY IN CART**
-    $stmt = $pdo->prepare("SELECT id, quantity FROM cart WHERE user_id = ? AND product_id = ?");
+    $stmt = $pdo->prepare("SELECT id, quantity FROM carts WHERE user_id = ? AND product_id = ?");
     $stmt->execute([$user_id, $product_id]);
     $existing = $stmt->fetch();
 
@@ -59,19 +59,19 @@ try {
             exit;
         }
         
-        $stmt = $pdo->prepare("UPDATE cart SET quantity = ? WHERE id = ?");
+        $stmt = $pdo->prepare("UPDATE carts SET quantity = ? WHERE id = ?");
         $stmt->execute([$new_qty, $existing['id']]);
         $cart_item_id = $existing['id'];
     } else {
         // **ADD NEW ITEM**
-        $stmt = $pdo->prepare("INSERT INTO cart (user_id, product_id, quantity) VALUES (?, ?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO carts (user_id, product_id, quantity) VALUES (?, ?, ?)");
         $stmt->execute([$user_id, $product_id, $quantity]);
         $cart_item_id = $pdo->lastInsertId();
     }
 
     echo json_encode([
         'success' => true,
-        'message' => 'Added to cart!',
+        'message' => 'Added to carts!',
         'data' => [
             'cart_item_id' => $cart_item_id,
             'product' => $product,
