@@ -25,6 +25,60 @@ try {
     if ($product) {
         // Fix images JSON
         $product['images'] = json_decode($product['images'] ?? '[]');
+        
+        // 1. shortDescription
+        $product['shortDescription'] = $product['short_description'] ?? 'High quality product available at best price.';
+        
+        // 2. brand
+        $product['brand'] = $product['brand'] ?? 'Mandal Variety';
+        
+        // 3. unitLabel
+        $product['unitLabel'] = $product['unit_label'] ?? $product['unit'] ?? 'pcs';
+        
+        // 4. couponApplicable
+        $product['couponApplicable'] = isset($product['coupon_applicable']) ? (bool)$product['coupon_applicable'] : true;
+        
+        // 5. discountPercentage
+        $price = (float)($product['price'] ?? 0);
+        $discountPrice = (float)($product['discount_price'] ?? 0);
+        $discountPercentage = 0;
+        if ($price > 0 && $discountPrice > 0 && $discountPrice < $price) {
+            $discountPercentage = round((($price - $discountPrice) / $price) * 100);
+        }
+        $product['discountPercentage'] = isset($product['discount_percentage']) ? (int)$product['discount_percentage'] : $discountPercentage;
+        
+        // 6. isInStock
+        $stock = (int)($product['stock_quantity'] ?? 0);
+        $product['isInStock'] = isset($product['is_in_stock']) ? (bool)$product['is_in_stock'] : ($stock > 0);
+        
+        // 7. maxOrderQuantity
+        $product['maxOrderQuantity'] = isset($product['max_order_quantity']) ? (int)$product['max_order_quantity'] : 10;
+        
+        // 8. minOrderQuantity
+        $product['minOrderQuantity'] = isset($product['min_order_quantity']) ? (int)$product['min_order_quantity'] : 1;
+        
+        // 9. estimatedDeliveryTime
+        $product['estimatedDeliveryTime'] = $product['estimated_delivery_time'] ?? '30-45 minutes';
+        
+        // 10. expiryDate
+        $product['expiryDate'] = $product['expiry_date'] ?? null;
+        
+        // 11. manufacturingDate
+        $product['manufacturingDate'] = $product['manufacturing_date'] ?? null;
+        
+        // 12. countryOfOrigin
+        $product['countryOfOrigin'] = $product['country_of_origin'] ?? 'India';
+        
+        // 13. deliveryType
+        $product['deliveryType'] = $product['delivery_type'] ?? 'instant';
+        
+        // 14. deliveryCharge
+        $deliveryCharge = isset($product['delivery_charge']) ? (float)$product['delivery_charge'] : 30.00;
+        $product['deliveryCharge'] = $deliveryCharge;
+        
+        // 15. freeDelivery
+        $product['freeDelivery'] = isset($product['free_delivery']) ? (bool)$product['free_delivery'] : ($deliveryCharge == 0);
+
         echo json_encode(['success' => true, 'data' => $product]);
     } else {
         echo json_encode(['success' => false, 'message' => 'No product ID: ' . $id]);
