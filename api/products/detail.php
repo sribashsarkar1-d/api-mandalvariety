@@ -73,7 +73,7 @@ try {
         $product['deliveryType'] = $product['delivery_type'] ?? 'instant';
         
         // 14. deliveryCharge
-        $deliveryCharge = isset($product['delivery_charge']) ? (float)$product['delivery_charge'] : 30.00;
+        $deliveryCharge = isset($product['delivery_charge']) ? (float)$product['delivery_charge'] : 10.00;
         $product['deliveryCharge'] = $deliveryCharge;
         
         // 15. freeDelivery
