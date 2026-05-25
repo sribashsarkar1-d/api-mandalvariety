@@ -25,5 +25,19 @@ $stmt = $pdo->prepare($query);
 $stmt->execute($params);
 $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-echo json_encode(['success' => true, 'data' => $reviews]);
+$reviewCount = count($reviews);
+$totalRating = 0;
+
+foreach ($reviews as $review) {
+    $totalRating += (float)($review['rating'] ?? 0);
+}
+
+$averageRating = $reviewCount > 0 ? round($totalRating / $reviewCount, 1) : 0.0;
+
+echo json_encode([
+    'success' => true, 
+    'averageRating' => $averageRating,
+    'reviewCount' => $reviewCount,
+    'data' => $reviews
+]);
 ?>
