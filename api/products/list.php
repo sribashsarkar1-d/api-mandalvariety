@@ -14,30 +14,29 @@ try {
     
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Dynamically calculate the base URL (e.g. http://localhost/auth-api/ or https://api.domain.com/)
-    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
-    $host = $_SERVER['HTTP_HOST'];
-    $requestUri = $_SERVER['REQUEST_URI'];
-    $apiPos = strpos($requestUri, '/api/');
-    $basePath = $apiPos !== false ? substr($requestUri, 0, $apiPos) : '';
-    $baseUrl = rtrim($protocol . '://' . $host . $basePath, '/') . '/';
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    // $_SERVER['SCRIPT_NAME'] is something like /api/products/list.php
+    $base_dir = dirname(dirname($_SERVER['SCRIPT_NAME'] ?? '')); // gives /api
+    $base_dir = rtrim(str_replace('\\', '/', $base_dir), '/');
+    $uploads_url = $protocol . "://" . $host . $base_dir . "/uploads/";
 
     foreach ($products as &$product) {
-        $images = json_decode($product['images'], true);
-        if (is_array($images)) {
-            $full_images = array_map(function($img) use ($baseUrl) {
-                if (strpos($img, 'http') === 0) return $img; // Already full URL
-                return $baseUrl . ltrim($img, '/');
-            }, $images);
-            $product['images'] = $full_images;
-        } else {
-            // Fallback if not json
-            if (!empty($product['images']) && strpos($product['images'], 'http') !== 0) {
-                $product['images'] = [$baseUrl . ltrim($product['images'], '/')];
+        $images = json_decode($product['images'] ?? '[]', true);
+        if (!is_array($images)) $images = [];
+        
+        $full_images = [];
+        foreach ($images as $img) {
+            $img = trim($img);
+            if (empty($img)) continue;
+            // If it's already a full URL, keep it. Otherwise prepend uploads_url
+            if (filter_var($img, FILTER_VALIDATE_URL) || strpos($img, 'http') === 0) {
+                $full_images[] = $img;
             } else {
-                $product['images'] = [];
+                $full_images[] = $uploads_url . ltrim($img, '/');
             }
         }
+        $product['images'] = $full_images;
     }
 
     echo json_encode(['success' => true, 'data' => $products]);
