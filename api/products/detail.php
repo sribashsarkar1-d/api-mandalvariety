@@ -23,27 +23,8 @@ try {
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($product) {
-        // Fix images JSON and prepend full URL
-        $images = json_decode($product['images'] ?? '[]', true);
-        if (!is_array($images)) $images = [];
-        
-        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
-        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-        $base_dir = dirname(dirname($_SERVER['SCRIPT_NAME'] ?? ''));
-        $base_dir = rtrim(str_replace('\\', '/', $base_dir), '/');
-        $uploads_url = $protocol . "://" . $host . $base_dir . "/uploads/";
-
-        $full_images = [];
-        foreach ($images as $img) {
-            $img = trim($img);
-            if (empty($img)) continue;
-            if (filter_var($img, FILTER_VALIDATE_URL) || strpos($img, 'http') === 0) {
-                $full_images[] = $img;
-            } else {
-                $full_images[] = $uploads_url . ltrim($img, '/');
-            }
-        }
-        $product['images'] = $full_images;
+        // Fix images JSON
+        $product['images'] = json_decode($product['images'] ?? '[]');
         
         // 1. shortDescription
         $product['shortDescription'] = $product['short_description'] ?? 'High quality product available at best price.';
