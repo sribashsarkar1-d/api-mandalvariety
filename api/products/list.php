@@ -19,7 +19,7 @@ try {
     // $_SERVER['SCRIPT_NAME'] is something like /api/products/list.php
     $base_dir = dirname(dirname($_SERVER['SCRIPT_NAME'] ?? '')); // gives /api
     $base_dir = rtrim(str_replace('\\', '/', $base_dir), '/');
-    $uploads_url = $protocol . "://" . $host . $base_dir . "/uploads/";
+    $uploads_url = $protocol . "://" . $host . $base_dir . "../uploads/";
 
     foreach ($products as &$product) {
         $images = json_decode($product['images'] ?? '[]', true);
