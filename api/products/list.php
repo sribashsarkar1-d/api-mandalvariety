@@ -27,10 +27,10 @@ try {
 
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
     $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    // Correctly determine the project's base path from the script's location
-    // e.g. from /auth-api/api/products/list.php to /auth-api
-    $project_path = dirname(dirname(dirname($_SERVER['SCRIPT_NAME'] ?? '')));
-    $project_path = rtrim(str_replace('\\', '/', $project_path), '/');
+    
+    // Safely determine project base path using regex to avoid OS-specific dirname() issues
+    $script_path = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+    $project_path = rtrim(preg_replace('/\/api\/.*$/i', '', $script_path), '/');
     $uploads_url = $protocol . "://" . $host . $project_path . "/admin/uploads/";
 
     foreach ($products as &$product) {
