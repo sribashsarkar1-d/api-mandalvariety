@@ -5,8 +5,16 @@ require_once __DIR__ . '/../config/database.php';
 try {
     $category_id = $_GET['category_id'] ?? null;
     $where = $category_id ? "WHERE p.category_id = ? AND p.is_active = 1" : "WHERE p.is_active = 1";
-    $sql = "SELECT p.id, p.name, p.price, p.images, c.name as category_name 
-            FROM products p LEFT JOIN categories c ON p.category_id = c.id $where";
+    $sql = "SELECT p.id, 
+                   p.name, 
+                   p.slug,
+                   p.price, 
+                   p.discount_price,
+                   p.stock_quantity,
+                   p.images, 
+                   c.name as category_name 
+            FROM products p 
+            LEFT JOIN categories c ON p.category_id = c.id $where";
     
     $stmt = $pdo->prepare($sql);
     if ($category_id) $stmt->execute([$category_id]);
@@ -16,10 +24,11 @@ try {
 
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
     $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    // $_SERVER['SCRIPT_NAME'] is something like /api/products/list.php
-    $base_dir = dirname(dirname($_SERVER['SCRIPT_NAME'] ?? '')); // gives /api
-    $base_dir = rtrim(str_replace('\\', '/', $base_dir), '/');
-    $uploads_url = $protocol . "://" . $host . $base_dir . "/admin/uploads/";
+    // Correctly determine the project's base path from the script's location
+    // e.g. from /auth-api/api/products/list.php to /auth-api
+    $project_path = dirname(dirname(dirname($_SERVER['SCRIPT_NAME'] ?? '')));
+    $project_path = rtrim(str_replace('\\', '/', $project_path), '/');
+    $uploads_url = $protocol . "://" . $host . $project_path . "/admin/uploads/";
 
     foreach ($products as &$product) {
         $images = json_decode($product['images'] ?? '[]', true);
@@ -41,6 +50,8 @@ try {
 
     echo json_encode(['success' => true, 'data' => $products]);
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => 'Error']);
+    // It's better to return a proper error status code and a more descriptive message for debugging.
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
 ?>
