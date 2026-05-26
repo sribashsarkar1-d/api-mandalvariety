@@ -173,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $remove_images = $_POST['remove_images'] ?? []; // Future functionality
 
     if (!empty($_FILES['images']['name'][0])) {
-        $uploadDir = __DIR__ . '/../uploads/';
+        $uploadDir = '/../uploads/';
         if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
 
         foreach ($_FILES['images']['name'] as $i => $imgName) {
