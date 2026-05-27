@@ -28,10 +28,14 @@ try {
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
     $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
     
-    // Safely determine project base path using regex to avoid OS-specific dirname() issues
-    $script_path = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
-    $project_path = rtrim(preg_replace('/\/api\/.*$/i', '', $script_path), '/');
-    $uploads_url = $protocol . "://" . $host . $project_path . "/admin/uploads/";
+    // Safely determine project base path
+    if (strpos($host, 'api.mandal-variety.com') !== false) {
+        $uploads_url = $protocol . "://" . $host . "/uploads/";
+    } else {
+        $script_path = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+        $project_path = rtrim(preg_replace('/\/api\/.*$/i', '', $script_path), '/');
+        $uploads_url = $protocol . "://" . $host . $project_path . "/admin/uploads/";
+    }
 
     foreach ($products as &$product) {
         $images = json_decode($product['images'] ?? '[]', true);
@@ -52,8 +56,8 @@ try {
             
             // Ensure proper types and add camelCase fallback fields to match detail.php
             $product['id'] = (int)$product['id'];
-            $product['price'] = (float)($product['price'] ?? 0);
-            $product['discount_price'] = isset($product['discount_price']) ? (float)$product['discount_price'] : null;
+            $product['price'] = number_format((float)($product['price'] ?? 0), 2, '.', '');
+            $product['discount_price'] = isset($product['discount_price']) ? number_format((float)$product['discount_price'], 2, '.', '') : null;
             $product['stock_quantity'] = (int)($product['stock_quantity'] ?? 0);
             
             $product['shortDescription'] = $product['short_description'] ?? 'High quality product available at best price.';
