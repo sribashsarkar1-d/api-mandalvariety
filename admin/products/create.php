@@ -159,20 +159,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $uploadedImages = [];
-    if (!empty($_FILES['images']['name'][0])) {
+    
+    // Check if POST size exceeded limit
+    if (empty($_FILES) && empty($_POST) && isset($_SERVER['REQUEST_METHOD']) && strtolower($_SERVER['REQUEST_METHOD']) == 'post') {
+        $errors[] = 'The uploaded files exceed the maximum allowed server upload size.';
+    } elseif (!empty($_FILES['images']['name'][0])) {
         $uploadDir = __DIR__ . '/../uploads/';
         if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
+            if (!mkdir($uploadDir, 0777, true)) {
+                $errors[] = "Failed to create directory: $uploadDir. Check permissions.";
+            }
         }
 
         $allowedExt = ['jpg', 'jpeg', 'png', 'webp'];
 
         foreach ($_FILES['images']['name'] as $i => $imgName) {
             $tmp = $_FILES['images']['tmp_name'][$i] ?? '';
+            $error = $_FILES['images']['error'][$i];
             $ext = strtolower(pathinfo($imgName, PATHINFO_EXTENSION));
 
+            if ($error !== UPLOAD_ERR_OK) {
+                $errors[] = "File upload error code: $error for image $imgName. (Code 1=Exceeds php.ini size, 2=Exceeds form max size, 3=Partial upload, 4=No file)";
+                continue;
+            }
+
             if (!in_array($ext, $allowedExt, true)) {
-                $errors[] = 'Only JPG, JPEG, PNG and WEBP files are allowed';
+                $errors[] = "Only JPG, JPEG, PNG and WEBP files are allowed for image $imgName";
                 continue;
             }
 
@@ -180,7 +192,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $newName = time() . '_' . rand(1000, 9999) . '_' . $i . '.' . $ext;
                 if (move_uploaded_file($tmp, $uploadDir . $newName)) {
                     $uploadedImages[] = $newName;
+                } else {
+                    $errors[] = "Failed to move uploaded file to $uploadDir$newName. Check folder permissions.";
                 }
+            } else {
+                $errors[] = "File $imgName was not uploaded via HTTP POST.";
             }
         }
     } else {
