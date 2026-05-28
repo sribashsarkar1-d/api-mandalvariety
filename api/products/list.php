@@ -30,7 +30,7 @@ try {
     
     // Safely determine project base path
     if (strpos($host, 'api.mandal-variety.com') !== false) {
-        $uploads_url = $protocol . "://" . $host . "/admin/uploads/";
+        $uploads_url = "https://mandal-variety.com/admin/uploads/";
     } else {
         $script_path = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
         $project_path = rtrim(preg_replace('/\/api\/.*$/i', '', $script_path), '/');

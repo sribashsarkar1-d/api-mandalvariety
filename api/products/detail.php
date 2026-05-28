@@ -24,8 +24,30 @@ try {
 
     if ($product) {
         // Fix images JSON
-        $product['images'] = json_decode($product['images'] ?? '[]');
+        $images = json_decode($product['images'] ?? '[]', true);
+        if (!is_array($images)) $images = [];
         
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        if (strpos($host, 'api.mandal-variety.com') !== false) {
+            $uploads_url = "https://mandal-variety.com/admin/uploads/";
+        } else {
+            $script_path = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+            $project_path = rtrim(preg_replace('/\/api\/.*$/i', '', $script_path), '/');
+            $uploads_url = $protocol . "://" . $host . $project_path . "/admin/uploads/";
+        }
+
+        $full_images = [];
+        foreach ($images as $img) {
+            $img = trim($img);
+            if (empty($img)) continue;
+            if (filter_var($img, FILTER_VALIDATE_URL) || strpos($img, 'http') === 0) {
+                $full_images[] = $img;
+            } else {
+                $full_images[] = $uploads_url . ltrim($img, '/');
+            }
+        }
+        $product['images'] = $full_images;
         // 1. shortDescription
         $product['shortDescription'] = $product['short_description'] ?? 'High quality product available at best price.';
         
