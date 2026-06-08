@@ -364,6 +364,7 @@ function getAttributesHtml($jsonAttr) {
 </style>
 
 <div class="w-100">
+    <?php include '../includes/topbar.php'; ?>
     <div class="container-fluid mt-4 mb-5 px-4">
         
         <div class="page-header-premium">
