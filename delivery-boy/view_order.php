@@ -6,13 +6,58 @@ $delivery_id = $_SESSION['delivery_id'];
 $order_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 if ($order_id <= 0) {
-    header('Location: index.php');
+    header("Location: index.php");
     exit;
+}
+
+$error = '';
+$success = '';
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    
+    if ($action === 'update_status') {
+        $new_status = $_POST['status'] ?? '';
+        $entered_otp = $_POST['otp'] ?? '';
+        
+        // Fetch order to verify
+        $stmt = $conn->prepare("SELECT status, delivery_otp FROM orders WHERE id = ? AND assigned_delivery_id = ?");
+        $stmt->execute([$order_id, $delivery_id]);
+        $order_verify = $stmt->fetch();
+        
+        if ($order_verify) {
+            if ($new_status === 'delivered') {
+                // Verify OTP
+                if (empty($order_verify['delivery_otp'])) {
+                    $error = "Please send the OTP to the customer first.";
+                } elseif ($entered_otp !== $order_verify['delivery_otp']) {
+                    $error = "Invalid OTP entered. Please try again.";
+                } else {
+                    // OTP is valid! Mark as delivered
+                    $stmt = $conn->prepare("
+                        UPDATE orders 
+                        SET status = 'delivered', tracking_status = 'delivered', payment_status = 'paid' 
+                        WHERE id = ?
+                    ");
+                    $stmt->execute([$order_id]);
+                    $success = "Order successfully delivered!";
+                }
+            } else {
+                // Just update status (e.g. out_for_delivery)
+                $stmt = $conn->prepare("UPDATE orders SET status = ? WHERE id = ?");
+                $stmt->execute([$new_status, $order_id]);
+                $success = "Status updated successfully.";
+            }
+        } else {
+            $error = "Order not found or not assigned to you.";
+        }
+    }
 }
 
 // Fetch order details
 $stmt = $conn->prepare("
-    SELECT o.*, u.name as customer_name, u.phone as customer_phone
+    SELECT o.*, u.name as user_name, u.email as user_email, u.phone as user_phone 
     FROM orders o
     LEFT JOIN users u ON o.user_id = u.id
     WHERE o.id = ? AND o.assigned_delivery_id = ?
@@ -21,196 +66,314 @@ $stmt->execute([$order_id, $delivery_id]);
 $order = $stmt->fetch();
 
 if (!$order) {
-    echo "Order not found or not assigned to you.";
+    header("Location: index.php");
     exit;
 }
 
-// Fetch order items
-$stmt = $conn->prepare("
-    SELECT oi.*, p.name, p.images
+// Fetch items
+$stmtItems = $conn->prepare("
+    SELECT oi.*, p.name as product_name, p.images
     FROM order_items oi
     LEFT JOIN products p ON oi.product_id = p.id
     WHERE oi.order_id = ?
 ");
-$stmt->execute([$order_id]);
-$items = $stmt->fetchAll();
+$stmtItems->execute([$order_id]);
+$items = $stmtItems->fetchAll();
 
-// Handle status updates
-$success = '';
-$error = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    $action = $_POST['action'];
-    $new_status = '';
-    
-    if ($action === 'out_for_delivery' && $order['status'] !== 'out_for_delivery') {
-        $new_status = 'out_for_delivery';
-    } elseif ($action === 'delivered' && $order['status'] === 'out_for_delivery') {
-        $new_status = 'delivered';
-    } else {
-        $error = "Invalid status transition.";
-    }
+// Handle data fields
+$order_no = $order['order_number'] ?? $order['order_no'] ?? 'N/A';
+$customer_name = $order['user_name'] ?? $order['customer_name'] ?? $order['name'] ?? 'Customer';
+$customer_phone = $order['user_phone'] ?? $order['customer_phone'] ?? $order['phone'] ?? 'No phone';
+$address = $order['shipping_address'] ?? $order['delivery_address'] ?? $order['address'] ?? 'No address provided';
+$landmark = $order['shipping_landmark'] ?? $order['delivery_landmark'] ?? '';
+$pincode = $order['shipping_pincode'] ?? $order['delivery_pincode'] ?? $order['pincode'] ?? '';
 
-    if ($new_status !== '') {
-        $updateStmt = $conn->prepare("UPDATE orders SET status = ? WHERE id = ?");
-        $updateStmt->execute([$new_status, $order_id]);
-        $order['status'] = $new_status; // update local variable
-        $success = "Order status updated successfully!";
+$grand_total = (float)($order['grand_total'] ?? $order['total_amount'] ?? 0);
+$payment_method = $order['payment_method'] ?? $order['payment_type'] ?? 'N/A';
+$payment_status = $order['payment_status'] ?? 'pending';
+$status = $order['status'] ?? 'unknown';
+
+function getThumb($imagesJson) {
+    if (!$imagesJson) return '../assets/images/placeholder.png';
+    $images = json_decode($imagesJson, true);
+    if (is_array($images) && !empty($images[0])) {
+        return '../uploads/' . $images[0];
     }
+    return '../assets/images/placeholder.png';
 }
+
 ?>
 
 <?php include 'includes/header.php'; ?>
 
 <style>
-    .order-container {
+    .dashboard-container {
         padding: 20px;
         max-width: 800px;
         margin: 0 auto;
-        padding-bottom: 80px; /* space for fixed bottom button */
+        padding-bottom: 80px;
     }
 
-    .info-card {
+    .premium-card {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        border: 1px solid rgba(0,0,0,0.05);
         padding: 20px;
+        margin-bottom: 20px;
     }
 
-    .icon-box {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        background: #f1f5f9;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .info-group {
+        margin-bottom: 15px;
+    }
+
+    .info-label {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .info-value {
+        font-weight: 600;
+        color: #1e293b;
+        font-size: 1.05rem;
+        word-break: break-word;
+    }
+
+    .call-btn {
+        background: #ecfdf5;
         color: #10b981;
-        font-size: 18px;
+        border: none;
+        border-radius: 12px;
+        padding: 12px;
+        font-weight: bold;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+    
+    .map-btn {
+        background: #eff6ff;
+        color: #3b82f6;
+        border: none;
+        border-radius: 12px;
+        padding: 12px;
+        font-weight: bold;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .item-list {
+        display: flex;
+        gap: 15px;
+        padding: 12px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .item-list:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
     }
 
     .item-img {
-        width: 50px;
-        height: 50px;
+        width: 60px;
+        height: 60px;
         object-fit: cover;
-        border-radius: 8px;
+        border-radius: 12px;
+        background: #f8fafc;
     }
 
-    .bottom-actions {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: white;
-        padding: 15px 20px;
-        box-shadow: 0 -4px 15px rgba(0,0,0,0.05);
-        display: flex;
-        gap: 15px;
-        z-index: 10;
-    }
-
-    .badge-status {
+    .status-badge {
+        display: inline-block;
         padding: 6px 12px;
-        border-radius: 6px;
+        border-radius: 99px;
         font-size: 0.8rem;
         font-weight: 700;
         text-transform: uppercase;
     }
+    .status-badge.bg-success { background: #d1fae5 !important; color: #059669 !important; }
+    .status-badge.bg-warning { background: #fef3c7 !important; color: #d97706 !important; }
+
+    #otpSection {
+        display: none;
+        background: #f8fafc;
+        border-radius: 16px;
+        padding: 20px;
+        margin-top: 15px;
+        border: 1px dashed #cbd5e1;
+    }
 </style>
 
-<div class="order-container">
-    
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h5 class="fw-bold mb-1">Order #<?= e($order['order_number']) ?></h5>
-            <div class="text-muted small"><?= date('h:i A, M d, Y', strtotime($order['created_at'])) ?></div>
-        </div>
-        <div>
-            <span class="badge-status bg-light border text-dark">
-                <?= str_replace('_', ' ', e($order['status'])) ?>
-            </span>
-        </div>
+<div class="dashboard-container">
+    <div class="d-flex align-items-center mb-4">
+        <a href="index.php" class="text-dark me-3"><i class="fa-solid fa-arrow-left fa-lg"></i></a>
+        <h4 class="fw-bold mb-0">Order #<?= e($order_no) ?></h4>
     </div>
 
     <?php if ($success): ?>
-        <div class="alert alert-success rounded-3 small"><i class="fa-solid fa-check me-2"></i><?= e($success) ?></div>
+        <div class="alert alert-success rounded-3"><i class="fa-solid fa-check-circle me-2"></i><?= e($success) ?></div>
     <?php endif; ?>
     <?php if ($error): ?>
-        <div class="alert alert-danger rounded-3 small"><i class="fa-solid fa-triangle-exclamation me-2"></i><?= e($error) ?></div>
+        <div class="alert alert-danger rounded-3"><i class="fa-solid fa-circle-exclamation me-2"></i><?= e($error) ?></div>
     <?php endif; ?>
 
-    <!-- Customer Details -->
-    <div class="premium-card info-card mb-4">
-        <h6 class="fw-bold mb-3 text-muted small">CUSTOMER DETAILS</h6>
-        <div class="d-flex align-items-center gap-3 mb-3">
-            <div class="icon-box"><i class="fa-solid fa-user"></i></div>
-            <div>
-                <div class="fw-bold"><?= e($order['customer_name'] ?? 'Unknown') ?></div>
-            </div>
+    <!-- Status Card -->
+    <div class="premium-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="info-label mb-0">Current Status</span>
+            <span class="status-badge <?= $status === 'delivered' ? 'bg-success' : 'bg-warning' ?>">
+                <?= str_replace('_', ' ', e($status)) ?>
+            </span>
         </div>
-        <div class="d-flex align-items-center gap-3 mb-3">
-            <div class="icon-box"><i class="fa-solid fa-phone"></i></div>
-            <div>
-                <div class="fw-bold"><?= e($order['customer_phone'] ?? 'N/A') ?></div>
-                <a href="tel:<?= e($order['customer_phone'] ?? '') ?>" class="text-success small fw-bold text-decoration-none">Call Customer</a>
-            </div>
-        </div>
-        <div class="d-flex align-items-start gap-3">
-            <div class="icon-box"><i class="fa-solid fa-location-dot"></i></div>
-            <div>
-                <div class="fw-bold text-dark mb-1">Delivery Address</div>
-                <div class="small text-muted" style="line-height: 1.5;">
-                    <?= nl2br(e($order['delivery_address'])) ?>
-                    <br><strong>PIN: <?= e($order['pincode']) ?></strong>
+        
+        <?php if ($status !== 'delivered'): ?>
+            <form method="POST" id="statusForm">
+                <input type="hidden" name="action" value="update_status">
+                
+                <label class="form-label fw-bold">Update Status</label>
+                <select name="status" class="form-select form-select-lg mb-3" id="statusSelect">
+                    <option value="out_for_delivery" <?= $status === 'out_for_delivery' ? 'selected' : '' ?>>Out for Delivery</option>
+                    <option value="delivered">Delivered (Requires OTP)</option>
+                </select>
+
+                <div id="otpSection">
+                    <h6 class="fw-bold text-center mb-3">Customer Verification</h6>
+                    <button type="button" class="btn btn-outline-primary w-100 fw-bold mb-3 rounded-pill" id="btnSendOtp">
+                        <i class="fa-solid fa-paper-plane me-2"></i> Send OTP to Customer
+                    </button>
+                    
+                    <div class="text-center text-success fw-bold small mb-3 d-none" id="otpSentMsg">
+                        <i class="fa-solid fa-check-circle me-1"></i> OTP Sent! Ask customer for the 6-digit code.
+                    </div>
+                    
+                    <input type="text" name="otp" class="form-control form-control-lg text-center fw-bold letter-spacing-lg mb-3" placeholder="Enter 6-digit OTP" maxlength="6">
                 </div>
-                <a href="https://maps.google.com/?q=<?= urlencode($order['delivery_address']) ?>" target="_blank" class="text-primary small fw-bold text-decoration-none mt-1 d-inline-block">
-                    <i class="fa-solid fa-map-location-dot me-1"></i> View on Map
+
+                <button type="submit" class="btn btn-primary w-100 btn-lg fw-bold rounded-pill">
+                    Update Order
+                </button>
+            </form>
+        <?php endif; ?>
+    </div>
+
+    <!-- Customer & Delivery Info -->
+    <div class="premium-card">
+        <h5 class="fw-bold mb-3">Delivery Details</h5>
+        
+        <div class="info-group">
+            <div class="info-label">Customer Name</div>
+            <div class="info-value"><?= e($customer_name) ?></div>
+        </div>
+
+        <div class="info-group">
+            <div class="info-label">Phone Number</div>
+            <div class="info-value"><?= e($customer_phone) ?></div>
+        </div>
+
+        <div class="info-group">
+            <div class="info-label">Delivery Address</div>
+            <div class="info-value">
+                <?= nl2br(e($address)) ?>
+                <?php if ($landmark): ?><br><small class="text-muted">Landmark: <?= e($landmark) ?></small><?php endif; ?>
+                <?php if ($pincode): ?><br><small class="text-muted">Pin: <?= e($pincode) ?></small><?php endif; ?>
+            </div>
+        </div>
+
+        <div class="row g-2 mt-3">
+            <div class="col-6">
+                <a href="tel:<?= e($customer_phone) ?>" class="call-btn">
+                    <i class="fa-solid fa-phone"></i> Call
+                </a>
+            </div>
+            <div class="col-6">
+                <a href="https://maps.google.com/?q=<?= urlencode($address . ' ' . $pincode) ?>" target="_blank" class="map-btn">
+                    <i class="fa-solid fa-map-location-dot"></i> Map
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- Order Items -->
-    <div class="premium-card info-card mb-4">
-        <h6 class="fw-bold mb-3 text-muted small">ORDER ITEMS (<?= count($items) ?>)</h6>
+    <!-- Items & Payment Info -->
+    <div class="premium-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">Order Items</h5>
+            <div class="text-success fw-bold fs-5">₹<?= number_format($grand_total, 2) ?></div>
+        </div>
         
-        <?php foreach($items as $item): ?>
-            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="bg-light item-img d-flex align-items-center justify-content-center text-muted border">
-                        <i class="fa-solid fa-box"></i>
-                    </div>
+        <div class="info-group mb-4">
+            <span class="badge bg-light text-dark border px-3 py-2">
+                <?= e(strtoupper($payment_method)) ?> - <?= e(ucwords($payment_status)) ?>
+            </span>
+            <?php if ($payment_method === 'cod' && $payment_status !== 'paid' && $status !== 'delivered'): ?>
+                <div class="text-danger small fw-bold mt-2"><i class="fa-solid fa-triangle-exclamation me-1"></i> Collect ₹<?= number_format($grand_total, 2) ?> from customer!</div>
+            <?php endif; ?>
+        </div>
+
+        <div>
+            <?php foreach ($items as $item): ?>
+                <div class="item-list">
+                    <img src="<?= e(getThumb($item['images'])) ?>" class="item-img" alt="Product">
                     <div>
-                        <div class="fw-bold text-dark" style="font-size:0.95rem;"><?= e($item['name']) ?></div>
-                        <div class="small text-muted">Qty: <?= (int)$item['quantity'] ?> × ₹<?= number_format((float)$item['price'], 2) ?></div>
+                        <div class="fw-bold text-dark lh-sm mb-1"><?= e($item['product_name'] ?? 'Product') ?></div>
+                        <div class="text-muted small">Qty: <?= (int)($item['quantity'] ?? 1) ?> × ₹<?= number_format((float)($item['price'] ?? 0), 2) ?></div>
                     </div>
                 </div>
-                <div class="fw-bold text-dark">
-                    ₹<?= number_format($item['quantity'] * $item['price'], 2) ?>
-                </div>
-            </div>
-        <?php endforeach; ?>
-        
-        <div class="mt-3 text-end">
-            <div class="small text-muted mb-1">Delivery Charge: ₹<?= number_format((float)$order['delivery_charge'], 2) ?></div>
-            <div class="fw-bold text-success fs-5">Total: ₹<?= number_format((float)$order['grand_total'], 2) ?></div>
-            <div class="small fw-bold mt-1 text-primary">Payment: <?= strtoupper(e($order['payment_status'])) ?></div>
+            <?php endforeach; ?>
         </div>
     </div>
-
 </div>
 
-<!-- Bottom Action Buttons -->
-<?php if ($order['status'] !== 'delivered' && $order['status'] !== 'cancelled'): ?>
-<div class="bottom-actions">
-    <form method="POST" class="w-100 m-0">
-        <?php if ($order['status'] === 'confirmed' || $order['status'] === 'preparing'): ?>
-            <button type="submit" name="action" value="out_for_delivery" class="btn-premium">
-                <i class="fa-solid fa-truck-fast me-2"></i> Start Delivery
-            </button>
-        <?php elseif ($order['status'] === 'out_for_delivery'): ?>
-            <button type="submit" name="action" value="delivered" class="btn-premium" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
-                <i class="fa-solid fa-circle-check me-2"></i> Mark as Delivered
-            </button>
-        <?php endif; ?>
-    </form>
-</div>
-<?php endif; ?>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#statusSelect').change(function() {
+            if ($(this).val() === 'delivered') {
+                $('#otpSection').slideDown();
+            } else {
+                $('#otpSection').slideUp();
+            }
+        });
+        
+        // Trigger on load
+        if ($('#statusSelect').val() === 'delivered') {
+            $('#otpSection').show();
+        }
+
+        $('#btnSendOtp').click(function() {
+            let btn = $(this);
+            btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin me-2"></i> Sending...');
+            
+            $.ajax({
+                url: 'ajax_send_otp.php',
+                type: 'POST',
+                data: { order_id: <?= $order_id ?> },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        btn.hide();
+                        $('#otpSentMsg').removeClass('d-none');
+                    } else {
+                        alert("Error: " + response.message);
+                        btn.prop('disabled', false).html('<i class="fa-solid fa-paper-plane me-2"></i> Send OTP to Customer');
+                    }
+                },
+                error: function() {
+                    alert("Network error occurred.");
+                    btn.prop('disabled', false).html('<i class="fa-solid fa-paper-plane me-2"></i> Send OTP to Customer');
+                }
+            });
+        });
+    });
+</script>
 
 <?php include 'includes/footer.php'; ?>
