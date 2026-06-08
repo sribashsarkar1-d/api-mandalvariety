@@ -1,6 +1,6 @@
 <?php
 require_once 'includes/config.php';
-require_once '../vendor/autoload.php';
+require_once '../admin/vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -38,12 +38,23 @@ if (!$order) {
 // Generate OTP
 $otp = sprintf("%06d", mt_rand(1, 999999));
 
+// Auto-add delivery_otp column if it doesn't exist
+try {
+    $conn->query("SELECT delivery_otp FROM orders LIMIT 1");
+} catch (\PDOException $e) {
+    try {
+        $conn->exec("ALTER TABLE orders ADD COLUMN delivery_otp VARCHAR(10) NULL DEFAULT NULL");
+    } catch (\PDOException $e2) {
+        // Ignore
+    }
+}
+
 // Save OTP to DB
 try {
     $stmt = $conn->prepare("UPDATE orders SET delivery_otp = ? WHERE id = ?");
     $stmt->execute([$otp, $order_id]);
-} catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => 'Error saving OTP. Ensure the delivery_otp column exists in the database.']);
+} catch (\Exception $e) {
+    echo json_encode(['success' => false, 'message' => 'Error saving OTP: ' . $e->getMessage()]);
     exit;
 }
 

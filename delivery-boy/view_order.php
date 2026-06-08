@@ -13,6 +13,17 @@ if ($order_id <= 0) {
 $error = '';
 $success = '';
 
+// Auto-add delivery_otp column if it doesn't exist
+try {
+    $conn->query("SELECT delivery_otp FROM orders LIMIT 1");
+} catch (\PDOException $e) {
+    try {
+        $conn->exec("ALTER TABLE orders ADD COLUMN delivery_otp VARCHAR(10) NULL DEFAULT NULL");
+    } catch (\PDOException $e2) {
+        // Ignore
+    }
+}
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
