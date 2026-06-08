@@ -451,11 +451,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     .img-preview-card {
         border-radius: 12px;
-        overflow: hidden;
+        overflow: visible;
         border: 1px solid #e2e8f0;
         box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         background: white;
         padding: 5px;
+        position: relative;
     }
 
     .img-preview-card img {
@@ -463,6 +464,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         height: 90px;
         object-fit: cover;
         border-radius: 8px;
+    }
+
+    .remove-img-btn {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        font-size: 12px;
+        transition: all 0.2s;
+        z-index: 10;
+        padding: 0;
+    }
+
+    .remove-img-btn:hover {
+        background: #dc2626;
+        transform: scale(1.1);
     }
 </style>
 
@@ -552,19 +579,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <label class="form-label">Discount Price (₹)</label>
                                     <input type="number" step="0.01" min="0" name="discount_price" id="discount_price" class="form-control-premium bg-light" value="<?= e($data['discount_price']) ?>" readonly placeholder="Calculated automatically">
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Available Stock</label>
+                                <div class="col-md-3">
+                                    <label class="form-label">Stock Quantity</label>
                                     <input type="number" min="0" name="stock_quantity" class="form-control-premium" value="<?= e($data['stock_quantity']) ?>" placeholder="0">
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
+                                    <label class="form-label">Stock</label>
+                                    <input type="number" min="0" name="stock" class="form-control-premium" value="<?= e($data['stock']) ?>" placeholder="0">
+                                </div>
+                                <div class="col-md-3">
                                     <label class="form-label">Weight (kg)</label>
                                     <input type="number" step="0.001" min="0" name="weight" class="form-control-premium" value="<?= e($data['weight']) ?>" placeholder="e.g. 1.5">
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label">Status</label>
                                     <select name="is_active" class="form-select-premium">
-                                        <option value="1" <?= $data['is_active'] === '1' ? 'selected' : '' ?>>Active (Visible)</option>
-                                        <option value="0" <?= $data['is_active'] === '0' ? 'selected' : '' ?>>Inactive (Hidden)</option>
+                                        <option value="1" <?= $data['is_active'] === '1' ? 'selected' : '' ?>>Active</option>
+                                        <option value="0" <?= $data['is_active'] === '0' ? 'selected' : '' ?>>Inactive</option>
                                     </select>
                                 </div>
                             </div>
@@ -627,6 +658,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <label class="form-label">Value</label>
                                     <input type="number" step="0.01" min="0" name="offer_value" id="offer_value" class="form-control-premium" value="<?= e($data['offer_value']) ?>" placeholder="10">
                                 </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Offer Target</label>
+                                    <select name="offer_target" class="form-select-premium">
+                                        <option value="product" <?= $data['offer_target'] === 'product' ? 'selected' : '' ?>>Specific Product</option>
+                                        <option value="category" <?= $data['offer_target'] === 'category' ? 'selected' : '' ?>>Entire Category</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Priority</label>
+                                    <input type="number" name="priority" class="form-control-premium" value="<?= e($data['priority']) ?>" placeholder="e.g. 1">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Start Date</label>
+                                    <input type="date" name="offer_start" class="form-control-premium" value="<?= e($data['offer_start']) ?>">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">End Date</label>
+                                    <input type="date" name="offer_end" class="form-control-premium" value="<?= e($data['offer_end']) ?>">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -647,7 +697,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <h6 class="fw-bold text-dark mb-1">Click to upload images</h6>
                                 <p class="small text-muted mb-0">JPG, PNG, WEBP (Max 5MB)</p>
                             </label>
-                            <input type="file" name="images[]" id="images" class="d-none" accept=".jpg,.jpeg,.png,.webp" multiple required>
+                            <input type="file" name="images[]" id="images" class="d-none" accept=".jpg,.jpeg,.png,.webp" multiple>
                             
                             <div id="imagePreviewContainer" class="preview-container"></div>
                         </div>
@@ -676,6 +726,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const discountPriceInput = document.getElementById('discount_price');
     const imageInput = document.getElementById('images');
     const previewContainer = document.getElementById('imagePreviewContainer');
+    let selectedFiles = [];
 
     function updateDiscountPrice() {
         const price = parseFloat(priceInput.value) || 0;
@@ -702,27 +753,45 @@ document.addEventListener('DOMContentLoaded', function () {
         discountPriceInput.value = discountPrice.toFixed(2);
     }
 
-    function previewImages(files) {
+    function updateFileInputAndPreview() {
+        const dt = new DataTransfer();
+        selectedFiles.forEach(file => dt.items.add(file));
+        imageInput.files = dt.files;
+
         previewContainer.innerHTML = '';
-        Array.from(files).forEach((file) => {
-            if (!file.type.startsWith('image/')) return;
+        selectedFiles.forEach((file, index) => {
             const reader = new FileReader();
             reader.onload = function (e) {
                 const card = document.createElement('div');
                 card.className = 'img-preview-card';
-                card.innerHTML = `<img src="${e.target.result}" title="${file.name}">`;
+                card.innerHTML = `
+                    <button type="button" class="remove-img-btn" onclick="removeNewImage(${index})" title="Remove image">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    <img src="${e.target.result}" title="${file.name}">
+                `;
                 previewContainer.appendChild(card);
             };
             reader.readAsDataURL(file);
         });
     }
 
+    window.removeNewImage = function(index) {
+        selectedFiles.splice(index, 1);
+        updateFileInputAndPreview();
+    };
+
     priceInput.addEventListener('input', updateDiscountPrice);
     offerTypeInput.addEventListener('change', updateDiscountPrice);
     offerValueInput.addEventListener('input', updateDiscountPrice);
 
     imageInput.addEventListener('change', function () {
-        previewImages(this.files);
+        Array.from(this.files).forEach(file => {
+            if (file.type.startsWith('image/')) {
+                selectedFiles.push(file);
+            }
+        });
+        updateFileInputAndPreview();
     });
 
     updateDiscountPrice();

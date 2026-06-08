@@ -172,6 +172,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $uploadedImages = productImages($product['images'] ?? '');
     $remove_images = $_POST['remove_images'] ?? []; // Future functionality
 
+    if (!empty($remove_images)) {
+        $uploadedImages = array_diff($uploadedImages, $remove_images);
+        foreach ($remove_images as $r_img) {
+            $p = __DIR__ . '/../uploads/' . basename($r_img);
+            if (file_exists($p) && is_file($p)) {
+                unlink($p);
+            }
+        }
+    }
+
     // Check if POST size exceeded limit
     if (empty($_FILES) && empty($_POST) && isset($_SERVER['REQUEST_METHOD']) && strtolower($_SERVER['REQUEST_METHOD']) == 'post') {
         $errors[] = 'The uploaded files exceed the maximum allowed server upload size.';
@@ -473,7 +483,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     .img-preview-card {
         border-radius: 12px;
-        overflow: hidden;
+        overflow: visible;
         border: 1px solid #e2e8f0;
         box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         background: white;
@@ -486,6 +496,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         height: 90px;
         object-fit: cover;
         border-radius: 8px;
+    }
+
+    .remove-img-btn {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        font-size: 12px;
+        transition: all 0.2s;
+        z-index: 10;
+        padding: 0;
+    }
+
+    .remove-img-btn:hover {
+        background: #dc2626;
+        transform: scale(1.1);
     }
 </style>
 
@@ -518,7 +554,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         <?php endif; ?>
 
-        <form method="POST" enctype="multipart/form-data">
+        <form method="POST" enctype="multipart/form-data" id="productForm">
             <div class="row g-4">
                 
                 <!-- Left Column -->
@@ -670,7 +706,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <?php if (!empty($existing)): ?>
                                 <div class="preview-container mt-0">
                                     <?php foreach ($existing as $img): ?>
-                                        <div class="img-preview-card">
+                                        <div class="img-preview-card" id="existing-img-<?= md5($img) ?>">
+                                            <button type="button" class="remove-img-btn" onclick="removeExistingImage('<?= e($img) ?>', 'existing-img-<?= md5($img) ?>')" title="Remove image">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </button>
                                             <img src="../uploads/<?= e($img) ?>" alt="Product image">
                                         </div>
                                     <?php endforeach; ?>
@@ -721,6 +760,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const discountPriceInput = document.getElementById('discount_price');
     const imageInput = document.getElementById('images');
     const previewContainer = document.getElementById('imagePreviewContainer');
+    let selectedFiles = [];
 
     function updateDiscountPrice() {
         const price = parseFloat(priceInput.value) || 0;
@@ -747,28 +787,61 @@ document.addEventListener('DOMContentLoaded', function () {
         discountPriceInput.value = discountPrice.toFixed(2);
     }
 
-    function previewImages(files) {
+    function updateFileInputAndPreview() {
+        const dt = new DataTransfer();
+        selectedFiles.forEach(file => dt.items.add(file));
+        imageInput.files = dt.files;
+
         previewContainer.innerHTML = '';
-        Array.from(files).forEach((file) => {
-            if (!file.type.startsWith('image/')) return;
+        selectedFiles.forEach((file, index) => {
             const reader = new FileReader();
             reader.onload = function (e) {
                 const card = document.createElement('div');
                 card.className = 'img-preview-card';
-                card.innerHTML = `<img src="${e.target.result}" title="${file.name}">`;
+                card.innerHTML = `
+                    <button type="button" class="remove-img-btn" onclick="removeNewImage(${index})" title="Remove image">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    <img src="${e.target.result}" title="${file.name}">
+                `;
                 previewContainer.appendChild(card);
             };
             reader.readAsDataURL(file);
         });
     }
 
+    window.removeNewImage = function(index) {
+        selectedFiles.splice(index, 1);
+        updateFileInputAndPreview();
+    };
+
+    window.removeExistingImage = function(imageName, elementId) {
+        if(confirm('Are you sure you want to remove this image? It will be deleted when you update the product.')) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'remove_images[]';
+            input.value = imageName;
+            document.getElementById('productForm').appendChild(input);
+            
+            const el = document.getElementById(elementId);
+            if(el) el.remove();
+        }
+    };
+
     priceInput.addEventListener('input', updateDiscountPrice);
     offerTypeInput.addEventListener('change', updateDiscountPrice);
     offerValueInput.addEventListener('input', updateDiscountPrice);
 
     imageInput.addEventListener('change', function () {
-        previewImages(this.files);
+        Array.from(this.files).forEach(file => {
+            if (file.type.startsWith('image/')) {
+                selectedFiles.push(file);
+            }
+        });
+        updateFileInputAndPreview();
     });
+
+    updateDiscountPrice();
 });
 </script>
 
