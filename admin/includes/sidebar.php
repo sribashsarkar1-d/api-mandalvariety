@@ -381,6 +381,16 @@ $adminEmail = $_SESSION['admin_email'] ?? 'admin@example.com';
             </li>
         </ul>
 
+        <div class="sidebar-group-title">Logistics</div>
+        <ul class="sidebar-menu">
+            <li>
+                <a href="<?= $basePath ?>delivery-boys/list.php" class="<?= isMenuActive(['delivery-boys', 'delivery_boys']) ? 'active' : '' ?>">
+                    <i class="fa-solid fa-motorcycle" style="width:20px; text-align:center; flex-shrink:0;"></i>
+                    <span>Delivery Partners</span>
+                </a>
+            </li>
+        </ul>
+
         <div class="sidebar-group-title">System</div>
         <ul class="sidebar-menu">
             <li>

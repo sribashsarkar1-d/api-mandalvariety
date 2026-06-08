@@ -405,6 +405,7 @@ $currentStatus = val($order, ['status'], 'pending');
 $currentTrackingStatus = val($order, ['tracking_status'], 'ordered');
 $currentPaymentStatus = val($order, ['payment_status'], 'pending');
 $currentRemark = val($order, ['admin_remark', 'remark'], '');
+$currentAssignedDeliveryId = val($order, ['assigned_delivery_id'], null);
 
 $itemsSubtotal = 0;
 $totalQty = 0;
@@ -585,6 +586,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
                 $updateFields[] = "remark = ?";
                 $updateParams[] = $remark;
             }
+
+            if (isset($_POST['assigned_delivery_id'])) {
+                $assignedDeliveryId = $_POST['assigned_delivery_id'] === '' ? null : (int)$_POST['assigned_delivery_id'];
+                $updateFields[] = "assigned_delivery_id = ?";
+                $updateParams[] = $assignedDeliveryId;
+            }
+
             if (array_key_exists('invoice_no', $order) && empty($order['invoice_no'])) {
                 $updateFields[] = "invoice_no = ?";
                 $updateParams[] = $invoiceNo;
@@ -885,7 +893,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
                         <input type="hidden" name="order_id" value="<?= (int)$orderId ?>">
 
                         <div class="row g-3">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">Order Status</label>
                                 <select name="status" class="form-select" required>
                                     <?php
@@ -899,7 +907,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
                                 </select>
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">Tracking Status</label>
                                 <select name="tracking_status" class="form-select" required>
                                     <?php
@@ -913,7 +921,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
                                 </select>
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">Payment Status</label>
                                 <select name="payment_status" class="form-select" required>
                                     <?php
@@ -922,6 +930,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
                                     ?>
                                         <option value="<?= e($st) ?>" <?= $currentPaymentStatus === $st ? 'selected' : '' ?>>
                                             <?= e(formatStatus($st)) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Assign Delivery</label>
+                                <select name="assigned_delivery_id" class="form-select">
+                                    <option value="">-- No Delivery Boy --</option>
+                                    <?php
+                                    $stmtBoys = $conn->query("SELECT id, name FROM delivery_boys WHERE is_active = 1 ORDER BY name ASC");
+                                    $allBoys = $stmtBoys->fetchAll();
+                                    foreach ($allBoys as $boy):
+                                    ?>
+                                        <option value="<?= $boy['id'] ?>" <?= $currentAssignedDeliveryId == $boy['id'] ? 'selected' : '' ?>>
+                                            <?= e($boy['name']) ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>

@@ -84,9 +84,12 @@ $stmt = $conn->prepare("
         o.*,
         u.name AS user_name,
         u.email AS user_email,
-        u.phone AS user_phone
+        u.phone AS user_phone,
+        d.name AS delivery_boy_name,
+        d.phone AS delivery_boy_phone
     FROM orders o
     LEFT JOIN users u ON o.user_id = u.id
+    LEFT JOIN delivery_boys d ON o.assigned_delivery_id = d.id
     WHERE o.id = ?
     LIMIT 1
 ");
@@ -165,7 +168,12 @@ $deliveryCity = val($order, ['delivery_city', 'shipping_city', 'city'], 'N/A');
 $deliveryState = val($order, ['delivery_state', 'shipping_state', 'state'], 'N/A');
 $deliveryCountry = val($order, ['delivery_country', 'shipping_country', 'country'], 'N/A');
 $deliveryPincode = val($order, ['delivery_pincode', 'shipping_pincode', 'pincode', 'postal_code', 'zip', 'zip_code'], 'N/A');
-$deliveryId = val($order, ['delivery_id', 'delivery_boy_id', 'assigned_delivery_id', 'rider_id'], 'N/A');
+
+$deliveryBoyStr = 'Unassigned';
+if (!empty($order['delivery_boy_name'])) {
+    $deliveryBoyStr = e($order['delivery_boy_name']) . (!empty($order['delivery_boy_phone']) ? ' (' . e($order['delivery_boy_phone']) . ')' : '');
+}
+$deliveryId = $deliveryBoyStr;
 
 $etaRaw = val($order, ['delivery_eta', 'estimated_delivery_date', 'delivery_date', 'eta'], '');
 $deliveryEta = ($etaRaw !== 'N/A' && $etaRaw !== '') ? date('d M Y', strtotime($etaRaw)) : 'N/A';
@@ -711,8 +719,8 @@ $grandTotal = $itemsSubtotal - $offerDiscount + $deliveryCharge;
                                 <div class="info-value"><?= e($deliveryPincode) ?></div>
                             </div>
                             <div class="info-item">
-                                <div class="info-key">Delivery ID</div>
-                                <div class="info-value"><?= e($deliveryId) ?></div>
+                                <div class="info-key">Assigned Delivery</div>
+                                <div class="info-value"><?= $deliveryId ?></div>
                             </div>
                             <div class="info-item">
                                 <div class="info-key">ETA</div>
