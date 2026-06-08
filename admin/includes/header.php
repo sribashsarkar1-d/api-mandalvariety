@@ -17,8 +17,9 @@
     <style>
         .d-flex > .w-100 {
             min-width: 0;
-            width: calc(100% - 260px) !important;
-            flex-grow: 1;
+            width: auto !important;
+            flex: 1;
+            transition: all 0.25s ease;
         }
         @media (max-width: 991.98px) {
             .d-flex > .w-100 {

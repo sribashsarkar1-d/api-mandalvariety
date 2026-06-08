@@ -233,6 +233,23 @@ function getAttributesHtml($jsonAttr) {
         z-index: 2;
     }
 
+    @media (max-width: 768px) {
+        .page-header-premium {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 20px;
+        }
+        .page-header-premium .d-flex {
+            width: 100%;
+            flex-wrap: wrap;
+        }
+        .page-header-premium .btn {
+            flex: 1;
+            justify-content: center;
+        }
+    }
+
     .premium-card {
         background: var(--glass-bg);
         backdrop-filter: blur(16px);

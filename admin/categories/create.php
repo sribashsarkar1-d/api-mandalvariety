@@ -143,6 +143,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         z-index: 2;
     }
 
+    @media (max-width: 768px) {
+        .page-header-premium {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 20px;
+        }
+        .page-header-premium .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
     .premium-card {
         background: var(--glass-bg);
         backdrop-filter: blur(16px);

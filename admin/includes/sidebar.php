@@ -248,28 +248,30 @@ $adminEmail = $_SESSION['admin_email'] ?? 'admin@example.com';
         color: #fff;
     }
 
-    .sidebar.collapsed .sidebar-brand,
-    .sidebar.collapsed .sidebar-group-title,
-    .sidebar.collapsed .sidebar-menu li a span,
-    .sidebar.collapsed .sidebar-user-info {
-        display: none;
-    }
+    @media (min-width: 992px) {
+        .sidebar.collapsed .sidebar-brand,
+        .sidebar.collapsed .sidebar-group-title,
+        .sidebar.collapsed .sidebar-menu li a span,
+        .sidebar.collapsed .sidebar-user-info {
+            display: none;
+        }
 
-    .sidebar.collapsed .sidebar-header {
-        justify-content: center;
-    }
+        .sidebar.collapsed .sidebar-header {
+            justify-content: center;
+        }
 
-    .sidebar.collapsed .sidebar-menu li a {
-        justify-content: center;
-        padding: 12px;
-    }
+        .sidebar.collapsed .sidebar-menu li a {
+            justify-content: center;
+            padding: 12px;
+        }
 
-    .sidebar.collapsed .sidebar-user {
-        justify-content: center;
-    }
+        .sidebar.collapsed .sidebar-user {
+            justify-content: center;
+        }
 
-    .sidebar.collapsed .sidebar-user-logout {
-        display: none;
+        .sidebar.collapsed .sidebar-user-logout {
+            display: none;
+        }
     }
 
     @media (max-width: 991.98px) {
@@ -277,13 +279,16 @@ $adminEmail = $_SESSION['admin_email'] ?? 'admin@example.com';
             position: fixed;
             left: 0;
             top: 0;
-            transform: translateX(0);
+            transform: translateX(-100%);
+            width: 260px !important;
+            min-width: 260px !important;
+            z-index: 1050;
         }
 
         .sidebar.collapsed {
-            transform: translateX(-100%);
-            width: 260px;
-            min-width: 260px;
+            transform: translateX(0);
+            width: 260px !important;
+            min-width: 260px !important;
         }
     }
 </style> 
