@@ -23,9 +23,9 @@ $is_available = (int)$boy['is_available'] === 1;
 // Fetch assigned active orders
 // Active orders: not delivered, not cancelled, not returned
 $stmt = $conn->prepare("
-    SELECT id, order_number, grand_total, status, delivery_address, pincode, created_at
+    SELECT *
     FROM orders 
-    WHERE assigned_delivery_id = ? AND status IN ('confirmed', 'preparing', 'out_for_delivery')
+    WHERE assigned_delivery_id = ? AND status NOT IN ('delivered', 'cancelled', 'returned')
     ORDER BY created_at DESC
 ");
 $stmt->execute([$delivery_id]);
@@ -147,23 +147,23 @@ $delivered_count = $stmt->fetchColumn();
             <div class="premium-card order-card p-3">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
-                        <div class="fw-bold">#<?= e($order['order_number']) ?></div>
-                        <div class="text-muted small"><?= date('h:i A, M d', strtotime($order['created_at'])) ?></div>
+                        <div class="fw-bold">#<?= e($order['order_number'] ?? $order['order_no'] ?? 'N/A') ?></div>
+                        <div class="text-muted small"><?= !empty($order['created_at']) ? date('h:i A, M d', strtotime($order['created_at'])) : 'Unknown time' ?></div>
                     </div>
-                    <span class="order-status status-<?= e($order['status']) ?>">
-                        <?= str_replace('_', ' ', e($order['status'])) ?>
+                    <span class="order-status status-<?= e($order['status'] ?? 'unknown') ?>">
+                        <?= str_replace('_', ' ', e($order['status'] ?? 'unknown')) ?>
                     </span>
                 </div>
                 
                 <div class="d-flex align-items-center gap-2 mb-3 mt-3">
                     <i class="fa-solid fa-location-dot text-danger"></i>
                     <div class="small text-muted text-truncate">
-                        <?= e($order['delivery_address']) ?>
+                        <?= e($order['shipping_address'] ?? $order['delivery_address'] ?? $order['address'] ?? 'No address provided') ?>
                     </div>
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center">
-                    <div class="fw-bold text-success">₹<?= number_format((float)$order['grand_total'], 2) ?></div>
+                    <div class="fw-bold text-success">₹<?= number_format((float)($order['grand_total'] ?? $order['total_amount'] ?? 0), 2) ?></div>
                     <a href="view_order.php?id=<?= (int)$order['id'] ?>" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold">
                         View Details
                     </a>
