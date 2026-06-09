@@ -21,8 +21,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $token = bin2hex(random_bytes(32));
             $expires_at = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
-            $updateStmt = $conn->prepare("UPDATE users SET reset_token = ?, reset_token_expires_at = ? WHERE id = ?");
-            $updateStmt->execute([$token, $expires_at, $admin['id']]);
+            try {
+                $updateStmt = $conn->prepare("UPDATE users SET reset_token = ?, reset_token_expires_at = ? WHERE id = ?");
+                $updateStmt->execute([$token, $expires_at, $admin['id']]);
+            } catch (PDOException $e) {
+                // If columns are missing, try to auto-add them
+                if (isset($e->errorInfo[1]) && $e->errorInfo[1] == 1054) { // 1054 = Unknown column
+                    $conn->exec("ALTER TABLE users ADD COLUMN reset_token VARCHAR(255) NULL");
+                    $conn->exec("ALTER TABLE users ADD COLUMN reset_token_expires_at DATETIME NULL");
+                    
+                    // Try the update again
+                    $updateStmt = $conn->prepare("UPDATE users SET reset_token = ?, reset_token_expires_at = ? WHERE id = ?");
+                    $updateStmt->execute([$token, $expires_at, $admin['id']]);
+                } else {
+                    $error = 'Database error: ' . $e->getMessage();
+                }
+            }
 
             $resetLink = BASE_URL . "reset-password.php?token=" . urlencode($token);
             

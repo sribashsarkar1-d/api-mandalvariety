@@ -11,10 +11,14 @@ $token = $_GET['token'] ?? '';
 if (empty($token)) {
     $error = 'Invalid or missing reset token.';
 } else {
-    // Validate token
-    $stmt = $conn->prepare("SELECT id FROM users WHERE reset_token = ? AND reset_token_expires_at > NOW() LIMIT 1");
-    $stmt->execute([$token]);
-    $admin = $stmt->fetch();
+    try {
+        $stmt = $conn->prepare("SELECT id FROM users WHERE reset_token = ? AND reset_token_expires_at > NOW() LIMIT 1");
+        $stmt->execute([$token]);
+        $admin = $stmt->fetch();
+    } catch (PDOException $e) {
+        $admin = false;
+        // If columns are missing, ignore and let it fall through to invalid token
+    }
 
     if ($admin) {
         $validToken = true;
