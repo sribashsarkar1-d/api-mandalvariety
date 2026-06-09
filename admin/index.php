@@ -155,7 +155,8 @@ if (!function_exists('old')) {
 
         <button type="submit" class="btn btn-success w-100">Login</button>
 
-        <div class="text-center mt-3">
+        <div class="d-flex justify-content-between mt-3">
+            <a href="forgot-password.php" class="text-decoration-none text-secondary">Forgot Password?</a>
             <a href="signup.php" class="text-decoration-none">Create Admin Account</a>
         </div>
     </form>
