@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($password !== $confirm_password) {
         $error = 'Passwords do not match.';
     } else {
-        $checkStmt = $pdo->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+        $checkStmt = $conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
         $checkStmt->execute([$email]);
 
         if ($checkStmt->fetch()) {
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $is_verified       = 1;
             $email_verified_at = date('Y-m-d H:i:s');
 
-            $insertStmt = $pdo->prepare("
+            $insertStmt = $conn->prepare("
                 INSERT INTO users (
                     name,
                     email,
