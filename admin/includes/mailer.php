@@ -1,5 +1,4 @@
 <?php
-// Correct relative path from admin/includes to the root PHPMailer folder
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
