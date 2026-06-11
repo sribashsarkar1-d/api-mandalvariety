@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS `inventory_users` (
 CREATE TABLE IF NOT EXISTS `inventory_purchases` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `product_name` varchar(255) NOT NULL,
-  `quantity` int(11) NOT NULL,
+  `quantity` decimal(10,3) NOT NULL,
+  `unit` varchar(20) NOT NULL DEFAULT 'pcs',
   `purchase_price` decimal(10,2) NOT NULL,
   `purchase_date` date NOT NULL,
   `expiry_date` date DEFAULT NULL,

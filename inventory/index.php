@@ -70,7 +70,7 @@ require_once 'includes/header.php';
                         <tr>
                             <td class="ps-4 fw-medium text-muted">#<?= $row['id'] ?></td>
                             <td class="fw-bold text-dark"><?= e($row['product_name']) ?></td>
-                            <td><span class="badge bg-light text-dark border px-2 py-1"><?= $row['quantity'] ?> pcs</span></td>
+                            <td><span class="badge bg-light text-dark border px-2 py-1"><?= floatval($row['quantity']) ?> <?= e($row['unit'] ?? 'pcs') ?></span></td>
                             <td class="fw-medium">₹<?= number_format($row['purchase_price'], 2) ?></td>
                             <td class="fw-bold text-success">₹<?= number_format($row['quantity'] * $row['purchase_price'], 2) ?></td>
                             <td class="text-muted"><i class="far fa-calendar-alt me-1"></i> <?= date('d M, Y', strtotime($row['purchase_date'])) ?></td>
@@ -79,12 +79,13 @@ require_once 'includes/header.php';
                                 if(!empty($row['expiry_date'])) {
                                     $expDate = strtotime($row['expiry_date']);
                                     $today = strtotime(date('Y-m-d'));
+                                    $dateStr = date('d M, Y', $expDate);
                                     if ($expDate < $today) {
-                                        echo "<span class='badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1 rounded-pill'><i class='fas fa-exclamation-circle me-1'></i> Expired</span>";
+                                        echo "<span class='badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1 rounded-pill'><i class='fas fa-exclamation-circle me-1'></i> Expired</span><br><small class='text-muted'>$dateStr</small>";
                                     } elseif ($expDate < strtotime('+7 days')) {
-                                        echo "<span class='badge bg-warning bg-opacity-10 text-warning border border-warning px-2 py-1 rounded-pill'><i class='fas fa-clock me-1'></i> Expiring Soon</span>";
+                                        echo "<span class='badge bg-warning bg-opacity-10 text-warning border border-warning px-2 py-1 rounded-pill'><i class='fas fa-clock me-1'></i> Expiring Soon</span><br><small class='text-muted'>$dateStr</small>";
                                     } else {
-                                        echo "<span class='badge bg-success bg-opacity-10 text-success border border-success px-2 py-1 rounded-pill'><i class='fas fa-check-circle me-1'></i> Valid</span>";
+                                        echo "<span class='badge bg-success bg-opacity-10 text-success border border-success px-2 py-1 rounded-pill'><i class='fas fa-check-circle me-1'></i> Valid</span><br><small class='text-muted'>$dateStr</small>";
                                     }
                                 } else {
                                     echo "<span class='text-muted small'>No Expiry</span>";

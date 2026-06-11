@@ -9,7 +9,8 @@ $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $product_name = trim($_POST['product_name'] ?? '');
-    $quantity = (int)($_POST['quantity'] ?? 0);
+    $quantity = (float)($_POST['quantity'] ?? 0);
+    $unit = trim($_POST['unit'] ?? 'pcs');
     $purchase_price = (float)($_POST['purchase_price'] ?? 0);
     $purchase_date = $_POST['purchase_date'] ?? '';
     $expiry_date = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : null;
@@ -17,8 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($product_name) || $quantity <= 0 || $purchase_price <= 0 || empty($purchase_date)) {
         $error = "Please fill all required fields correctly.";
     } else {
-        $stmt = $conn->prepare("INSERT INTO inventory_purchases (product_name, quantity, purchase_price, purchase_date, expiry_date) VALUES (?, ?, ?, ?, ?)");
-        if ($stmt->execute([$product_name, $quantity, $purchase_price, $purchase_date, $expiry_date])) {
+        $stmt = $conn->prepare("INSERT INTO inventory_purchases (product_name, quantity, unit, purchase_price, purchase_date, expiry_date) VALUES (?, ?, ?, ?, ?, ?)");
+        if ($stmt->execute([$product_name, $quantity, $unit, $purchase_price, $purchase_date, $expiry_date])) {
             header("Location: index.php");
             exit;
         } else {
@@ -57,12 +58,25 @@ require_once 'includes/header.php';
                             </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label fw-medium text-secondary">Quantity (pcs) <span class="text-danger">*</span></label>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium text-secondary">Quantity <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light text-muted border-end-0"><i class="fas fa-layer-group"></i></span>
-                                <input type="number" name="quantity" class="form-control border-start-0 ps-0" placeholder="0" required min="1">
+                                <input type="number" step="0.01" name="quantity" class="form-control border-start-0 ps-0" placeholder="0" required min="0.01">
                             </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label fw-medium text-secondary">Unit</label>
+                            <select name="unit" class="form-select">
+                                <option value="pcs">pcs</option>
+                                <option value="kg">kg</option>
+                                <option value="g">g</option>
+                                <option value="L">L</option>
+                                <option value="ml">ml</option>
+                                <option value="box">box</option>
+                                <option value="packet">packet</option>
+                            </select>
                         </div>
 
                         <div class="col-md-6">
