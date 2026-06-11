@@ -20,6 +20,8 @@ if (!$purchase) {
     exit;
 }
 
+$error = '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $product_name = trim($_POST['product_name'] ?? '');
     $quantity = (int)($_POST['quantity'] ?? 0);

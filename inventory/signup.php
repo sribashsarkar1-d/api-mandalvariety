@@ -1,5 +1,7 @@
 <?php
 require_once 'includes/config.php';
+$error = '';
+$success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
