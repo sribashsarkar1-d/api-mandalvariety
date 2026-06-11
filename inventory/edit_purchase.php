@@ -5,12 +5,12 @@ if (!isset($_SESSION['inventory_user_id'])) {
     exit;
 }
 
-$id = $_GET['id'] ?? null;
-if (!$id) {
+if (!isset($_GET['id'])) {
     header("Location: index.php");
     exit;
 }
 
+$id = (int)$_GET['id'];
 $stmt = $conn->prepare("SELECT * FROM inventory_purchases WHERE id = ?");
 $stmt->execute([$id]);
 $purchase = $stmt->fetch();
@@ -26,11 +26,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $product_name = trim($_POST['product_name'] ?? '');
     $quantity = (int)($_POST['quantity'] ?? 0);
     $purchase_price = (float)($_POST['purchase_price'] ?? 0);
-    $purchase_date = $_POST['purchase_date'] ?? date('Y-m-d');
+    $purchase_date = $_POST['purchase_date'] ?? '';
     $expiry_date = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : null;
 
-    if (empty($product_name) || $quantity <= 0 || $purchase_price < 0) {
-        $error = "Please provide valid product name, quantity, and price.";
+    if (empty($product_name) || $quantity <= 0 || $purchase_price <= 0 || empty($purchase_date)) {
+        $error = "Please fill all required fields correctly.";
     } else {
         $stmt = $conn->prepare("UPDATE inventory_purchases SET product_name = ?, quantity = ?, purchase_price = ?, purchase_date = ?, expiry_date = ? WHERE id = ?");
         if ($stmt->execute([$product_name, $quantity, $purchase_price, $purchase_date, $expiry_date, $id])) {
@@ -44,43 +44,73 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 require_once 'includes/header.php';
 ?>
 
+<div class="d-flex align-items-center mb-4">
+    <a href="index.php" class="btn btn-light border text-secondary rounded-circle me-3" style="width: 40px; height: 40px; padding: 7px;">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <div>
+        <h3 class="fw-bold mb-0 text-dark">Edit Purchase #<?= $id ?></h3>
+        <p class="text-muted mb-0 small">Update the details of this stock entry</p>
+    </div>
+</div>
+
 <div class="row">
-    <div class="col-md-8 mx-auto">
-        <div class="card">
-            <div class="card-header bg-info text-white">
-                <h4 class="mb-0">Edit Purchase</h4>
-            </div>
-            <div class="card-body">
+    <div class="col-lg-8">
+        <div class="card border-0">
+            <div class="card-body p-4">
                 <?php if(!empty($error)): ?>
-                    <div class="alert alert-danger"><?= e($error) ?></div>
+                    <div class="alert alert-danger p-2 mb-4" style="border-radius: 8px;"><i class="fas fa-exclamation-triangle me-2"></i><?= e($error) ?></div>
                 <?php endif; ?>
+                
                 <form method="POST" action="">
-                    <div class="mb-3">
-                        <label class="form-label">Product Name</label>
-                        <input type="text" name="product_name" class="form-control" value="<?= e($purchase['product_name'] ?? '') ?>" required>
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <label class="form-label fw-medium text-secondary">Product Name <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted border-end-0"><i class="fas fa-box"></i></span>
+                                <input type="text" name="product_name" class="form-control border-start-0 ps-0" value="<?= e($purchase['product_name']) ?>" required>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium text-secondary">Quantity (pcs) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted border-end-0"><i class="fas fa-layer-group"></i></span>
+                                <input type="number" name="quantity" class="form-control border-start-0 ps-0" value="<?= $purchase['quantity'] ?>" required min="1">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium text-secondary">Purchase Price (Per item) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted border-end-0"><i class="fas fa-rupee-sign"></i></span>
+                                <input type="number" step="0.01" name="purchase_price" class="form-control border-start-0 ps-0" value="<?= $purchase['purchase_price'] ?>" required min="0">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium text-secondary">Purchase Date <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted border-end-0"><i class="far fa-calendar-check"></i></span>
+                                <input type="date" name="purchase_date" class="form-control border-start-0 ps-0" value="<?= $purchase['purchase_date'] ?>" required>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium text-secondary">Expiry Date <span class="text-muted fw-normal">(Optional)</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted border-end-0"><i class="far fa-calendar-times"></i></span>
+                                <input type="date" name="expiry_date" class="form-control border-start-0 ps-0" value="<?= $purchase['expiry_date'] ?>">
+                            </div>
+                        </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Quantity</label>
-                            <input type="number" name="quantity" class="form-control" value="<?= $purchase['quantity'] ?? '' ?>" min="1" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Unit Price / Cost</label>
-                            <input type="number" step="0.01" name="purchase_price" class="form-control" value="<?= $purchase['purchase_price'] ?? '' ?>" min="0" required>
-                        </div>
+                    
+                    <hr class="my-4 text-muted">
+                    
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="index.php" class="btn btn-light border px-4">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-5 shadow-sm"><i class="fas fa-save me-1"></i> Update Purchase</button>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Purchase Date</label>
-                            <input type="date" name="purchase_date" class="form-control" value="<?= $purchase['purchase_date'] ?? '' ?>" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Expiry Date (optional)</label>
-                            <input type="date" name="expiry_date" class="form-control" value="<?= $purchase['expiry_date'] ?? '' ?>">
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Update Purchase</button>
-                    <a href="index.php" class="btn btn-secondary">Cancel</a>
                 </form>
             </div>
         </div>

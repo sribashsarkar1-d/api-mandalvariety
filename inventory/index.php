@@ -22,74 +22,91 @@ $purchases = $stmt->fetchAll();
 require_once 'includes/header.php';
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Inventory Purchases</h2>
-    <a href="add_purchase.php" class="btn btn-success"><i class="fas fa-plus"></i> Add New</a>
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+        <h2 class="fw-bold mb-0 text-dark">Inventory Purchases</h2>
+        <p class="text-muted mb-0 small">Manage your shop's stock and purchases efficiently.</p>
+    </div>
+    <a href="add_purchase.php" class="btn btn-primary shadow-sm px-4">
+        <i class="fas fa-plus me-1"></i> Add New
+    </a>
 </div>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" action="index.php" class="d-flex">
-            <input type="text" name="search" class="form-control me-2" placeholder="Search product name..." value="<?= e($search) ?>">
-            <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Search</button>
-            <?php if(!empty($search)): ?>
-                <a href="index.php" class="btn btn-secondary ms-2">Clear</a>
-            <?php endif; ?>
+<div class="card mb-4 border-0">
+    <div class="card-body p-3 p-md-4">
+        <form method="GET" action="index.php" class="d-flex flex-column flex-md-row gap-2">
+            <div class="input-group flex-grow-1">
+                <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-search"></i></span>
+                <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Search by product name..." value="<?= e($search) ?>">
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary px-4"><i class="fas fa-search me-1"></i> Search</button>
+                <?php if(!empty($search)): ?>
+                    <a href="index.php" class="btn btn-outline-secondary px-3">Clear</a>
+                <?php endif; ?>
+            </div>
         </form>
     </div>
 </div>
 
-<div class="card">
+<div class="card border-0 overflow-hidden">
     <div class="card-body p-0 table-responsive">
-        <table class="table table-striped table-hover mb-0">
-            <thead class="table-dark">
+        <table class="table table-hover align-middle mb-0" style="min-width: 800px;">
+            <thead class="table-light text-secondary">
                 <tr>
-                    <th>ID</th>
+                    <th class="ps-4">ID</th>
                     <th>Product Name</th>
                     <th>Quantity</th>
                     <th>Price</th>
                     <th>Total</th>
                     <th>Purchase Date</th>
-                    <th>Expiry Date</th>
-                    <th>Actions</th>
+                    <th>Status</th>
+                    <th class="text-end pe-4">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="border-top-0">
                 <?php if(count($purchases) > 0): ?>
                     <?php foreach($purchases as $row): ?>
                         <tr>
-                            <td><?= $row['id'] ?></td>
-                            <td><?= e($row['product_name']) ?></td>
-                            <td><?= $row['quantity'] ?></td>
-                            <td>₹<?= number_format($row['purchase_price'], 2) ?></td>
-                            <td>₹<?= number_format($row['quantity'] * $row['purchase_price'], 2) ?></td>
-                            <td><?= date('d M, Y', strtotime($row['purchase_date'])) ?></td>
+                            <td class="ps-4 fw-medium text-muted">#<?= $row['id'] ?></td>
+                            <td class="fw-bold text-dark"><?= e($row['product_name']) ?></td>
+                            <td><span class="badge bg-light text-dark border px-2 py-1"><?= $row['quantity'] ?> pcs</span></td>
+                            <td class="fw-medium">₹<?= number_format($row['purchase_price'], 2) ?></td>
+                            <td class="fw-bold text-success">₹<?= number_format($row['quantity'] * $row['purchase_price'], 2) ?></td>
+                            <td class="text-muted"><i class="far fa-calendar-alt me-1"></i> <?= date('d M, Y', strtotime($row['purchase_date'])) ?></td>
                             <td>
                                 <?php 
                                 if(!empty($row['expiry_date'])) {
                                     $expDate = strtotime($row['expiry_date']);
                                     $today = strtotime(date('Y-m-d'));
                                     if ($expDate < $today) {
-                                        echo "<span class='badge bg-danger'>Expired on " . date('d M, Y', $expDate) . "</span>";
+                                        echo "<span class='badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1 rounded-pill'><i class='fas fa-exclamation-circle me-1'></i> Expired</span>";
                                     } elseif ($expDate < strtotime('+7 days')) {
-                                        echo "<span class='badge bg-warning text-dark'>Expiring " . date('d M, Y', $expDate) . "</span>";
+                                        echo "<span class='badge bg-warning bg-opacity-10 text-warning border border-warning px-2 py-1 rounded-pill'><i class='fas fa-clock me-1'></i> Expiring Soon</span>";
                                     } else {
-                                        echo date('d M, Y', $expDate);
+                                        echo "<span class='badge bg-success bg-opacity-10 text-success border border-success px-2 py-1 rounded-pill'><i class='fas fa-check-circle me-1'></i> Valid</span>";
                                     }
                                 } else {
-                                    echo "-";
+                                    echo "<span class='text-muted small'>No Expiry</span>";
                                 }
                                 ?>
                             </td>
-                            <td>
-                                <a href="edit_purchase.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-info text-white"><i class="fas fa-edit"></i> Edit</a>
-                                <a href="delete_purchase.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this item?');"><i class="fas fa-trash"></i> Delete</a>
+                            <td class="text-end pe-4">
+                                <a href="edit_purchase.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-light border text-primary rounded-circle" title="Edit" style="width: 32px; height: 32px; padding: 4px;">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="delete_purchase.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-light border text-danger rounded-circle ms-1" title="Delete" onclick="return confirm('Are you sure you want to delete this item?');" style="width: 32px; height: 32px; padding: 4px;">
+                                    <i class="fas fa-trash"></i>
+                                </a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="8" class="text-center">No purchases found.</td>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="fas fa-box-open fs-1 text-light mb-3"></i><br>
+                            No purchases found. Start adding your inventory!
+                        </td>
                     </tr>
                 <?php endif; ?>
             </tbody>
