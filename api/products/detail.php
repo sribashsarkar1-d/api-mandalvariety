@@ -48,11 +48,28 @@ try {
             }
         }
         $product['images'] = $full_images;
+        // Parse attributes
+        $attributes = [];
+        if (!empty($product['attributes'])) {
+            $decodedAttrs = json_decode($product['attributes'], true);
+            if (is_array($decodedAttrs)) {
+                $attributes = $decodedAttrs;
+            }
+            // Optional: return parsed attributes instead of string
+            $product['attributes'] = $attributes; 
+        }
+
         // 1. shortDescription
         $product['shortDescription'] = $product['short_description'] ?? 'High quality product available at best price.';
         
         // 2. brand
-        $product['brand'] = $product['brand'] ?? 'Mandal Variety';
+        $brand = $product['brand'] ?? null;
+        if (empty($brand) && !empty($attributes['Brand'])) {
+            $brand = $attributes['Brand'];
+        } elseif (empty($brand) && !empty($attributes['brand'])) {
+            $brand = $attributes['brand'];
+        }
+        $product['brand'] = !empty($brand) ? $brand : 'Mandal Variety';
         
         // 3. unitLabel
         $product['unitLabel'] = $product['unit_label'] ?? $product['unit'] ?? 'pcs';
