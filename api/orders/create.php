@@ -28,8 +28,8 @@ $total_amount = 0;
 foreach ($cart_items as $item) {
     $total_amount += $item['quantity'] * $item['price_at_purchase'];
 }
-$delivery_charge = 50.00;
-$tax_amount = $total_amount * 0.18; // 18% GST
+$delivery_charge = 10.00;
+$tax_amount = $total_amount * 0.01; // 18% GST
 $grand_total = $total_amount + $delivery_charge + $tax_amount;
 
 // Generate order number
