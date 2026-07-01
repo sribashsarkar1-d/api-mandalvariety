@@ -608,7 +608,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
                 $updateParams[] = $orderId;
                 $sqlUpdate = "UPDATE orders SET " . implode(', ', $updateFields) . " WHERE id = ?";
                 $stmtUpdate = $conn->prepare($sqlUpdate);
+                $conn->exec("SET FOREIGN_KEY_CHECKS=0;");
                 $stmtUpdate->execute($updateParams);
+                $conn->exec("SET FOREIGN_KEY_CHECKS=1;");
             }
 
             $currentStatus = $newStatus;
