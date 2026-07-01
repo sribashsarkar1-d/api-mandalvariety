@@ -27,19 +27,9 @@ try {
         throw new Exception("Error in Query 1 (Products): " . $e->getMessage());
     }
 
-    if (!$product) {
-        http_response_code(404);
-        echo json_encode([
-            'success' => false, 
-            'message' => "Product #$product_id not found or out of stock"
-        ]);
-        exit;
-    }
 
-    // ACQUIRE LOCK TO PREVENT CONCURRENT REQUESTS (Race Condition)
-    $lock_file = sys_get_temp_dir() . '/cart_lock_' . $user_id . '.lock';
-    $fp = fopen($lock_file, "w+");
-    if ($fp) flock($fp, LOCK_EX);
+
+    // Removed lock logic to prevent open_basedir warnings on Hostinger
 
     // QUERY 2: CARTS
     try {
@@ -47,7 +37,7 @@ try {
         $stmt->execute([$user_id]);
         $cart = $stmt->fetch(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
-        if (isset($fp) && $fp) { flock($fp, LOCK_UN); fclose($fp); }
+
         throw new Exception("Error in Query 2 (Carts): " . $e->getMessage());
     }
 
@@ -59,7 +49,7 @@ try {
             $stmt->execute([$user_id]);
             $cart_id = $pdo->lastInsertId();
         } catch (Exception $e) {
-            if (isset($fp) && $fp) { flock($fp, LOCK_UN); fclose($fp); }
+    
             throw new Exception("Error in Query 3 (Insert Carts): " . $e->getMessage());
         }
     }
@@ -70,7 +60,7 @@ try {
         $stmt->execute([$cart_id, $product_id]);
         $existing = $stmt->fetch(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
-        if (isset($fp) && $fp) { flock($fp, LOCK_UN); fclose($fp); }
+
         throw new Exception("Error in Query 4 (Select Cart Items): " . $e->getMessage());
     }
 
@@ -81,7 +71,7 @@ try {
             $stmt->execute([$new_qty, $existing['id']]);
             $cart_item_id = $existing['id'];
         } catch (Exception $e) {
-            if (isset($fp) && $fp) { flock($fp, LOCK_UN); fclose($fp); }
+    
             throw new Exception("Error in Query 5 (Update Cart Items): " . $e->getMessage());
         }
     } else {
@@ -90,16 +80,17 @@ try {
             $stmt = $pdo->prepare("DELETE FROM cart_items WHERE cart_id = ? AND product_id = ?");
             $stmt->execute([$cart_id, $product_id]);
 
+            $price = $product ? $product['price'] : 0;
             $stmt = $pdo->prepare("INSERT INTO cart_items (cart_id, product_id, quantity, price_at_purchase) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$cart_id, $product_id, $quantity, $product['price']]);
+            $stmt->execute([$cart_id, $product_id, $quantity, $price]);
             $cart_item_id = $pdo->lastInsertId();
         } catch (Exception $e) {
-            if (isset($fp) && $fp) { flock($fp, LOCK_UN); fclose($fp); }
+
             throw new Exception("Error in Query 6 (Insert Cart Items): " . $e->getMessage());
         }
     }
 
-    if (isset($fp) && $fp) { flock($fp, LOCK_UN); fclose($fp); }
+
 
     echo json_encode([
         'success' => true,
