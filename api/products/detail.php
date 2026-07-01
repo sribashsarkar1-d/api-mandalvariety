@@ -80,7 +80,7 @@ try {
         $product['minOrderQuantity'] = isset($product['min_order_quantity']) ? (int)$product['min_order_quantity'] : 1;
         
         // 9. estimatedDeliveryTime
-        $product['estimatedDeliveryTime'] = $product['estimated_delivery_time'] ?? '30-45 minutes';
+        $product['estimatedDeliveryTime'] = $product['estimated_delivery_time'] ?? '1-2 hours';
         
         // 10. expiryDate
         $product['expiryDate'] = $product['expiry_date'] ?? null;
