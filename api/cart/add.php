@@ -37,7 +37,7 @@ try {
     }
 
     // ACQUIRE LOCK TO PREVENT CONCURRENT REQUESTS (Race Condition)
-    $pdo->exec("SELECT GET_LOCK('cart_user_{$user_id}', 5)");
+    $pdo->query("SELECT GET_LOCK('cart_user_{$user_id}', 5)")->fetchAll();
 
     // QUERY 2: CARTS
     try {
@@ -45,7 +45,7 @@ try {
         $stmt->execute([$user_id]);
         $cart = $stmt->fetch(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
-        $pdo->exec("SELECT RELEASE_LOCK('cart_user_{$user_id}')");
+        $pdo->query("SELECT RELEASE_LOCK('cart_user_{$user_id}')")->fetchAll();
         throw new Exception("Error in Query 2 (Carts): " . $e->getMessage());
     }
 
@@ -57,7 +57,7 @@ try {
             $stmt->execute([$user_id]);
             $cart_id = $pdo->lastInsertId();
         } catch (Exception $e) {
-            $pdo->exec("SELECT RELEASE_LOCK('cart_user_{$user_id}')");
+            $pdo->query("SELECT RELEASE_LOCK('cart_user_{$user_id}')")->fetchAll();
             throw new Exception("Error in Query 3 (Insert Carts): " . $e->getMessage());
         }
     }
@@ -68,7 +68,7 @@ try {
         $stmt->execute([$cart_id, $product_id]);
         $existing = $stmt->fetch(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
-        $pdo->exec("SELECT RELEASE_LOCK('cart_user_{$user_id}')");
+        $pdo->query("SELECT RELEASE_LOCK('cart_user_{$user_id}')")->fetchAll();
         throw new Exception("Error in Query 4 (Select Cart Items): " . $e->getMessage());
     }
 
@@ -79,7 +79,7 @@ try {
             $stmt->execute([$new_qty, $existing['id']]);
             $cart_item_id = $existing['id'];
         } catch (Exception $e) {
-            $pdo->exec("SELECT RELEASE_LOCK('cart_user_{$user_id}')");
+            $pdo->query("SELECT RELEASE_LOCK('cart_user_{$user_id}')")->fetchAll();
             throw new Exception("Error in Query 5 (Update Cart Items): " . $e->getMessage());
         }
     } else {
@@ -92,12 +92,12 @@ try {
             $stmt->execute([$cart_id, $product_id, $quantity, $product['price']]);
             $cart_item_id = $pdo->lastInsertId();
         } catch (Exception $e) {
-            $pdo->exec("SELECT RELEASE_LOCK('cart_user_{$user_id}')");
+            $pdo->query("SELECT RELEASE_LOCK('cart_user_{$user_id}')")->fetchAll();
             throw new Exception("Error in Query 6 (Insert Cart Items): " . $e->getMessage());
         }
     }
 
-    $pdo->exec("SELECT RELEASE_LOCK('cart_user_{$user_id}')");
+    $pdo->query("SELECT RELEASE_LOCK('cart_user_{$user_id}')")->fetchAll();
 
     echo json_encode([
         'success' => true,
