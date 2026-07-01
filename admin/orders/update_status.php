@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Dompdf\Dompdf;
@@ -85,7 +88,7 @@ function sendInvoiceMail($toEmail, $toName, $subject, $body, $pdfPath = null)
             'success' => true,
             'error'   => ''
         ];
-    } catch (Exception $ex) {
+    } catch (\Throwable $ex) {
         return [
             'success' => false,
             'error'   => $mail->ErrorInfo
@@ -673,9 +676,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
             } else {
                 $success = 'Status updated and bill generated successfully.';
             }
-
             $conn->commit();
-        } catch (Exception $ex) {
+        } catch (\Throwable $ex) {
             if ($conn->inTransaction()) {
                 $conn->rollBack();
             }
