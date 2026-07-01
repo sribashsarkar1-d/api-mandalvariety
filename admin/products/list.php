@@ -37,8 +37,12 @@ $where = [];
 $params = [];
 
 if ($search !== '') {
-    $where[] = "(p.name LIKE :search OR p.slug LIKE :search OR p.sku LIKE :search OR p.description LIKE :search)";
-    $params[':search'] = "%{$search}%";
+    $where[] = "(p.name LIKE :search1 OR p.slug LIKE :search2 OR p.sku LIKE :search3 OR p.description LIKE :search4)";
+    $searchPattern = "%{$search}%";
+    $params[':search1'] = $searchPattern;
+    $params[':search2'] = $searchPattern;
+    $params[':search3'] = $searchPattern;
+    $params[':search4'] = $searchPattern;
 }
 
 if ($category > 0) {
