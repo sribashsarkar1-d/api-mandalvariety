@@ -662,9 +662,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
                     );
 
                     if (!$mailResult['success']) {
-                        throw new Exception('Status updated but email failed: ' . $mailResult['error']);
+                        $errors[] = 'Email failed to send: ' . $mailResult['error'];
+                        $success = 'Status updated and bill generated, but email was not sent.';
+                    } else {
+                        $success = 'Status updated, bill generated, and email sent successfully.';
                     }
-                    $success = 'Status updated, bill generated, and email sent successfully.';
                 } else {
                     $success = 'Status updated and bill generated successfully (No email found to send).';
                 }
