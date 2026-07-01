@@ -639,36 +639,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
             $invoiceHtml = buildInvoiceHtml($invoiceData);
             generateInvoicePdf($invoiceHtml, $invoicePdfPath);
 
-            if ($action === 'email_pdf') {
-                if (empty($customerEmail)) {
-                    throw new Exception('Customer email not found.');
+            if ($action === 'save') {
+                if (!empty($customerEmail)) {
+                    $mailBody = "
+                        <div style='font-family:Arial,sans-serif;font-size:14px;color:#222;line-height:1.6'>
+                            <p>Dear " . e($customerName) . ",</p>
+                            <p>Your order <strong>" . e($orderNumber) . "</strong> has been updated.</p>
+                            <p><strong>Order Status:</strong> " . e(formatStatus($currentStatus)) . "<br>
+                            <strong>Tracking Status:</strong> " . e(formatStatus($currentTrackingStatus)) . "<br>
+                            <strong>Payment Status:</strong> " . e(formatStatus($currentPaymentStatus)) . "</p>
+                            <p>Your invoice PDF is attached with this email.</p>
+                            <p>Thank you for shopping with us.</p>
+                        </div>
+                    ";
+
+                    $mailResult = sendInvoiceMail(
+                        $customerEmail,
+                        $customerName,
+                        'Invoice for Order ' . $orderNumber,
+                        $mailBody,
+                        $invoicePdfPath
+                    );
+
+                    if (!$mailResult['success']) {
+                        throw new Exception('Status updated but email failed: ' . $mailResult['error']);
+                    }
+                    $success = 'Status updated, bill generated, and email sent successfully.';
+                } else {
+                    $success = 'Status updated and bill generated successfully (No email found to send).';
                 }
-
-                $mailBody = "
-                    <div style='font-family:Arial,sans-serif;font-size:14px;color:#222;line-height:1.6'>
-                        <p>Dear " . e($customerName) . ",</p>
-                        <p>Your order <strong>" . e($orderNumber) . "</strong> has been updated.</p>
-                        <p><strong>Order Status:</strong> " . e(formatStatus($currentStatus)) . "<br>
-                        <strong>Tracking Status:</strong> " . e(formatStatus($currentTrackingStatus)) . "<br>
-                        <strong>Payment Status:</strong> " . e(formatStatus($currentPaymentStatus)) . "</p>
-                        <p>Your invoice PDF is attached with this email.</p>
-                        <p>Thank you for shopping with us.</p>
-                    </div>
-                ";
-
-                $mailResult = sendInvoiceMail(
-                    $customerEmail,
-                    $customerName,
-                    'Invoice for Order ' . $orderNumber,
-                    $mailBody,
-                    $invoicePdfPath
-                );
-
-                if (!$mailResult['success']) {
-                    throw new Exception('Email failed: ' . $mailResult['error']);
-                }
-
-                $success = 'Status updated, bill generated, and invoice shared by email successfully.';
             } else {
                 $success = 'Status updated and bill generated successfully.';
             }
@@ -958,12 +957,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
 
                             <div class="col-12">
                                 <div class="d-flex flex-wrap gap-2">
-                                    <button type="submit" name="action" value="save" class="btn btn-primary btn-ui">Save + Generate Bill</button>
-                                    <button type="submit" name="action" value="email_pdf" class="btn btn-success btn-ui">Save + Share by Email</button>
-                                    <a href="download_invoice.php?id=<?= (int)$orderId ?>" class="btn btn-outline-dark btn-ui">
-    Download Bill PDF
-</a>
-                                    <button type="button" class="btn btn-dark btn-ui" onclick="printBillOnly()">Print Bill</button>
+                                    <button type="submit" name="action" value="save" class="btn btn-primary btn-ui">Save</button>
+                                    <a href="download_invoice.php?id=<?= (int)$orderId ?>" class="btn btn-outline-dark btn-ui">Download Bill</a>
+                                    <button type="button" class="btn btn-dark btn-ui" onclick="printBillOnly()">Print</button>
                                 </div>
                             </div>
                         </div>
@@ -1072,14 +1068,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-end mt-3 no-print">
-                    <form method="POST" class="m-0">
-                        <input type="hidden" name="order_id" value="<?= (int)$orderId ?>">
-                        <button type="submit" name="action" value="download_pdf" class="btn btn-outline-primary btn-ui">
-                            Download Latest Bill PDF
-                        </button>
-                    </form>
-                </div>
+
             </div>
         </div>
     </div>
