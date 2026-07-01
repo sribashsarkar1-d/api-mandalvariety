@@ -31,7 +31,7 @@ $search   = trim($_GET['search'] ?? '');
 $category = isset($_GET['category']) ? (int)$_GET['category'] : 0;
 $status   = trim($_GET['status'] ?? '');
 $sort     = trim($_GET['sort'] ?? 'latest');
-$lowStockLimit = 10;
+$lowStockLimit = 5;
 
 $where = [];
 $params = [];
