@@ -78,7 +78,7 @@
 
         </ul>
 
-        <a href="#download" class="btn btn-dark rounded-pill px-4">
+        <a href="mandal-variety-official-web\mandal-variety.apk" class="btn btn-dark rounded-pill px-4">
           Download App
         </a>
 
