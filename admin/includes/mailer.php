@@ -16,7 +16,7 @@ function sendAdminPasswordResetLink($email, $resetLink) {
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
 
-        $mail->setFrom('roy338004@gmail.com', 'NEXUS Auth API Admin');
+        $mail->setFrom('roy338004@gmail.com', 'Mandal Variety');
         $mail->addAddress($email);
 
         $mail->isHTML(true);

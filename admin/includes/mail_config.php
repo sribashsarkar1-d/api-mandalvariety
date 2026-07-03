@@ -16,9 +16,9 @@ function sendInvoiceMail($toEmail, $toName, $subject, $body, $pdfPath = null)
         $mail->Port       = 465;
 
         $mail->CharSet = 'UTF-8';
-        $mail->setFrom('roy338004@gmail.com', 'Your Store');
+        $mail->setFrom('roy338004@gmail.com', 'Mandal Variety');
         $mail->addAddress($toEmail, $toName);
-        $mail->addReplyTo('roy338004@gmail.com', 'Your Store');
+        $mail->addReplyTo('roy338004@gmail.com', 'Mandal Variety');
 
         if (!empty($pdfPath) && file_exists($pdfPath)) {
             $mail->addAttachment($pdfPath);

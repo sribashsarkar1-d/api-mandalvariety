@@ -20,17 +20,17 @@ function sendOTP($email, $otp) {
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
 
-        $mail->setFrom('roy338004@gmail.com', 'NEXUS Auth API');
+        $mail->setFrom('roy338004@gmail.com', 'Mandal Variety');
 
         $mail->addAddress($email);
 
         $mail->isHTML(true);
 
-        $mail->Subject = 'NEXUS Login OTP';
+        $mail->Subject = 'Mandal Variety Login OTP';
 
         $mail->Body = "
         <div style='font-family:Arial;padding:20px'>
-            <h2>NEXUS Login Verification</h2>
+            <h2>Mandal Variety Login Verification</h2>
 
             <p>Your Login OTP:</p>
 

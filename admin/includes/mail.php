@@ -15,7 +15,7 @@ $mail->Password = 'npny pdiu brbj tlly';
 $mail->SMTPSecure = 'tls';
 $mail->Port = 587;
 
-$mail->setFrom('roy338004@gmail.com', 'Shop');
+$mail->setFrom('roy338004@gmail.com', 'Mandal Variety');
 $mail->addAddress($to);
 
 $mail->Subject = $subject;
