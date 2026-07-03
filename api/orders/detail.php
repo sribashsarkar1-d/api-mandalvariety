@@ -34,11 +34,28 @@ if (!$order) {
 $stmt = $pdo->prepare("
     SELECT oi.*, p.name, p.images 
     FROM order_items oi 
-    JOIN products p ON oi.product_id = p.id 
+    LEFT JOIN products p ON oi.product_id = p.id 
     WHERE oi.order_id = ?
 ");
 $stmt->execute([$order_id]);
 $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$baseUrl = 'https://mandal-variety.com/admin/uploads/';
+foreach ($items as &$item) {
+    $parsedImages = [];
+    if (!empty($item['images'])) {
+        $json = json_decode($item['images'], true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($json)) {
+            $parsedImages = array_values(array_filter(array_map('trim', $json)));
+        } else {
+            $parsedImages = array_values(array_filter(array_map('trim', explode(',', $item['images']))));
+        }
+    }
+    $item['images'] = array_map(function($img) use ($baseUrl) {
+        return $baseUrl . $img;
+    }, $parsedImages);
+}
+unset($item);
 
 $order['items'] = $items;
 echo json_encode(['success' => true, 'data' => $order], JSON_PRETTY_PRINT);
