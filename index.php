@@ -78,7 +78,7 @@
 
         </ul>
 
-        <a href="mandal-variety-official-web\mandal-variety.apk" class="btn btn-dark rounded-pill px-4">
+        <a href="mandal-variety-official-web/mandal-variety.apk" class="btn btn-dark rounded-pill px-4">
           Download App
         </a>
 
@@ -113,12 +113,12 @@
 
           <div class="hero-buttons d-flex flex-wrap gap-3">
 
-            <a href="#" class="btn btn-dark btn-lg rounded-pill px-4">
+            <a href="mandal-variety-official-web/mandal-variety.apk" class="btn btn-dark btn-lg rounded-pill px-4">
               Download App
             </a>
 
             <a href="#contact" class="btn btn-light btn-lg rounded-pill px-4 border">
-              Contact Us
+              Conact Us
             </a>
 
           </div>
