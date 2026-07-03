@@ -118,7 +118,7 @@
             </a>
 
             <a href="#contact" class="btn btn-light btn-lg rounded-pill px-4 border">
-              Conact Us
+              Contact Us
             </a>
 
           </div>
