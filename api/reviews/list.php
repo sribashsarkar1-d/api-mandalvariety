@@ -6,7 +6,7 @@ require_once __DIR__ . '/../config/database.php';
 $product_id = $_GET['product_id'] ?? null;
 $user_id = $_GET['user_id'] ?? null;
 
-$query = "SELECT r.*, u.name as user_name FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.status = 'approved'";
+$query = "SELECT r.*, u.name as user_name FROM reviews r LEFT JOIN users u ON r.user_id = u.id WHERE 1=1";
 $params = [];
 
 if ($product_id) {
