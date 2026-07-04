@@ -30,7 +30,7 @@
 
   <!-- TOP BAR -->
   <div class="topbar text-center py-2">
-    Ordering is available only through the Mandal Variety mobile application.
+    Welcome to Mandal Variety! Fast local delivery within 1 hour.
   </div>
 
   <!-- NAVBAR -->
@@ -78,11 +78,19 @@
 
         </ul>
 
-        <a href="mandal-variety-official-web/mandal-variety.apk" class="btn btn-dark rounded-pill px-4">
-          Download App
-        </a>
-
-      </div>
+        <div class="d-flex align-items-center gap-3">
+          <a href="#" class="text-dark position-relative" data-bs-toggle="modal" data-bs-target="#wishlistModal" title="Wishlist">
+            <i class="bi bi-heart fs-5"></i>
+            <span id="wishlist-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem; display: none;">0</span>
+          </a>
+          <a href="#" class="text-dark position-relative" data-bs-toggle="modal" data-bs-target="#cartModal" title="Cart">
+            <i class="bi bi-cart fs-5"></i>
+            <span id="cart-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem; display: none;">0</span>
+          </a>
+          <a href="mandal-variety-official-web/mandal-variety.apk" class="btn btn-dark rounded-pill px-4 ms-2 d-none d-lg-block">
+            Download App
+          </a>
+        </div>
     </div>
   </nav>
 
@@ -407,6 +415,19 @@
 
   </section>
 
+  <!-- PRODUCTS -->
+  <section class="section-padding bg-light" id="products">
+    <div class="container">
+      <div class="section-title text-center">
+        <h2>Our Products</h2>
+        <p>Fresh items available for immediate delivery</p>
+      </div>
+      <div class="row g-4" id="product-list">
+        <!-- Products will be injected here via JS -->
+      </div>
+    </div>
+  </section>
+
   <!-- ABOUT -->
   <section class="section-padding bg-light" id="about">
 
@@ -636,8 +657,257 @@
     <i class="bi bi-whatsapp"></i>
   </a>
 
+  <!-- CART MODAL -->
+  <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="cartModalLabel">Shopping Cart</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="cart-items">
+          <p class="text-center text-muted">Your cart is empty.</p>
+        </div>
+        <div class="modal-footer d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Total: ₹<span id="cart-total">0</span></h5>
+          <button type="button" class="btn btn-dark rounded-pill px-4" onclick="placeOrder()">Place Order</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WISHLIST MODAL -->
+  <div class="modal fade" id="wishlistModal" tabindex="-1" aria-labelledby="wishlistModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="wishlistModalLabel">Your Wishlist</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="wishlist-items">
+          <p class="text-center text-muted">Your wishlist is empty.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
 
+  <!-- CUSTOM SCRIPT -->
+  <script>
+    const products = [
+      { id: 1, name: 'Premium Fresh Dates', price: 250, image: 'mandal-variety-official-web/images/ChatGPT Image Jul 4, 2026, 03_37_32 PM.png' },
+      { id: 2, name: 'Organic Almonds', price: 400, image: 'mandal-variety-official-web/images/ChatGPT Image Jul 4, 2026, 03_37_44 PM.png' },
+      { id: 3, name: 'Cashew Nuts', price: 350, image: 'mandal-variety-official-web/images/ChatGPT Image Jul 4, 2026, 03_37_49 PM.png' },
+      { id: 4, name: 'Mixed Dry Fruits', price: 500, image: 'mandal-variety-official-web/images/ChatGPT Image Jul 4, 2026, 03_37_55 PM.png' },
+      { id: 5, name: 'Green Raisins', price: 150, image: 'mandal-variety-official-web/images/ChatGPT Image Jul 4, 2026, 03_38_00 PM.png' },
+      { id: 6, name: 'Walnut Kernels', price: 450, image: 'mandal-variety-official-web/images/ChatGPT Image Jul 4, 2026, 03_38_05 PM.png' },
+      { id: 7, name: 'Pistachios (Salted)', price: 480, image: 'mandal-variety-official-web/images/ChatGPT Image Jul 4, 2026, 03_38_12 PM.png' },
+      { id: 8, name: 'Dried Figs', price: 300, image: 'mandal-variety-official-web/images/ChatGPT Image Jul 4, 2026, 03_38_19 PM.png' },
+      { id: 9, name: 'Black Raisins', price: 180, image: 'mandal-variety-official-web/images/ChatGPT Image Jul 4, 2026, 03_38_25 PM.png' }
+    ];
+
+    let cart = JSON.parse(localStorage.getItem('mv_cart')) || [];
+    let wishlist = JSON.parse(localStorage.getItem('mv_wishlist')) || [];
+
+    function saveState() {
+      localStorage.setItem('mv_cart', JSON.stringify(cart));
+      localStorage.setItem('mv_wishlist', JSON.stringify(wishlist));
+      updateBadges();
+      renderCart();
+      renderWishlist();
+    }
+
+    function updateBadges() {
+      const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+      const wishlistCount = wishlist.length;
+
+      const cartBadge = document.getElementById('cart-badge');
+      const wishlistBadge = document.getElementById('wishlist-badge');
+
+      if (cartCount > 0) {
+        cartBadge.textContent = cartCount;
+        cartBadge.style.display = 'block';
+      } else {
+        cartBadge.style.display = 'none';
+      }
+
+      if (wishlistCount > 0) {
+        wishlistBadge.textContent = wishlistCount;
+        wishlistBadge.style.display = 'block';
+      } else {
+        wishlistBadge.style.display = 'none';
+      }
+    }
+
+    function renderProducts() {
+      const container = document.getElementById('product-list');
+      if (!container) return;
+      container.innerHTML = '';
+
+      products.forEach(p => {
+        const isWished = wishlist.some(w => w.id === p.id);
+        const wishIcon = isWished ? 'bi-heart-fill text-danger' : 'bi-heart';
+
+        container.innerHTML += `
+          <div class="col-lg-4 col-md-6">
+            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden product-card">
+              <img src="${p.image}" class="card-img-top" alt="${p.name}" style="height: 250px; object-fit: cover;">
+              <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h5 class="card-title mb-0 fw-bold">${p.name}</h5>
+                  <button class="btn btn-light btn-sm rounded-circle shadow-sm" onclick="toggleWishlist(${p.id})" title="Wishlist">
+                    <i class="bi ${wishIcon}"></i>
+                  </button>
+                </div>
+                <p class="card-text text-success fw-bold fs-5 mb-3">₹${p.price}</p>
+                <button class="btn btn-dark w-100 rounded-pill" onclick="addToCart(${p.id})">
+                  <i class="bi bi-cart-plus me-2"></i> Add to Cart
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function addToCart(id) {
+      const product = products.find(p => p.id === id);
+      const existing = cart.find(item => item.id === id);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.push({ ...product, quantity: 1 });
+      }
+      saveState();
+      
+      const btn = event.currentTarget;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i class="bi bi-check2"></i> Added';
+      btn.classList.replace('btn-dark', 'btn-success');
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.classList.replace('btn-success', 'btn-dark');
+      }, 1000);
+    }
+
+    function removeFromCart(id) {
+      cart = cart.filter(item => item.id !== id);
+      saveState();
+    }
+
+    function updateQuantity(id, delta) {
+      const item = cart.find(i => i.id === id);
+      if (item) {
+        item.quantity += delta;
+        if (item.quantity <= 0) removeFromCart(id);
+        else saveState();
+      }
+    }
+
+    function toggleWishlist(id) {
+      const existingIndex = wishlist.findIndex(item => item.id === id);
+      if (existingIndex > -1) {
+        wishlist.splice(existingIndex, 1);
+      } else {
+        const product = products.find(p => p.id === id);
+        wishlist.push(product);
+      }
+      saveState();
+      renderProducts();
+    }
+
+    function renderCart() {
+      const container = document.getElementById('cart-items');
+      const totalEl = document.getElementById('cart-total');
+      
+      if (cart.length === 0) {
+        container.innerHTML = '<p class="text-center text-muted my-4">Your cart is empty.</p>';
+        totalEl.textContent = '0';
+        return;
+      }
+
+      let html = '';
+      let total = 0;
+
+      cart.forEach(item => {
+        total += item.price * item.quantity;
+        html += `
+          <div class="d-flex align-items-center mb-3 border-bottom pb-3">
+            <img src="${item.image}" alt="${item.name}" class="rounded" style="width: 60px; height: 60px; object-fit: cover;">
+            <div class="ms-3 flex-grow-1">
+              <h6 class="mb-0">${item.name}</h6>
+              <small class="text-muted">₹${item.price}</small>
+            </div>
+            <div class="d-flex align-items-center me-3">
+              <button class="btn btn-sm btn-outline-secondary rounded-circle px-2 py-0" onclick="updateQuantity(${item.id}, -1)">-</button>
+              <span class="mx-2">${item.quantity}</span>
+              <button class="btn btn-sm btn-outline-secondary rounded-circle px-2 py-0" onclick="updateQuantity(${item.id}, 1)">+</button>
+            </div>
+            <button class="btn btn-sm btn-light text-danger rounded-circle" onclick="removeFromCart(${item.id})">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+      totalEl.textContent = total;
+    }
+
+    function renderWishlist() {
+      const container = document.getElementById('wishlist-items');
+      
+      if (wishlist.length === 0) {
+        container.innerHTML = '<p class="text-center text-muted my-4">Your wishlist is empty.</p>';
+        return;
+      }
+
+      let html = '';
+      wishlist.forEach(item => {
+        html += `
+          <div class="d-flex align-items-center mb-3 border-bottom pb-3">
+            <img src="${item.image}" alt="${item.name}" class="rounded" style="width: 60px; height: 60px; object-fit: cover;">
+            <div class="ms-3 flex-grow-1">
+              <h6 class="mb-0">${item.name}</h6>
+              <small class="text-muted">₹${item.price}</small>
+            </div>
+            <button class="btn btn-sm btn-dark rounded-pill me-2" onclick="addToCart(${item.id}); toggleWishlist(${item.id});">
+              Move to Cart
+            </button>
+            <button class="btn btn-sm btn-light text-danger rounded-circle" onclick="toggleWishlist(${item.id})">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function placeOrder() {
+      if (cart.length === 0) return;
+      
+      let message = "Hello Mandal Variety, I would like to place an order:\n\n";
+      let total = 0;
+      
+      cart.forEach((item, index) => {
+        message += `${index + 1}. ${item.name} (x${item.quantity}) - ₹${item.price * item.quantity}\n`;
+        total += item.price * item.quantity;
+      });
+      
+      message += `\n*Total: ₹${total}*`;
+      message += `\nDelivery Area: Balarampur`;
+      
+      const whatsappUrl = `https://wa.me/918967136033?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderProducts();
+      saveState();
+    });
+  </script>
 </body>
 </html>
