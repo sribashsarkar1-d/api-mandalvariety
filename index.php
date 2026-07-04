@@ -435,7 +435,7 @@
             </div>
             <h4 class="timeline-card-title">Download App</h4>
             <div class="img-wrapper my-3">
-              <img src="mandal-variety-official-web/images/guide-step1.png" alt="Download App" class="img-fluid w-100 shadow-sm" loading="lazy">
+              <img src="mandal-variety-official-web/images/guide-step.png" alt="Download App" class="img-fluid w-100 shadow-sm" loading="lazy">
             </div>
             <p class="timeline-card-desc mb-0">Download the Mandal Variety App and sign in with your account to begin shopping.</p>
           </div>
@@ -458,7 +458,7 @@
             </div>
             <h4 class="timeline-card-title">Add Product to Cart</h4>
             <div class="img-wrapper my-3">
-              <img src="mandal-variety-official-web/images/guide-step2.png" alt="Add Product to Cart" class="img-fluid w-100 shadow-sm" loading="lazy">
+              <img src="mandal-variety-official-web/images/guide-step1.png" alt="Add Product to Cart" class="img-fluid w-100 shadow-sm" loading="lazy">
             </div>
             <p class="timeline-card-desc mb-0">Browse products and tap the Cart button to add products.</p>
           </div>
@@ -481,7 +481,7 @@
             </div>
             <h4 class="timeline-card-title">Add Product to Wishlist</h4>
             <div class="img-wrapper my-3">
-              <img src="mandal-variety-official-web/images/guide-step3.png" alt="Add Product to Wishlist" class="img-fluid w-100 shadow-sm" loading="lazy">
+              <img src="mandal-variety-official-web/images/guide-step2.png" alt="Add Product to Wishlist" class="img-fluid w-100 shadow-sm" loading="lazy">
             </div>
             <p class="timeline-card-desc mb-0">Tap the heart icon to save products for later.</p>
           </div>
@@ -504,7 +504,7 @@
             </div>
             <h4 class="timeline-card-title">View Cart</h4>
             <div class="img-wrapper my-3">
-              <img src="mandal-variety-official-web/images/guide-step4.png" alt="View Cart" class="img-fluid w-100 shadow-sm" loading="lazy">
+              <img src="mandal-variety-official-web/images/guide-step3.png" alt="View Cart" class="img-fluid w-100 shadow-sm" loading="lazy">
             </div>
             <p class="timeline-card-desc mb-0">Open your cart and review the selected products before checkout.</p>
           </div>
@@ -527,7 +527,7 @@
             </div>
             <h4 class="timeline-card-title">Add / Select Delivery Address</h4>
             <div class="img-wrapper my-3">
-              <img src="mandal-variety-official-web/images/guide-step5.png" alt="Add Delivery Address" class="img-fluid w-100 shadow-sm" loading="lazy">
+              <img src="mandal-variety-official-web/images/guide-step4.png" alt="Add Delivery Address" class="img-fluid w-100 shadow-sm" loading="lazy">
             </div>
             <p class="timeline-card-desc mb-0">Choose your current location or add a new address manually.</p>
           </div>
@@ -550,7 +550,7 @@
             </div>
             <h4 class="timeline-card-title">Checkout & Place Order</h4>
             <div class="img-wrapper my-3">
-              <img src="mandal-variety-official-web/images/guide-step6.png" alt="Checkout" class="img-fluid w-100 shadow-sm" loading="lazy">
+              <img src="mandal-variety-official-web/images/guide-step5.png" alt="Checkout" class="img-fluid w-100 shadow-sm" loading="lazy">
             </div>
             <p class="timeline-card-desc mb-0">Verify your address, payment method and total amount, then place your order.</p>
           </div>
@@ -573,7 +573,7 @@
             </div>
             <h4 class="timeline-card-title">Order Confirmation</h4>
             <div class="img-wrapper my-3">
-              <img src="mandal-variety-official-web/images/guide-step7.png" alt="Order Confirmation" class="img-fluid w-100 shadow-sm" loading="lazy">
+              <img src="mandal-variety-official-web/images/guide-step6.png" alt="Order Confirmation" class="img-fluid w-100 shadow-sm" loading="lazy">
             </div>
             <p class="timeline-card-desc mb-0">Your order is placed successfully. You can now track your order.</p>
           </div>
@@ -596,7 +596,7 @@
             </div>
             <h4 class="timeline-card-title">View My Orders</h4>
             <div class="img-wrapper my-3">
-              <img src="mandal-variety-official-web/images/guide-step8.png" alt="View Orders" class="img-fluid w-100 shadow-sm" loading="lazy">
+              <img src="mandal-variety-official-web/images/guide-step7.png" alt="View Orders" class="img-fluid w-100 shadow-sm" loading="lazy">
             </div>
             <p class="timeline-card-desc mb-0">Open the Orders page to see all previous and current orders.</p>
           </div>
@@ -619,7 +619,7 @@
             </div>
             <h4 class="timeline-card-title">View Order Details</h4>
             <div class="img-wrapper my-3">
-              <img src="mandal-variety-official-web/images/guide-step9.png" alt="View Order Details" class="img-fluid w-100 shadow-sm" loading="lazy">
+              <img src="mandal-variety-official-web/images/guide-step8.png" alt="View Order Details" class="img-fluid w-100 shadow-sm" loading="lazy">
             </div>
             <p class="timeline-card-desc mb-0">Track your order status, payment details and delivery progress.</p>
           </div>
