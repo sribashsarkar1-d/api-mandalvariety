@@ -659,3 +659,180 @@ h1, h2, h3, h4, h5, h6 {
     padding: 15px;
   }
 }
+
+/* ==========================================
+   ১২. How to Use Section (App Guide)
+========================================== */
+.how-to-use-section {
+  background-color: var(--bg-light);
+  position: relative;
+  overflow: hidden;
+}
+
+.how-to-use-timeline {
+  position: relative;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 0;
+}
+
+.how-to-use-timeline::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background: var(--celadon-1);
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+.timeline-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.timeline-row.left-oriented {
+  flex-direction: row;
+}
+
+.timeline-row.right-oriented {
+  flex-direction: row-reverse;
+}
+
+.timeline-spacer {
+  width: 45%;
+}
+
+.timeline-card {
+  width: 45%;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 1);
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(100, 122, 103, 0.06);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 2;
+}
+
+.timeline-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 40px rgba(100, 122, 103, 0.15);
+  background: #ffffff;
+  border-color: var(--tea-green);
+}
+
+.timeline-card img {
+  border-radius: 12px;
+  transition: transform 0.5s ease;
+  background-color: #f8f9fa;
+}
+
+.timeline-card:hover img {
+  transform: scale(1.02);
+}
+
+.step-badge {
+  background-color: #EAF7E7;
+  color: var(--dusty-olive);
+  padding: 6px 14px;
+  border-radius: 30px;
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+}
+
+.timeline-card-title {
+  font-weight: 800;
+  font-size: 1.4rem;
+  color: var(--text-main);
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+.timeline-card-desc {
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.timeline-card-icon {
+  width: 45px;
+  height: 45px;
+  background: var(--bg-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-color);
+  font-size: 1.3rem;
+  transition: all 0.3s ease;
+}
+
+.timeline-card:hover .timeline-card-icon {
+  background: var(--primary-color);
+  color: #ffffff;
+}
+
+.timeline-icon-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 40px;
+  background: var(--primary-color);
+  color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  z-index: 3;
+  box-shadow: 0 0 0 5px rgba(234, 247, 231, 0.8);
+}
+
+.timeline-arrow-down {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  color: var(--primary-color);
+  font-size: 2rem;
+  margin: 10px 0;
+  animation: floatDown 2s infinite ease-in-out;
+}
+
+@keyframes floatDown {
+  0%, 100% { transform: translateY(-5px); }
+  50% { transform: translateY(5px); }
+}
+
+@media (max-width: 767.98px) {
+  .how-to-use-timeline::before {
+    display: none;
+  }
+  .timeline-row {
+    flex-direction: column !important;
+    margin-bottom: 30px;
+  }
+  .timeline-card {
+    width: 100%;
+  }
+  .timeline-spacer {
+    display: none;
+  }
+  .timeline-icon-center {
+    display: none;
+  }
+  .timeline-arrow-down {
+    margin: -10px 0 20px 0;
+  }
+}

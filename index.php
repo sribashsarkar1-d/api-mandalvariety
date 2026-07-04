@@ -23,6 +23,9 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
+  <!-- AOS CSS -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -66,6 +69,10 @@
 
           <li class="nav-item">
             <a class="nav-link" href="#categories">Categories</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="#how-to-use">How to Use</a>
           </li>
 
           <li class="nav-item">
@@ -407,8 +414,225 @@
 
   </section>
 
+  <!-- HOW TO USE -->
+  <section class="section-padding bg-light how-to-use-section" id="how-to-use">
+    <div class="container">
+      <div class="section-title text-center" data-aos="fade-up">
+        <h2>How to Use Mandal Variety App</h2>
+        <p>Follow these simple steps to order groceries and daily essentials within minutes.</p>
+      </div>
+
+      <div class="how-to-use-timeline">
+        
+        <!-- Step 1 -->
+        <div class="timeline-row left-oriented">
+          <div class="timeline-card" data-aos="fade-right">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="step-badge">STEP 1</div>
+              <div class="timeline-card-icon">
+                <i class="bi bi-phone"></i>
+              </div>
+            </div>
+            <h4 class="timeline-card-title">Download App</h4>
+            <div class="img-wrapper my-3">
+              <img src="mandal-variety-official-web/images/guide-step1.png" alt="Download App" class="img-fluid w-100 shadow-sm" loading="lazy">
+            </div>
+            <p class="timeline-card-desc mb-0">Download the Mandal Variety App and sign in with your account to begin shopping.</p>
+          </div>
+          <div class="timeline-icon-center">1</div>
+          <div class="timeline-spacer"></div>
+        </div>
+
+        <div class="timeline-arrow-down" data-aos="fade-down">
+          <i class="bi bi-chevron-double-down"></i>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="timeline-row right-oriented">
+          <div class="timeline-card" data-aos="fade-left">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="step-badge">STEP 2</div>
+              <div class="timeline-card-icon">
+                <i class="bi bi-cart-plus"></i>
+              </div>
+            </div>
+            <h4 class="timeline-card-title">Add Product to Cart</h4>
+            <div class="img-wrapper my-3">
+              <img src="mandal-variety-official-web/images/guide-step2.png" alt="Add Product to Cart" class="img-fluid w-100 shadow-sm" loading="lazy">
+            </div>
+            <p class="timeline-card-desc mb-0">Browse products and tap the Cart button to add products.</p>
+          </div>
+          <div class="timeline-icon-center">2</div>
+          <div class="timeline-spacer"></div>
+        </div>
+
+        <div class="timeline-arrow-down" data-aos="fade-down">
+          <i class="bi bi-chevron-double-down"></i>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="timeline-row left-oriented">
+          <div class="timeline-card" data-aos="fade-right">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="step-badge">STEP 3</div>
+              <div class="timeline-card-icon">
+                <i class="bi bi-heart"></i>
+              </div>
+            </div>
+            <h4 class="timeline-card-title">Add Product to Wishlist</h4>
+            <div class="img-wrapper my-3">
+              <img src="mandal-variety-official-web/images/guide-step3.png" alt="Add Product to Wishlist" class="img-fluid w-100 shadow-sm" loading="lazy">
+            </div>
+            <p class="timeline-card-desc mb-0">Tap the heart icon to save products for later.</p>
+          </div>
+          <div class="timeline-icon-center">3</div>
+          <div class="timeline-spacer"></div>
+        </div>
+
+        <div class="timeline-arrow-down" data-aos="fade-down">
+          <i class="bi bi-chevron-double-down"></i>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="timeline-row right-oriented">
+          <div class="timeline-card" data-aos="fade-left">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="step-badge">STEP 4</div>
+              <div class="timeline-card-icon">
+                <i class="bi bi-bag-check"></i>
+              </div>
+            </div>
+            <h4 class="timeline-card-title">View Cart</h4>
+            <div class="img-wrapper my-3">
+              <img src="mandal-variety-official-web/images/guide-step4.png" alt="View Cart" class="img-fluid w-100 shadow-sm" loading="lazy">
+            </div>
+            <p class="timeline-card-desc mb-0">Open your cart and review the selected products before checkout.</p>
+          </div>
+          <div class="timeline-icon-center">4</div>
+          <div class="timeline-spacer"></div>
+        </div>
+
+        <div class="timeline-arrow-down" data-aos="fade-down">
+          <i class="bi bi-chevron-double-down"></i>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="timeline-row left-oriented">
+          <div class="timeline-card" data-aos="fade-right">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="step-badge">STEP 5</div>
+              <div class="timeline-card-icon">
+                <i class="bi bi-geo-alt"></i>
+              </div>
+            </div>
+            <h4 class="timeline-card-title">Add / Select Delivery Address</h4>
+            <div class="img-wrapper my-3">
+              <img src="mandal-variety-official-web/images/guide-step5.png" alt="Add Delivery Address" class="img-fluid w-100 shadow-sm" loading="lazy">
+            </div>
+            <p class="timeline-card-desc mb-0">Choose your current location or add a new address manually.</p>
+          </div>
+          <div class="timeline-icon-center">5</div>
+          <div class="timeline-spacer"></div>
+        </div>
+
+        <div class="timeline-arrow-down" data-aos="fade-down">
+          <i class="bi bi-chevron-double-down"></i>
+        </div>
+
+        <!-- Step 6 -->
+        <div class="timeline-row right-oriented">
+          <div class="timeline-card" data-aos="fade-left">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="step-badge">STEP 6</div>
+              <div class="timeline-card-icon">
+                <i class="bi bi-credit-card"></i>
+              </div>
+            </div>
+            <h4 class="timeline-card-title">Checkout & Place Order</h4>
+            <div class="img-wrapper my-3">
+              <img src="mandal-variety-official-web/images/guide-step6.png" alt="Checkout" class="img-fluid w-100 shadow-sm" loading="lazy">
+            </div>
+            <p class="timeline-card-desc mb-0">Verify your address, payment method and total amount, then place your order.</p>
+          </div>
+          <div class="timeline-icon-center">6</div>
+          <div class="timeline-spacer"></div>
+        </div>
+
+        <div class="timeline-arrow-down" data-aos="fade-down">
+          <i class="bi bi-chevron-double-down"></i>
+        </div>
+
+        <!-- Step 7 -->
+        <div class="timeline-row left-oriented">
+          <div class="timeline-card" data-aos="fade-right">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="step-badge">STEP 7</div>
+              <div class="timeline-card-icon">
+                <i class="bi bi-check-circle"></i>
+              </div>
+            </div>
+            <h4 class="timeline-card-title">Order Confirmation</h4>
+            <div class="img-wrapper my-3">
+              <img src="mandal-variety-official-web/images/guide-step7.png" alt="Order Confirmation" class="img-fluid w-100 shadow-sm" loading="lazy">
+            </div>
+            <p class="timeline-card-desc mb-0">Your order is placed successfully. You can now track your order.</p>
+          </div>
+          <div class="timeline-icon-center">7</div>
+          <div class="timeline-spacer"></div>
+        </div>
+
+        <div class="timeline-arrow-down" data-aos="fade-down">
+          <i class="bi bi-chevron-double-down"></i>
+        </div>
+
+        <!-- Step 8 -->
+        <div class="timeline-row right-oriented">
+          <div class="timeline-card" data-aos="fade-left">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="step-badge">STEP 8</div>
+              <div class="timeline-card-icon">
+                <i class="bi bi-list-ul"></i>
+              </div>
+            </div>
+            <h4 class="timeline-card-title">View My Orders</h4>
+            <div class="img-wrapper my-3">
+              <img src="mandal-variety-official-web/images/guide-step8.png" alt="View Orders" class="img-fluid w-100 shadow-sm" loading="lazy">
+            </div>
+            <p class="timeline-card-desc mb-0">Open the Orders page to see all previous and current orders.</p>
+          </div>
+          <div class="timeline-icon-center">8</div>
+          <div class="timeline-spacer"></div>
+        </div>
+
+        <div class="timeline-arrow-down" data-aos="fade-down">
+          <i class="bi bi-chevron-double-down"></i>
+        </div>
+
+        <!-- Step 9 -->
+        <div class="timeline-row left-oriented">
+          <div class="timeline-card" data-aos="fade-right">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="step-badge">STEP 9</div>
+              <div class="timeline-card-icon">
+                <i class="bi bi-box-seam"></i>
+              </div>
+            </div>
+            <h4 class="timeline-card-title">View Order Details</h4>
+            <div class="img-wrapper my-3">
+              <img src="mandal-variety-official-web/images/guide-step9.png" alt="View Order Details" class="img-fluid w-100 shadow-sm" loading="lazy">
+            </div>
+            <p class="timeline-card-desc mb-0">Track your order status, payment details and delivery progress.</p>
+          </div>
+          <div class="timeline-icon-center">9</div>
+          <div class="timeline-spacer"></div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
   <!-- ABOUT -->
-  <section class="section-padding bg-light" id="about">
+  <section class="section-padding" id="about">
 
     <div class="container">
 
@@ -597,6 +821,8 @@
 
             <li><a href="#">Categories</a></li>
 
+            <li><a href="#how-to-use">How to Use</a></li>
+
             <li><a href="#">Contact</a></li>
 
           </ul>
@@ -639,5 +865,14 @@
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
 
+  <!-- AOS JS -->
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script>
+    AOS.init({
+      once: true,
+      duration: 800,
+      offset: 100
+    });
+  </script>
 </body>
 </html>
