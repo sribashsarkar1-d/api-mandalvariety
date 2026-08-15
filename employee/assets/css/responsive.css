@@ -1,0 +1,97 @@
+/* assets/css/responsive.css */
+/* Desktop Layout Rules */
+@media (min-width: 992px) {
+    body {
+        display: flex;
+    }
+
+    /* Sidebar for desktop */
+    .desktop-sidebar {
+        width: 250px;
+        background: white;
+        height: 100vh;
+        position: fixed;
+        left: 0;
+        top: 0;
+        box-shadow: var(--shadow-sm);
+        z-index: 1040;
+        padding-top: 1rem;
+    }
+
+    .desktop-sidebar-brand {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-blue);
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .desktop-sidebar-menu a {
+        display: block;
+        padding: 0.75rem 1.5rem;
+        color: var(--text-main);
+        text-decoration: none;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+    }
+
+    .desktop-sidebar-menu a i {
+        margin-right: 1rem;
+        width: 20px;
+        text-align: center;
+    }
+
+    .desktop-sidebar-menu a:hover, .desktop-sidebar-menu a.active {
+        background-color: var(--bg-color);
+        color: var(--primary-blue);
+        border-right: 4px solid var(--primary-blue);
+    }
+
+    .main-wrapper {
+        margin-left: 250px;
+        width: calc(100% - 250px);
+    }
+
+    .bottom-nav {
+        display: none !important; /* Hide bottom nav on desktop */
+    }
+
+    .main-content {
+        padding-bottom: 2rem; /* Remove space for bottom nav */
+    }
+
+    .app-header .hamburger {
+        display: none; /* Hide hamburger on large screens if sidebar is fixed */
+    }
+}
+
+@media (max-width: 991.98px) {
+    .desktop-sidebar {
+        display: none; /* Hide sidebar on mobile */
+    }
+    .main-wrapper {
+        width: 100%;
+    }
+}
+
+/* Print CSS */
+@media print {
+    body {
+        background: white;
+        padding: 0;
+        margin: 0;
+    }
+    .app-header, .bottom-nav, .desktop-sidebar, .no-print {
+        display: none !important;
+    }
+    .main-wrapper, .main-content {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+    }
+    .custom-card {
+        box-shadow: none;
+        border: none;
+    }
+}

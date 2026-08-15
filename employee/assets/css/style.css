@@ -1,0 +1,249 @@
+/* assets/css/style.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --primary-blue: #0d6efd;
+    --primary-hover: #0b5ed7;
+    --bg-color: #f8f9fa;
+    --card-bg: #ffffff;
+    --text-main: #212529;
+    --text-muted: #6c757d;
+    --success: #198754;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --border-color: #e9ecef;
+    --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+}
+
+body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+}
+
+/* Common Layout */
+.app-header {
+    background-color: var(--primary-blue);
+    color: white;
+    padding: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow-sm);
+}
+
+.app-header .title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.app-header i {
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+/* Cards */
+.custom-card {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: none;
+    margin-bottom: 1rem;
+}
+
+/* Bottom Navigation (Mobile) */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    display: flex;
+    justify-content: space-around;
+    padding: 0.75rem 0;
+    box-shadow: 0 -0.125rem 0.25rem rgba(0,0,0,0.075);
+    z-index: 1030;
+}
+
+.bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.75rem;
+}
+
+.bottom-nav-item.active {
+    color: var(--primary-blue);
+}
+
+.bottom-nav-item i {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+}
+
+/* Main Content Wrapper */
+.main-content {
+    padding-bottom: 80px; /* Space for bottom nav */
+}
+
+/* Forms */
+.form-control, .form-select {
+    border-radius: var(--radius-md);
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+    border-radius: var(--radius-md);
+    font-weight: 500;
+}
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+/* Product Card */
+.product-card {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1rem;
+}
+
+.product-image {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+    margin-right: 1rem;
+    border: 1px solid var(--border-color);
+}
+
+.product-details {
+    flex-grow: 1;
+}
+
+.product-title {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.product-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.product-price {
+    font-weight: 700;
+    margin-top: 0.25rem;
+}
+
+/* Badges */
+.badge-success { background-color: var(--success); color: white; }
+.badge-warning { background-color: var(--warning); color: #000; }
+.badge-danger { background-color: var(--danger); color: white; }
+
+/* Dashboard Stat Card */
+.stat-card {
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+.stat-card .value { font-size: 1.5rem; font-weight: 700; margin-bottom: 0; }
+.stat-card .label { font-size: 0.9rem; opacity: 0.9; }
+.stat-card i { font-size: 2rem; opacity: 0.8; }
+
+.bg-blue { background-color: var(--primary-blue); }
+.bg-purple { background-color: #6f42c1; }
+.bg-orange { background-color: #fd7e14; }
+.bg-red { background-color: #dc3545; }
+.bg-teal { background-color: #20c997; }
+
+/* Category Pills */
+.category-pills {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    scrollbar-width: none; /* Firefox */
+}
+.category-pills::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
+}
+.category-pill {
+    padding: 0.5rem 1rem;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    margin-right: 0.5rem;
+    white-space: nowrap;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+.category-pill.active {
+    background: var(--primary-blue);
+    color: white;
+    border-color: var(--primary-blue);
+}
+
+/* Cart Specific Styles */
+.cart-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+.cart-item-image {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+    margin-right: 1rem;
+}
+.cart-item-details {
+    flex-grow: 1;
+}
+.qty-btn {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.qty-input {
+    width: 40px;
+    text-align: center;
+    border: none;
+    background: transparent;
+    font-weight: 600;
+}
