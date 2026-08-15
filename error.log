@@ -212,3 +212,83 @@ Stack trace:
 [14-Aug-2026 18:37:56 Asia/Kolkata] PHP Warning:  Undefined array key "brand" in C:\xampp\htdocs\auth-api\employee\admin\product-add.php on line 21
 [14-Aug-2026 18:42:13 Asia/Kolkata] PHP Warning:  Undefined array key "brand" in C:\xampp\htdocs\auth-api\employee\admin\product-add.php on line 21
 [14-Aug-2026 18:48:34 Asia/Kolkata] PHP Warning:  Undefined array key "brand" in C:\xampp\htdocs\auth-api\employee\admin\product-add.php on line 21
+[15-Aug-2026 09:58:15 Europe/Berlin] PHP Fatal error:  Uncaught Error: Undefined constant "BASE_URL" in C:\xampp\htdocs\auth-api\employee\api\products\list.php:50
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\employee\api\products\list.php on line 50
+[15-Aug-2026 09:58:21 Europe/Berlin] PHP Fatal error:  Uncaught Error: Undefined constant "BASE_URL" in C:\xampp\htdocs\auth-api\employee\api\products\list.php:50
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\employee\api\products\list.php on line 50
+[15-Aug-2026 09:58:29 Europe/Berlin] PHP Fatal error:  Uncaught Error: Undefined constant "BASE_URL" in C:\xampp\htdocs\auth-api\employee\api\products\list.php:50
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\employee\api\products\list.php on line 50
+[15-Aug-2026 09:58:36 Europe/Berlin] PHP Fatal error:  Uncaught Error: Undefined constant "BASE_URL" in C:\xampp\htdocs\auth-api\employee\api\products\list.php:50
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\employee\api\products\list.php on line 50
+[15-Aug-2026 09:58:39 Europe/Berlin] PHP Fatal error:  Uncaught Error: Undefined constant "BASE_URL" in C:\xampp\htdocs\auth-api\employee\api\products\list.php:50
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\employee\api\products\list.php on line 50
+[15-Aug-2026 09:58:43 Europe/Berlin] PHP Fatal error:  Uncaught Error: Undefined constant "BASE_URL" in C:\xampp\htdocs\auth-api\employee\api\products\list.php:50
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\employee\api\products\list.php on line 50
+[15-Aug-2026 09:59:22 Europe/Berlin] PHP Fatal error:  Uncaught Error: Undefined constant "BASE_URL" in C:\xampp\htdocs\auth-api\employee\api\products\list.php:50
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\employee\api\products\list.php on line 50
+[15-Aug-2026 10:00:05 Europe/Berlin] PHP Fatal error:  Uncaught Error: Undefined constant "BASE_URL" in C:\xampp\htdocs\auth-api\employee\api\products\list.php:50
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\employee\api\products\list.php on line 50
+[15-Aug-2026 10:00:05 Europe/Berlin] PHP Fatal error:  Uncaught Error: Undefined constant "BASE_URL" in C:\xampp\htdocs\auth-api\employee\api\products\list.php:50
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\employee\api\products\list.php on line 50
+[15-Aug-2026 13:36:48 Asia/Kolkata] PHP Warning:  Undefined array key "brand" in C:\xampp\htdocs\auth-api\employee\admin\product-add.php on line 21
+[15-Aug-2026 13:38:40 Asia/Kolkata] PHP Warning:  Undefined array key "brand" in C:\xampp\htdocs\auth-api\employee\admin\product-add.php on line 21
+[15-Aug-2026 13:39:35 Asia/Kolkata] PHP Warning:  Undefined array key "brand" in C:\xampp\htdocs\auth-api\employee\admin\product-add.php on line 21
+[15-Aug-2026 13:46:29 Asia/Kolkata] PHP Warning:  Undefined array key "brand" in C:\xampp\htdocs\auth-api\employee\admin\product-add.php on line 21
+[15-Aug-2026 13:48:36 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Undefined constant "CURRENCY" in C:\xampp\htdocs\auth-api\employee\admin\settings.php:34
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\employee\admin\settings.php on line 34
+[15-Aug-2026 13:48:43 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Undefined constant "CURRENCY" in C:\xampp\htdocs\auth-api\employee\admin\settings.php:34
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\employee\admin\settings.php on line 34
+[15-Aug-2026 14:01:30 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Undefined constant "CURRENCY" in C:\xampp\htdocs\auth-api\employee\admin\settings.php:34
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\employee\admin\settings.php on line 34
+[15-Aug-2026 14:12:56 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Undefined constant "CURRENCY" in C:\xampp\htdocs\auth-api\employee\admin\settings.php:34
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\employee\admin\settings.php on line 34
+[15-Aug-2026 14:13:14 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Undefined constant "CURRENCY" in C:\xampp\htdocs\auth-api\employee\admin\settings.php:34
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\employee\admin\settings.php on line 34
+[15-Aug-2026 14:13:23 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Undefined constant "CURRENCY" in C:\xampp\htdocs\auth-api\employee\admin\settings.php:34
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\employee\admin\settings.php on line 34
+[15-Aug-2026 14:14:20 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Undefined constant "CURRENCY" in C:\xampp\htdocs\auth-api\employee\admin\settings.php:34
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\employee\admin\settings.php on line 34
+[15-Aug-2026 14:14:42 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Undefined constant "CURRENCY" in C:\xampp\htdocs\auth-api\employee\admin\settings.php:34
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\employee\admin\settings.php on line 34
+[15-Aug-2026 14:15:04 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Undefined constant "CURRENCY" in C:\xampp\htdocs\auth-api\employee\admin\settings.php:34
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\employee\admin\settings.php on line 34
+[15-Aug-2026 14:42:10 Asia/Kolkata] PHP Fatal error:  Uncaught Error: Undefined constant "CURRENCY" in C:\xampp\htdocs\auth-api\employee\admin\settings.php:34
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\auth-api\employee\admin\settings.php on line 34

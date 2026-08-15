@@ -33,6 +33,15 @@ try {
         $_SESSION['user_name'] = $user['name'];
         $_SESSION['user_role'] = $user['role'];
         
+        // Add notification
+        try {
+            $notifTitle = "User Login";
+            $notifMsg = $user['name'] . " logged in.";
+            $pdo->prepare("INSERT INTO employee_notifications (title, message, type) VALUES (?, ?, 'login')")->execute([$notifTitle, $notifMsg]);
+        } catch(PDOException $e) {
+            // Ignore notification failure
+        }
+        
         $redirect = ($user['role'] === 'admin') ? BASE_URL . '/admin/dashboard.php' : BASE_URL . '/employee/dashboard.php';
         
         json_response(true, 'Login successful', ['redirect' => $redirect]);

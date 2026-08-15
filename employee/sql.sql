@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS employee_users (
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
+    reset_otp VARCHAR(10) NULL,
+    reset_otp_expiry DATETIME NULL,
     role ENUM('admin', 'employee') NOT NULL DEFAULT 'employee',
     phone VARCHAR(20) NULL,
     profile_image VARCHAR(255) NULL,

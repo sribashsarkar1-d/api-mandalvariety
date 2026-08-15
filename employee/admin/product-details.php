@@ -26,13 +26,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $barcode = sanitize_input($_POST['barcode']);
     $brand = sanitize_input($_POST['brand']);
     $unit = $_POST['unit'];
-    $purchase_price = $_POST['purchase_price'];
+    $purchase_price = $_POST['purchase_price'] ?? 0;
     $selling_price = $_POST['selling_price'];
-    $mrp = $_POST['mrp'];
-    $gst = $_POST['gst_percent'] ?: 0;
+    $mrp = $_POST['mrp'] ?? 0;
+    $gst = $_POST['gst_percent'] ?? 0;
     $discount = $_POST['discount'] ?: 0;
     $expiry = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : null;
     $min_stock = $_POST['minimum_stock'] ?: 0;
+    $quantity = $_POST['quantity'] ?: 0;
     $desc = sanitize_input($_POST['description']);
     $status = $_POST['status'];
     
@@ -66,6 +67,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ");
         
         $stmt->execute($params);
+        
+        // Update Stock
+        $status = 'in_stock';
+        if ($quantity <= 0) $status = 'out_of_stock';
+        elseif ($quantity <= $min_stock) $status = 'low_stock';
+        
+        $stmtStock = $pdo->prepare("
+            INSERT INTO employee_product_stock (product_id, quantity, stock_status) 
+            VALUES (?, ?, ?) 
+            ON DUPLICATE KEY UPDATE quantity = VALUES(quantity), stock_status = VALUES(stock_status)
+        ");
+        $stmtStock->execute([$product_id, $quantity, $status]);
+        
         $success = "Product updated successfully.";
     } catch (Exception $e) {
         $error = "Error: " . $e->getMessage();
@@ -73,7 +87,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // Fetch current product
-$stmt = $pdo->prepare("SELECT * FROM employee_products WHERE id = ?");
+$stmt = $pdo->prepare("
+    SELECT p.*, COALESCE(s.quantity, 0) as quantity 
+    FROM employee_products p 
+    LEFT JOIN employee_product_stock s ON p.id = s.product_id 
+    WHERE p.id = ?
+");
 $stmt->execute([$product_id]);
 $product = $stmt->fetch();
 
@@ -150,30 +169,35 @@ require_once '../includes/header.php';
         </div>
         
         <div class="row g-2 mb-3">
-            <div class="col-4">
-                <label class="form-label text-muted small">Purchase (₹) *</label>
-                <input type="number" step="0.01" name="purchase_price" class="form-control" value="<?= htmlspecialchars($product['purchase_price']) ?>" required>
+            <div class="col-6 col-md-3">
+                <label class="form-label text-muted small">Purchase Price</label>
+                <input type="number" step="0.01" name="purchase_price" class="form-control" value="<?= htmlspecialchars($product['purchase_price'] ?? 0) ?>">
             </div>
-            <div class="col-4">
-                <label class="form-label text-muted small">Selling (₹) *</label>
-                <input type="number" step="0.01" name="selling_price" class="form-control" value="<?= htmlspecialchars($product['selling_price']) ?>" required>
+            <div class="col-6 col-md-3">
+                <label class="form-label text-muted small">MRP</label>
+                <input type="number" step="0.01" name="mrp" class="form-control" value="<?= htmlspecialchars($product['mrp'] ?? 0) ?>">
             </div>
-            <div class="col-4">
-                <label class="form-label text-muted small">MRP (₹)</label>
-                <input type="number" step="0.01" name="mrp" class="form-control" value="<?= htmlspecialchars($product['mrp']) ?>">
+            <div class="col-6 col-md-3">
+                <label class="form-label text-muted small">Selling Price *</label>
+                <input type="number" step="0.01" name="selling_price" id="editSellingPrice" class="form-control" value="<?= htmlspecialchars($product['selling_price']) ?>" required>
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label text-muted small">Discount</label>
+                <input type="number" step="0.01" name="discount" id="editDiscountAmt" class="form-control" value="<?= htmlspecialchars($product['discount']) ?>">
             </div>
         </div>
         
+        <div class="p-2 mb-3 bg-light rounded border d-flex justify-content-between align-items-center">
+            <span class="text-muted small fw-bold">Final Discounted Price:</span>
+            <span class="fs-5 fw-bold text-success" id="editFinalPriceDisplay">₹0.00</span>
+        </div>
+        
         <div class="row g-2 mb-3">
-            <div class="col-4">
-                <label class="form-label text-muted small">GST (%)</label>
-                <input type="number" step="0.01" name="gst_percent" class="form-control" value="<?= htmlspecialchars($product['gst_percent']) ?>">
+            <div class="col-6">
+                <label class="form-label text-muted small">Current Stock Qty</label>
+                <input type="number" step="0.001" name="quantity" class="form-control" value="<?= (float)$product['quantity'] ?>">
             </div>
-            <div class="col-4">
-                <label class="form-label text-muted small">Disc (₹)</label>
-                <input type="number" step="0.01" name="discount" class="form-control" value="<?= htmlspecialchars($product['discount']) ?>">
-            </div>
-            <div class="col-4">
+            <div class="col-6">
                 <label class="form-label text-muted small">Min Stock</label>
                 <input type="number" step="0.001" name="minimum_stock" class="form-control" value="<?= htmlspecialchars($product['minimum_stock']) ?>">
             </div>
@@ -200,5 +224,28 @@ require_once '../includes/header.php';
         <button type="submit" class="btn btn-primary w-100 py-2">Update Product</button>
     </form>
 </div>
+
+<?php ob_start(); ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sellingPriceInput = document.getElementById('editSellingPrice');
+    const discountInput = document.getElementById('editDiscountAmt');
+    const finalPriceDisplay = document.getElementById('editFinalPriceDisplay');
+
+    function calculateFinalPrice() {
+        const sp = parseFloat(sellingPriceInput.value) || 0;
+        const disc = parseFloat(discountInput.value) || 0;
+        const final = Math.max(0, sp - disc);
+        finalPriceDisplay.textContent = '₹' + final.toFixed(2);
+    }
+
+    sellingPriceInput.addEventListener('input', calculateFinalPrice);
+    discountInput.addEventListener('input', calculateFinalPrice);
+    
+    // Initial calculation
+    calculateFinalPrice();
+});
+</script>
+<?php $extra_js = ob_get_clean(); ?>
 
 <?php require_once '../includes/footer.php'; ?>

@@ -2,10 +2,10 @@
 // config/database.php
 
 define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_USER', 'u391326945_mandalvr');
+define('DB_PASS', 'Mandal@1234567890');
 // Note: Assumes 'employee_pos' is the database name. If not, the user can change it.
-define('DB_NAME', 'employee_pos');
+define('DB_NAME', 'u391326945_mandalvariety');
 
 try {
     $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4", DB_USER, DB_PASS);

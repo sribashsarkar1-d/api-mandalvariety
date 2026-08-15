@@ -8,18 +8,23 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <?php if ($role === 'admin'): ?>
         <a href="<?= BASE_URL ?>/admin/dashboard.php" class="bottom-nav-item <?= $current_page == 'dashboard.php' ? 'active' : '' ?>">
             <i class="bi bi-house"></i>
-            <span>Dashboard</span>
+            <span>Home</span>
         </a>
         <a href="<?= BASE_URL ?>/admin/products.php" class="bottom-nav-item <?= strpos($current_page, 'product') !== false ? 'active' : '' ?>">
             <i class="bi bi-box"></i>
             <span>Products</span>
         </a>
+        
+        <a href="<?= BASE_URL ?>/admin/product-add.php" class="bottom-nav-item bottom-nav-fab">
+            <i class="bi bi-plus"></i>
+        </a>
+        
         <a href="<?= BASE_URL ?>/admin/sales.php" class="bottom-nav-item <?= strpos($current_page, 'sale') !== false ? 'active' : '' ?>">
             <i class="bi bi-receipt"></i>
             <span>Sales</span>
         </a>
-        <a href="#" class="bottom-nav-item" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar">
-            <i class="bi bi-list"></i>
+        <a href="#mobileSidebar" class="bottom-nav-item" data-bs-toggle="offcanvas">
+            <i class="bi bi-three-dots"></i>
             <span>More</span>
         </a>
     <?php else: ?>
@@ -27,16 +32,21 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <i class="bi bi-house"></i>
             <span>Home</span>
         </a>
-        <a href="<?= BASE_URL ?>/employee/pos.php" class="bottom-nav-item <?= $current_page == 'pos.php' ? 'active' : '' ?>">
-            <i class="bi bi-cart"></i>
-            <span>POS</span>
+        <a href="<?= BASE_URL ?>/employee/products.php" class="bottom-nav-item <?= strpos($current_page, 'product') !== false ? 'active' : '' ?>">
+            <i class="bi bi-box"></i>
+            <span>Products</span>
         </a>
+        
+        <a href="<?= BASE_URL ?>/employee/pos.php" class="bottom-nav-item bottom-nav-fab">
+            <i class="bi bi-plus"></i>
+        </a>
+        
         <a href="<?= BASE_URL ?>/employee/sales.php" class="bottom-nav-item <?= strpos($current_page, 'sale') !== false ? 'active' : '' ?>">
             <i class="bi bi-receipt"></i>
             <span>Sales</span>
         </a>
-        <a href="#" class="bottom-nav-item" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar">
-            <i class="bi bi-list"></i>
+        <a href="#mobileSidebar" class="bottom-nav-item" data-bs-toggle="offcanvas">
+            <i class="bi bi-three-dots"></i>
             <span>More</span>
         </a>
     <?php endif; ?>

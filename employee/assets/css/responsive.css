@@ -1,97 +1,185 @@
 /* assets/css/responsive.css */
-/* Desktop Layout Rules */
+
 @media (min-width: 992px) {
-    body {
-        display: flex;
-    }
-
-    /* Sidebar for desktop */
-    .desktop-sidebar {
-        width: 250px;
-        background: white;
-        height: 100vh;
-        position: fixed;
-        left: 0;
-        top: 0;
-        box-shadow: var(--shadow-sm);
-        z-index: 1040;
-        padding-top: 1rem;
-    }
-
-    .desktop-sidebar-brand {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--primary-blue);
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-
-    .desktop-sidebar-menu a {
-        display: block;
-        padding: 0.75rem 1.5rem;
-        color: var(--text-main);
-        text-decoration: none;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-    }
-
-    .desktop-sidebar-menu a i {
-        margin-right: 1rem;
-        width: 20px;
-        text-align: center;
-    }
-
-    .desktop-sidebar-menu a:hover, .desktop-sidebar-menu a.active {
-        background-color: var(--bg-color);
-        color: var(--primary-blue);
-        border-right: 4px solid var(--primary-blue);
-    }
-
-    .main-wrapper {
-        margin-left: 250px;
-        width: calc(100% - 250px);
-    }
-
-    .bottom-nav {
-        display: none !important; /* Hide bottom nav on desktop */
-    }
-
-    .main-content {
-        padding-bottom: 2rem; /* Remove space for bottom nav */
-    }
-
-    .app-header .hamburger {
-        display: none; /* Hide hamburger on large screens if sidebar is fixed */
-    }
+    .d-lg-none { display: none !important; }
+    .bottom-nav { display: none !important; }
 }
 
 @media (max-width: 991.98px) {
-    .desktop-sidebar {
-        display: none; /* Hide sidebar on mobile */
+    /* Hide desktop sidebar */
+    .desktop-sidebar { display: none !important; }
+    
+    /* Main Content adjustment */
+    .main-content {
+        margin-left: 0;
+        padding-bottom: 90px; /* Space for bottom nav */
     }
-    .main-wrapper {
-        width: 100%;
+    
+    /* Mobile App Header - Gradient Background */
+    .app-header {
+        background: linear-gradient(135deg, var(--secondary-purple), var(--primary-blue));
+        color: white;
+        padding: 1.5rem 1rem 3rem 1rem; /* Extra padding at bottom for overlap effect */
+        border-bottom: none;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    /* Top row of mobile header */
+    .mobile-header-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+    }
+    .mobile-header-top i.hamburger {
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: white;
+    }
+    .mobile-header-brand {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: white;
+    }
+    .mobile-header-top .notification-icon {
+        color: white;
+    }
+    
+    /* Middle row of mobile header (Welcome) */
+    .mobile-header-user {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+    .mobile-header-greeting p {
+        margin-bottom: 0.2rem;
+        font-size: 0.85rem;
+        opacity: 0.9;
+    }
+    .mobile-header-greeting h4 {
+        margin-bottom: 0;
+        color: white;
+        font-size: 1.3rem;
+    }
+    .mobile-user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: white;
+        font-size: 1rem;
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+    
+    /* Overlapping Container for Dashboard Cards */
+    .mobile-overlap-container {
+        margin-top: -2rem;
+        position: relative;
+        z-index: 10;
+        padding: 0 1rem;
+    }
+    
+    /* Hide desktop search */
+    .header-search { display: none !important; }
+    .header-actions .user-profile { display: none !important; }
+    
+    /* Stat Cards Mobile Adjustments */
+    .stat-card {
+        padding: 1rem;
+    }
+    .stat-card-value {
+        font-size: 1.4rem;
+    }
+    
+    .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 0.5rem 0 calc(0.5rem + env(safe-area-inset-bottom)) 0;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+        z-index: 1030;
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+    }
+    
+    .bottom-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.75rem;
+        font-weight: 600;
+        flex: 1;
+        transition: all 0.2s;
+        padding: 0.25rem 0;
+    }
+    
+    .bottom-nav-item.active {
+        color: var(--primary-blue);
+    }
+    
+    .bottom-nav-item i {
+        font-size: 1.4rem;
+        margin-bottom: 0.15rem;
+        transition: transform 0.2s;
+    }
+    
+    .bottom-nav-item.active i {
+        transform: scale(1.1);
+    }
+    
+    /* Floating Action Button (Center +) */
+    .bottom-nav-fab {
+        flex: none;
+        width: 55px;
+        height: 55px;
+        background: linear-gradient(135deg, var(--primary-blue), var(--secondary-purple));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white !important;
+        margin-top: -35px;
+        box-shadow: 0 8px 15px rgba(90, 103, 216, 0.3);
+        border: 4px solid white;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .bottom-nav-fab:active {
+        transform: scale(0.92);
+        box-shadow: 0 4px 8px rgba(90, 103, 216, 0.4);
+    }
+    .bottom-nav-fab i {
+        margin-bottom: 0;
+        font-size: 2rem;
+        font-weight: bold;
     }
 }
 
-/* Print CSS */
-@media print {
-    body {
-        background: white;
-        padding: 0;
-        margin: 0;
+@media (max-width: 575.98px) {
+    .container-fluid {
+        padding-left: 1rem;
+        padding-right: 1rem;
     }
-    .app-header, .bottom-nav, .desktop-sidebar, .no-print {
-        display: none !important;
-    }
-    .main-wrapper, .main-content {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-    }
+    
+    /* Forms & Cards */
     .custom-card {
-        box-shadow: none;
-        border: none;
+        padding: 1rem;
+    }
+    
+    /* Make tables horizontally scrollable by default on small screens */
+    .table-responsive {
+        border: 0;
     }
 }

@@ -36,6 +36,39 @@ $stmtPayment = $pdo->prepare("SELECT * FROM employee_payments WHERE sale_id = ? 
 $stmtPayment->execute([$sale_id]);
 $payments = $stmtPayment->fetchAll();
 
+// Calculate exact paid today from payments linked to sale
+$paid_today = 0;
+foreach ($payments as $pay) {
+    $paid_today += (float)$pay['amount'];
+}
+
+// Fetch exact Ledger records for this sale
+$stmtLedger = $pdo->prepare("SELECT * FROM employee_customer_ledger WHERE sale_id = ? ORDER BY id ASC");
+$stmtLedger->execute([$sale_id]);
+$ledger_records = $stmtLedger->fetchAll();
+
+$previous_due = 0.00;
+$total_payable = (float)$sale['grand_total'];
+$remaining_due = 0.00;
+$has_ledger = false;
+
+if (!empty($ledger_records)) {
+    $has_ledger = true;
+    foreach ($ledger_records as $rec) {
+        if ($rec['transaction_type'] === 'sale_credit') {
+            $previous_due = (float)$rec['previous_due'];
+            $total_payable = $previous_due + (float)$sale['grand_total'];
+            $remaining_due = (float)$rec['new_due']; // Base remaining due before payment
+        }
+        if ($rec['transaction_type'] === 'payment') {
+            $remaining_due = (float)$rec['new_due']; // Final remaining due after payment
+        }
+    }
+} else {
+    // Standard sale with no baki interaction
+    $remaining_due = $total_payable - $paid_today;
+}
+
 $page_title = 'Invoice';
 $show_back_btn = true;
 $header_action_html = '<i class="bi bi-printer" onclick="window.print()" style="cursor:pointer;" title="Print Invoice"></i>';
@@ -44,7 +77,7 @@ require_once '../includes/header.php';
 ?>
 <style>
     body { background-color: var(--bg-color); }
-    .bottom-nav { display: none !important; }
+    /* .bottom-nav { display: none !important; } */
     
     .invoice-card {
         background: white;
@@ -187,25 +220,56 @@ require_once '../includes/header.php';
             </table>
             
             <div class="invoice-totals">
-                <div class="d-flex justify-content-between text-muted">
+                <div class="d-flex justify-content-between text-muted small">
                     <span>Subtotal</span>
                     <span><?= format_currency($sale['subtotal']) ?></span>
                 </div>
-                <div class="d-flex justify-content-between text-muted">
+                <?php if ($sale['discount'] > 0): ?>
+                <div class="d-flex justify-content-between text-muted small">
                     <span>Discount</span>
                     <span><?= format_currency($sale['discount']) ?></span>
                 </div>
-                <div class="d-flex justify-content-between text-muted">
+                <?php endif; ?>
+                <?php if ($sale['gst_amount'] > 0): ?>
+                <div class="d-flex justify-content-between text-muted small">
                     <span>GST</span>
                     <span><?= format_currency($sale['gst_amount']) ?></span>
                 </div>
-                <div class="d-flex justify-content-between grand-total">
-                    <span>Total</span>
+                <?php endif; ?>
+                <div class="d-flex justify-content-between fw-bold mt-1 text-dark">
+                    <span>Today's Bill</span>
                     <span><?= format_currency($sale['grand_total']) ?></span>
                 </div>
             </div>
             
-            <div class="mt-4 pt-3 border-top dashed">
+            <?php if ($has_ledger): ?>
+            <div class="mt-3 pt-3 border-top dashed">
+                <h6 class="fw-bold mb-2 text-muted" style="font-size: 0.8rem; text-transform: uppercase;">Customer Credit</h6>
+                <div class="d-flex justify-content-between text-muted">
+                    <span>Previous Baki</span>
+                    <span><?= format_currency($previous_due) ?></span>
+                </div>
+                <div class="d-flex justify-content-between text-muted">
+                    <span>Today's Bill</span>
+                    <span><?= format_currency($sale['grand_total']) ?></span>
+                </div>
+                <div class="d-flex justify-content-between grand-total">
+                    <span>Total Payable</span>
+                    <span><?= format_currency($total_payable) ?></span>
+                </div>
+                <div class="d-flex justify-content-between fw-bold mt-2 text-success">
+                    <span>Paid Today</span>
+                    <span><?= format_currency($paid_today) ?></span>
+                </div>
+                <div class="d-flex justify-content-between fw-bold mt-1 text-danger">
+                    <span>Remaining Baki</span>
+                    <span><?= format_currency($remaining_due) ?></span>
+                </div>
+            </div>
+            <?php endif; ?>
+            
+            <div class="mt-3 pt-3 border-top dashed">
+                <h6 class="fw-bold mb-2 text-muted" style="font-size: 0.8rem; text-transform: uppercase;">Payment Details</h6>
                 <div class="d-flex justify-content-between mb-1">
                     <span class="fw-bold">Payment Method:</span>
                     <span class="text-capitalize"><?= htmlspecialchars($sale['payment_method']) ?></span>
@@ -219,12 +283,6 @@ require_once '../includes/header.php';
                     ?>
                     <span class="text-capitalize fw-bold <?= $statusColor ?>"><?= htmlspecialchars($sale['payment_status']) ?></span>
                 </div>
-                <?php foreach ($payments as $pay): ?>
-                    <div class="d-flex justify-content-between text-muted small mt-1">
-                        <span>Paid (<?= htmlspecialchars($pay['payment_method']) ?>)</span>
-                        <span><?= format_currency($pay['amount']) ?></span>
-                    </div>
-                <?php endforeach; ?>
             </div>
             
             <div class="invoice-footer">
@@ -245,3 +303,10 @@ require_once '../includes/header.php';
 <?php 
 require_once '../includes/footer.php'; 
 ?>
+<?php if (isset($_GET['auto_print']) && $_GET['auto_print'] == '1'): ?>
+<script>
+window.addEventListener('load', function() {
+    window.print();
+});
+</script>
+<?php endif; ?>

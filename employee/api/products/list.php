@@ -1,5 +1,6 @@
 <?php
 require_once '../../config/database.php';
+require_once '../../config/constants.php';
 require_once '../../includes/functions.php';
 
 $search = isset($_GET['search']) ? sanitize_input($_GET['search']) : '';
@@ -7,7 +8,7 @@ $category = isset($_GET['category']) ? sanitize_input($_GET['category']) : 'all'
 
 $query = "
     SELECT 
-        p.id, p.name, p.sku, p.image, p.selling_price, p.unit, p.expiry_date,
+        p.id, p.name, p.sku, p.barcode, p.image, p.selling_price, p.discount, p.unit, p.expiry_date,
         COALESCE(s.quantity, 0) as stock, s.stock_status
     FROM employee_products p
     LEFT JOIN employee_product_stock s ON p.id = s.product_id
@@ -38,7 +39,9 @@ try {
     
     // Format data for frontend
     foreach ($products as &$p) {
-        $p['formatted_price'] = format_currency($p['selling_price']);
+        $discount = isset($p['discount']) ? (float)$p['discount'] : 0;
+        $final_price = $p['selling_price'] - $discount;
+        $p['formatted_price'] = format_currency($final_price);
         if ($p['expiry_date']) {
             $p['formatted_expiry'] = date('d-m-Y', strtotime($p['expiry_date']));
         } else {

@@ -18,7 +18,7 @@ require_once '../includes/header.php';
 <style>
     /* Specific POS overrides */
     body { background-color: var(--bg-color); }
-    .bottom-nav { display: none !important; }
+    /* .bottom-nav { display: none !important; } Removed to show bottom buttons */
     .main-content { padding-bottom: 20px; }
     
     /* Search Box */
@@ -50,7 +50,7 @@ require_once '../includes/header.php';
     /* Floating Cart Button */
     .floating-cart {
         position: fixed;
-        bottom: 20px;
+        bottom: 90px;
         right: 20px;
         background: var(--primary-blue);
         color: white;

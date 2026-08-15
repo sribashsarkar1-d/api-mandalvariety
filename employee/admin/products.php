@@ -51,6 +51,7 @@ require_once '../includes/header.php';
 ?>
 
 <form method="GET" class="mb-3">
+    <input type="hidden" name="category" value="<?= htmlspecialchars($category) ?>">
     <div class="row g-2">
         <div class="col-8 col-md-9">
             <div class="search-box mb-0">
@@ -59,12 +60,26 @@ require_once '../includes/header.php';
             </div>
         </div>
         <div class="col-4 col-md-3">
-            <select name="category" class="form-select" onchange="this.form.submit()">
-                <option value="all">All Cats</option>
-                <?php foreach ($categories as $cat): ?>
-                    <option value="<?= $cat['id'] ?>" <?= $category == $cat['id'] ? 'selected' : '' ?>><?= htmlspecialchars($cat['name']) ?></option>
-                <?php endforeach; ?>
-            </select>
+            <div class="dropdown">
+                <button class="form-select text-start text-truncate" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <?php 
+                    $selected_cat = 'All Cats';
+                    foreach ($categories as $cat) {
+                        if ($category == $cat['id']) {
+                            $selected_cat = $cat['name'];
+                            break;
+                        }
+                    }
+                    echo htmlspecialchars($selected_cat);
+                    ?>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="max-height: 300px; overflow-y: auto;">
+                    <li><a class="dropdown-item <?= $category === 'all' ? 'active' : '' ?>" href="?category=all&search=<?= urlencode($search) ?>">All Categories</a></li>
+                    <?php foreach ($categories as $cat): ?>
+                        <li><a class="dropdown-item <?= $category == $cat['id'] ? 'active' : '' ?>" href="?category=<?= $cat['id'] ?>&search=<?= urlencode($search) ?>"><?= htmlspecialchars($cat['name']) ?></a></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
         </div>
     </div>
 </form>

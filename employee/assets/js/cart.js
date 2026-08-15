@@ -3,6 +3,8 @@ const Cart = {
     items: [],
     customerId: null,
     customerName: 'Walk-in Customer',
+    previousDue: 0,
+    billTotal: 0,
     
     init: function() {
         this.loadCart();
@@ -82,13 +84,17 @@ const Cart = {
         let totalGst = 0;
         
         this.items.forEach(item => {
-            const price = parseFloat(item.selling_price);
-            const qty = parseFloat(item.qty);
-            const lineTotal = price * qty;
+            const price = parseFloat(item.selling_price) || 0;
+            const discount = parseFloat(item.discount) || 0;
+            const gstPercent = parseFloat(item.gst_percent) || 0;
+            const qty = parseFloat(item.qty) || 0;
             
-            subtotal += lineTotal;
-            // Assuming no individual discount in UI for now, calculate GST if provided from DB
-            // We will let backend do strict calc, but we show basic here.
+            const priceAfterDiscount = price - discount;
+            const gstAmountPerUnit = (priceAfterDiscount * gstPercent) / 100;
+            
+            subtotal += (price * qty);
+            totalDiscount += (discount * qty);
+            totalGst += (gstAmountPerUnit * qty);
             
             html += `
             <div class="cart-item">
@@ -106,7 +112,7 @@ const Cart = {
                             <input type="text" class="qty-input mx-1" value="${qty}" readonly>
                             <button class="qty-btn plus-qty" data-id="${item.id}"><i class="bi bi-plus"></i></button>
                         </div>
-                        <div class="fw-bold">${App.formatCurrency(lineTotal)}</div>
+                        <div class="fw-bold">${App.formatCurrency((priceAfterDiscount + gstAmountPerUnit) * qty)}</div>
                     </div>
                 </div>
             </div>
@@ -116,19 +122,64 @@ const Cart = {
         listContainer.innerHTML = html;
         checkoutBtn.disabled = false;
         
-        // Update totals (simplified for UI, backend does real calc)
-        const grandTotal = subtotal - totalDiscount + totalGst;
-        this.updateSummary(subtotal, totalDiscount, totalGst, grandTotal);
+        const total = subtotal - totalDiscount + totalGst;
+        this.updateSummary(subtotal, totalDiscount, totalGst, total);
     },
     
     updateSummary: function(subtotal, discount, gst, total) {
+        this.billTotal = total;
         document.getElementById('summarySubtotal').textContent = App.formatCurrency(subtotal);
         document.getElementById('summaryDiscount').textContent = App.formatCurrency(discount);
         document.getElementById('summaryGST').textContent = App.formatCurrency(gst);
         document.getElementById('summaryTotal').textContent = App.formatCurrency(total);
         
-        // Also update modal payment amount
-        document.getElementById('paymentAmountDisplay').textContent = App.formatCurrency(total);
+        const totalPayable = total + this.previousDue;
+        
+        if (this.previousDue > 0) {
+            document.getElementById('rowPreviousDue').style.display = 'flex';
+            document.getElementById('rowTotalPayable').style.display = 'flex';
+            document.getElementById('summaryPreviousDue').textContent = App.formatCurrency(this.previousDue);
+            document.getElementById('summaryTotalPayable').textContent = App.formatCurrency(totalPayable);
+            
+            // Also update modal
+            const mPrevDue = document.getElementById('modalPreviousDue');
+            if (mPrevDue) mPrevDue.textContent = App.formatCurrency(this.previousDue);
+            const mTotalPay = document.getElementById('modalTotalPayable');
+            if (mTotalPay) mTotalPay.textContent = App.formatCurrency(totalPayable);
+        } else {
+            document.getElementById('rowPreviousDue').style.display = 'none';
+            document.getElementById('rowTotalPayable').style.display = 'none';
+            
+            const mPrevDue = document.getElementById('modalPreviousDue');
+            if (mPrevDue) mPrevDue.textContent = App.formatCurrency(0);
+            const mTotalPay = document.getElementById('modalTotalPayable');
+            if (mTotalPay) mTotalPay.textContent = App.formatCurrency(total);
+        }
+        
+        // Modal bill display
+        const mTodayBill = document.getElementById('modalTodayBill');
+        if(mTodayBill) mTodayBill.textContent = App.formatCurrency(total);
+        
+        const upiDisplay = document.getElementById('upiAmountDisplay');
+        if(upiDisplay) upiDisplay.textContent = App.formatCurrency(totalPayable);
+        
+        const paidInput = document.getElementById('paidAmountInput');
+        if(paidInput) {
+            paidInput.value = totalPayable;
+            this.updateRemainingDue();
+        }
+    },
+    
+    updateRemainingDue: function() {
+        const totalPayable = this.billTotal + this.previousDue;
+        const paidInput = document.getElementById('paidAmountInput');
+        let paidAmount = parseFloat(paidInput.value);
+        if(isNaN(paidAmount)) paidAmount = 0;
+        
+        let remaining = totalPayable - paidAmount;
+        if(remaining < 0) remaining = 0;
+        
+        document.getElementById('remainingDueDisplay').textContent = App.formatCurrency(remaining);
     },
     
     bindEvents: function() {
@@ -153,19 +204,52 @@ const Cart = {
         
         // Checkout trigger
         document.getElementById('checkoutBtn').addEventListener('click', function() {
+            const confirmBtn = document.getElementById('confirmPaymentBtn');
+            if(confirmBtn) confirmBtn.disabled = false;
+            
+            const totalPayable = self.billTotal + self.previousDue;
+            document.getElementById('paidAmountInput').value = totalPayable;
+            self.updateRemainingDue();
+            
             const modal = new bootstrap.Modal(document.getElementById('checkoutModal'));
             modal.show();
         });
         
-        // Payment method toggle (show/hide transaction ID)
+        const paidInput = document.getElementById('paidAmountInput');
+        if(paidInput) {
+            paidInput.addEventListener('input', function() {
+                self.updateRemainingDue();
+            });
+        }
+        
+        // Payment received checkbox toggle
+        const paymentCheckbox = document.getElementById('paymentReceivedCheckbox');
+        if(paymentCheckbox) {
+            paymentCheckbox.addEventListener('change', function() {
+                const confirmBtn = document.getElementById('confirmPaymentBtn');
+                confirmBtn.disabled = !this.checked;
+            });
+        }
+        
+        // Payment method toggle (show/hide transaction ID and QR code)
         document.querySelectorAll('.payment-method').forEach(radio => {
             radio.addEventListener('change', function() {
-                const wrapper = document.getElementById('transactionIdWrapper');
+                const transactionWrapper = document.getElementById('transactionIdWrapper');
+                const qrContainer = document.getElementById('upiQrContainer');
+                
+                // Toggle Transaction ID
                 if (['upi', 'card'].includes(this.value)) {
-                    wrapper.classList.remove('d-none');
+                    transactionWrapper.classList.remove('d-none');
                 } else {
-                    wrapper.classList.add('d-none');
+                    transactionWrapper.classList.add('d-none');
                     document.getElementById('transactionId').value = '';
+                }
+                
+                // Toggle QR Code
+                if (this.value === 'upi') {
+                    qrContainer.classList.remove('d-none');
+                } else {
+                    qrContainer.classList.add('d-none');
                 }
             });
         });
@@ -180,36 +264,51 @@ const Cart = {
             
             const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
             const transactionId = document.getElementById('transactionId').value;
+            let paidAmount = parseFloat(document.getElementById('paidAmountInput').value);
+            if(isNaN(paidAmount)) paidAmount = 0;
+            
+            const totalPayable = self.billTotal + self.previousDue;
+            if(paidAmount > totalPayable) {
+                alert("Payment amount cannot exceed total payable amount.");
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-check2-circle me-2"></i> Confirm Bill';
+                return;
+            }
             
             const payload = {
                 customer_id: self.customerId, // null means walk-in
                 items: self.items.map(item => ({ id: item.id, qty: item.qty })),
                 payment_method: paymentMethod,
-                transaction_id: transactionId
+                transaction_id: transactionId,
+                paid_amount: paidAmount
             };
             
             try {
-                // Adjust BASE_URL assumption
                 const response = await fetch('../api/sales/create.php', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                
                 const result = await response.json();
                 
                 if (result.success) {
                     // Clear cart
                     localStorage.removeItem('pos_cart');
                     self.items = [];
-                    // Redirect to invoice
-                    window.location.href = `invoice.php?id=${result.data.sale_id}`;
+                    self.previousDue = 0;
+                    self.customerId = null;
+                    
+                    // Hide payment modal
+                    const modalEl = document.getElementById('checkoutModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    if(modal) modal.hide();
+                    
+                    // Show Success Screen
+                    self.showSuccessScreen(result.data);
                 } else {
-                    alert('Checkout failed: ' + result.message);
+                    alert(result.message || 'Failed to create bill');
                     btn.disabled = false;
-                    btn.textContent = 'Confirm Bill';
+                    btn.innerHTML = '<i class="bi bi-check2-circle me-2"></i> Confirm Bill';
                 }
             } catch (error) {
                 console.error(error);
@@ -219,9 +318,187 @@ const Cart = {
             }
         });
         
-        // Customer Search & Creation logic could go here
-        // (Skipping full AJAX implementation of customer fetch for brevity, 
-        // using static Walk-in for now, but UI is prepared).
+        // Search customer
+        const customerSearch = document.getElementById('customerSearch');
+        if(customerSearch) {
+            customerSearch.addEventListener('input', function() {
+                self.searchCustomers(this.value);
+            });
+            // Initial load
+            self.searchCustomers('');
+        }
+        
+        // Select customer from list
+        document.getElementById('customerList').addEventListener('click', function(e) {
+            const item = e.target.closest('.list-group-item');
+            if(item) {
+                // Update active state
+                document.querySelectorAll('#customerList .list-group-item').forEach(el => el.classList.remove('active-customer', 'text-primary'));
+                item.classList.add('active-customer', 'text-primary');
+                
+                // Update self
+                self.customerId = item.dataset.id || null;
+                self.customerName = item.dataset.name;
+                
+                // Update UI display
+                document.querySelector('#selectedCustomerDisplay .customer-name').textContent = item.dataset.name;
+                document.querySelector('#selectedCustomerDisplay .customer-phone').textContent = item.dataset.phone || 'No phone provided';
+                
+                // Close modal
+                const modalEl = document.getElementById('customerModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if(modal) modal.hide();
+                
+                self.fetchCustomerDue();
+            }
+        });
+        
+        // Add new customer
+        const newCustomerForm = document.getElementById('newCustomerForm');
+        if(newCustomerForm) {
+            newCustomerForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const name = document.getElementById('newCustName').value;
+                const phone = document.getElementById('newCustPhone').value;
+                
+                const btn = this.querySelector('button[type="submit"]');
+                const origText = btn.textContent;
+                btn.disabled = true;
+                btn.innerHTML = 'Saving...';
+                
+                try {
+                    const response = await fetch('../api/customers/create.php', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ name, phone })
+                    });
+                    const result = await response.json();
+                    
+                    if(result.success) {
+                        // Set active
+                        self.customerId = result.data.id;
+                        self.customerName = result.data.name;
+                        
+                        document.querySelector('#selectedCustomerDisplay .customer-name').textContent = result.data.name;
+                        document.querySelector('#selectedCustomerDisplay .customer-phone').textContent = result.data.phone;
+                        
+                        // Close modal
+                        const modalEl = document.getElementById('customerModal');
+                        const modal = bootstrap.Modal.getInstance(modalEl);
+                        if(modal) modal.hide();
+                        
+                        // Reload list
+                        self.searchCustomers('');
+                        newCustomerForm.reset();
+                    } else {
+                        alert(result.message);
+                    }
+                } catch(error) {
+                    console.error(error);
+                    alert("Failed to create customer");
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = origText;
+                }
+            });
+        }
+    },
+    
+    searchCustomers: async function(query) {
+        const list = document.getElementById('customerList');
+        try {
+            const response = await fetch(`../api/customers/search.php?q=${encodeURIComponent(query)}`);
+            const result = await response.json();
+            
+            if(result.success) {
+                let html = `
+                    <button class="list-group-item list-group-item-action fw-bold ${!this.customerId ? 'active-customer text-primary' : ''}" data-id="" data-name="Walk-in Customer" data-phone="No phone provided">
+                        Walk-in Customer
+                    </button>
+                `;
+                
+                result.data.forEach(c => {
+                    const isActive = this.customerId == c.id;
+                    html += `
+                        <button class="list-group-item list-group-item-action fw-bold ${isActive ? 'active-customer text-primary' : ''}" data-id="${c.id}" data-name="${c.name}" data-phone="${c.phone}">
+                            ${c.name} <small class="text-muted d-block fw-normal">${c.phone}</small>
+                        </button>
+                    `;
+                });
+                
+                list.innerHTML = html;
+            }
+        } catch(error) {
+            console.error(error);
+        }
+    },
+    
+    fetchCustomerDue: async function() {
+        if (!this.customerId) {
+            this.previousDue = 0;
+            this.renderCart();
+            return;
+        }
+        
+        try {
+            const response = await fetch(`../api/credit/customer-due.php?customer_id=${this.customerId}`);
+            const result = await response.json();
+            
+            if (result.success) {
+                this.previousDue = parseFloat(result.data.current_due);
+            } else {
+                this.previousDue = 0;
+            }
+        } catch (error) {
+            console.error("Error fetching due:", error);
+            this.previousDue = 0;
+        }
+        
+        this.renderCart();
+    },
+    
+    showSuccessScreen: function(data) {
+        document.getElementById('successTodayBill').textContent = App.formatCurrency(data.new_bill_total);
+        document.getElementById('successPreviousBaki').textContent = App.formatCurrency(data.previous_due);
+        document.getElementById('successPaidToday').textContent = App.formatCurrency(data.paid_today);
+        document.getElementById('successRemainingBaki').textContent = App.formatCurrency(data.remaining_due);
+        document.getElementById('successPaymentMethod').textContent = data.payment_method.toUpperCase();
+        
+        const prevBakiRow = document.getElementById('successRowPreviousBaki');
+        const paidRow = document.getElementById('successRowPaidToday');
+        const remainingBakiRow = document.getElementById('successRowRemainingBaki');
+        
+        // Hide baki related info if it was a normal sale with no credit involved
+        if (data.previous_due == 0 && data.remaining_due == 0 && data.paid_today == data.new_bill_total) {
+            if (prevBakiRow) prevBakiRow.style.display = 'none';
+            if (remainingBakiRow) remainingBakiRow.style.display = 'none';
+            if (paidRow) paidRow.style.display = 'none';
+        } else {
+            if (prevBakiRow) prevBakiRow.style.display = 'flex';
+            if (remainingBakiRow) remainingBakiRow.style.display = 'flex';
+            if (paidRow) paidRow.style.display = 'flex';
+        }
+        
+        // Setup buttons
+        const printBtn = document.getElementById('successPrintBtn');
+        const viewBtn = document.getElementById('successViewBtn');
+        const newBtn = document.getElementById('successNewBtn');
+        
+        printBtn.onclick = () => window.location.href = `invoice.php?id=${data.sale_id}&auto_print=1`;
+        viewBtn.onclick = () => window.location.href = `invoice.php?id=${data.sale_id}`;
+        newBtn.onclick = () => {
+            const modalEl = document.getElementById('successModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if(modal) modal.hide();
+            window.location.reload();
+        };
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('successModal'), {
+            backdrop: 'static',
+            keyboard: false
+        });
+        modal.show();
     }
 };
 

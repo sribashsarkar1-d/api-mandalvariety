@@ -12,49 +12,82 @@ if (is_logged_in()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - <?= SITE_NAME ?></title>
+    <title>Login - Mandal Variety Store</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
-    <style>
-        body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background-color: var(--primary-blue);
-        }
-        .login-card {
-            width: 100%;
-            max-width: 400px;
-            padding: 2rem;
-            border-radius: var(--radius-lg);
-            background: white;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-    </style>
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/auth.css">
 </head>
-<body>
+<body class="auth-page">
 
-<div class="login-card text-center">
-    <h3 class="mb-4 text-primary fw-bold"><?= SITE_NAME ?></h3>
-    <h5 class="mb-4">Welcome Back</h5>
-    
-    <div id="alertBox" class="alert d-none"></div>
+<div class="auth-wrapper">
+    <div class="auth-hero">
+        <div class="auth-hero-icon">
+            <i class="bi bi-cart3"></i>
+        </div>
+        <div class="auth-hero-title">Mandal Variety Store</div>
+        <div class="auth-hero-subtitle">Store Management System</div>
+    </div>
 
-    <form id="loginForm">
-        <div class="form-floating mb-3 text-start">
-            <input type="email" class="form-control" id="email" name="email" placeholder="name@example.com" required>
-            <label for="email">Email address</label>
+    <div class="auth-card">
+        <div class="auth-header">
+            <h4>Welcome Back! </h4>
+            <p>Sign in to continue to your account</p>
         </div>
-        <div class="form-floating mb-4 text-start">
-            <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
-            <label for="password">Password</label>
+
+        <div id="alertBox" class="alert d-none"></div>
+
+        <div class="auth-tabs">
+            <div class="auth-tab active" data-role="admin">
+                <i class="bi bi-person-badge"></i> Admin Login
+            </div>
+            <div class="auth-tab" data-role="employee">
+                <i class="bi bi-shop"></i> Employee Login
+            </div>
         </div>
-        <button class="btn btn-primary w-100 py-2 mb-3" type="submit" id="loginBtn">Sign in</button>
-        
-        <p class="text-muted small">Don't have an account? <a href="signup.php" class="text-decoration-none">Sign up</a></p>
-    </form>
+
+        <form id="loginForm">
+            <!-- Hidden role input for backend logic, if needed by backend, though existing login might just check email -->
+            <!-- Wait, the existing login.php didn't have a role select, it just took email & password -->
+            <!-- I'll keep the UI tabs but they won't affect the form data since existing login didn't send role -->
+            
+            <div class="auth-form-group">
+                <i class="bi bi-person auth-form-icon"></i>
+                <input type="email" class="auth-form-control" id="email" name="email" placeholder="Email or Phone Number" autocomplete="username" required>
+            </div>
+            
+            <div class="auth-form-group">
+                <i class="bi bi-lock auth-form-icon"></i>
+                <input type="password" class="auth-form-control" id="password" name="password" placeholder="Password" autocomplete="current-password" required>
+                <button type="button" class="auth-password-toggle" data-target="password">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
+            
+            <div class="auth-footer-link">
+                <a href="forgot_password.php">Forgot Password?</a>
+            </div>
+            
+            <button class="auth-btn" type="submit" id="loginBtn">
+                <i class="bi bi-box-arrow-in-right"></i> Login
+            </button>
+            
+            <div class="auth-security-card">
+                <div class="auth-security-icon">
+                    <i class="bi bi-shield-lock"></i>
+                </div>
+                <div class="auth-security-text">
+                    <h6>Secure & Trusted</h6>
+                    <p>Your data is protected with enterprise-grade security</p>
+                </div>
+            </div>
+            
+            <div class="auth-bottom-text">
+                Don't have an account? <a href="signup.php">Sign Up</a>
+            </div>
+        </form>
+    </div>
 </div>
+
+<script src="<?= BASE_URL ?>/assets/js/auth-ui.js"></script>
 
 <script>
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
@@ -79,14 +112,16 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         } else {
             alertBox.className = 'alert alert-danger';
             alertBox.textContent = result.message;
+            alertBox.classList.remove('d-none');
             btn.disabled = false;
-            btn.textContent = 'Sign in';
+            btn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Login';
         }
     } catch (error) {
         alertBox.className = 'alert alert-danger';
         alertBox.textContent = 'An error occurred. Please try again.';
+        alertBox.classList.remove('d-none');
         btn.disabled = false;
-        btn.textContent = 'Sign in';
+        btn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Login';
     }
 });
 </script>

@@ -29,6 +29,8 @@ if (!in_array($payment_method, $valid_payments)) {
     $payment_method = 'cash';
 }
 
+$paid_amount = isset($input['paid_amount']) ? (float)$input['paid_amount'] : null;
+
 $items = $input['items'];
 $invoice_number = generate_invoice_number($pdo);
 
@@ -105,6 +107,36 @@ try {
     
     $grand_total = $subtotal - $total_discount + $total_gst_amount;
     
+    // Ledger Logic Pre-calculation
+    $previous_due = 0.00;
+    if ($customer_id) {
+        $stmtDue = $pdo->prepare("
+            SELECT new_due 
+            FROM employee_customer_ledger 
+            WHERE customer_id = ? 
+            ORDER BY created_at DESC, id DESC 
+            LIMIT 1 FOR UPDATE
+        ");
+        $stmtDue->execute([$customer_id]);
+        $dueResult = $stmtDue->fetch();
+        if ($dueResult) {
+            $previous_due = (float)$dueResult['new_due'];
+        }
+    }
+    
+    $total_payable = $previous_due + $grand_total;
+    
+    // If paid_amount is not passed explicitly, assume backward compatible full payment of current bill
+    if ($paid_amount === null) {
+        $paid_amount = $grand_total; 
+    }
+    
+    if ($paid_amount > $total_payable) {
+        throw new Exception("Payment amount (₹{$paid_amount}) exceeds total payable (₹{$total_payable}).");
+    }
+    
+    $new_due = $total_payable - $paid_amount;
+    
     // 2. Insert Sale
     $stmt = $pdo->prepare("
         INSERT INTO employee_sales 
@@ -112,7 +144,11 @@ try {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
     
-    $payment_status = ($payment_method === 'credit') ? 'pending' : 'paid';
+    // Payment status for this sale specifically
+    $payment_status = 'paid';
+    if ($paid_amount < $grand_total) {
+        $payment_status = ($paid_amount > 0) ? 'partial' : 'pending';
+    }
     
     $stmt->execute([
         $invoice_number, 
@@ -150,13 +186,73 @@ try {
         ]);
     }
     
-    // 4. Insert Payment if not credit
-    if ($payment_method !== 'credit') {
+    // 4. Insert Payment if not credit and paid amount > 0
+    // We only insert to employee_payments up to the grand_total for this sale, to not break existing reports
+    if ($paid_amount > 0) {
+        $sale_payment_amount = min($paid_amount, $grand_total);
         $stmtPayment = $pdo->prepare("
             INSERT INTO employee_payments (sale_id, amount, payment_method, transaction_id, payment_status)
             VALUES (?, ?, ?, ?, 'success')
         ");
-        $stmtPayment->execute([$sale_id, $grand_total, $payment_method, $transaction_id]);
+        $stmtPayment->execute([$sale_id, $sale_payment_amount, $payment_method, $transaction_id]);
+    }
+    
+    // 4.1 Insert Customer Ledger
+    if ($customer_id) {
+        $ledger_due = $previous_due;
+        
+        // Conditional Ledger Rule
+        // Only create Baki/Credit ledger records if credit/due is involved.
+        if ($previous_due > 0 || $paid_amount < $grand_total) {
+            
+            // Always record sale credit
+            $ledger_due += $grand_total;
+            $stmtSaleCredit = $pdo->prepare("
+                INSERT INTO employee_customer_ledger
+                (customer_id, employee_id, sale_id, transaction_type, amount, previous_due, new_due, description)
+                VALUES (?, ?, ?, 'sale_credit', ?, ?, ?, ?)
+            ");
+            $stmtSaleCredit->execute([
+                $customer_id, 
+                $employee_id, 
+                $sale_id, 
+                $grand_total, 
+                $previous_due, 
+                $ledger_due, 
+                "Sale Invoice #{$invoice_number}"
+            ]);
+            
+            // If there was a payment, record payment ledger
+            if ($paid_amount > 0) {
+                $prev = $ledger_due;
+                $ledger_due -= $paid_amount;
+                
+                // Log in credit payments table as well
+                $stmtCredPay = $pdo->prepare("
+                    INSERT INTO employee_credit_payments 
+                    (customer_id, employee_id, amount, payment_method, transaction_id, notes)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ");
+                $stmtCredPay->execute([$customer_id, $employee_id, $paid_amount, $payment_method, $transaction_id, "Payment for Invoice #{$invoice_number}"]);
+                $credit_payment_id = $pdo->lastInsertId();
+                
+                $stmtPayLedger = $pdo->prepare("
+                    INSERT INTO employee_customer_ledger
+                    (customer_id, employee_id, sale_id, credit_payment_id, transaction_type, amount, previous_due, new_due, description)
+                    VALUES (?, ?, ?, ?, 'payment', ?, ?, ?, ?)
+                ");
+                $stmtPayLedger->execute([
+                    $customer_id, 
+                    $employee_id, 
+                    $sale_id, 
+                    $credit_payment_id,
+                    $paid_amount, 
+                    $prev, 
+                    $ledger_due, 
+                    "Payment against Invoice #{$invoice_number}"
+                ]);
+            }
+        }
     }
     
     // 5. Update Stock and Record Movement
@@ -198,7 +294,28 @@ try {
 
     $pdo->commit();
     
-    json_response(true, 'Checkout successful', ['sale_id' => $sale_id, 'invoice_number' => $invoice_number]);
+    // Add notification
+    try {
+        $notifTitle = "New Sale Generated";
+        $notifMsg = "Invoice #$invoice_number created by {$_SESSION['user_name']} for " . format_currency($grand_total);
+        $pdo->prepare("INSERT INTO employee_notifications (title, message, type) VALUES (?, ?, 'sale')")->execute([$notifTitle, $notifMsg]);
+    } catch(PDOException $e) {
+        // Ignore notification failure
+    }
+    
+    $response_data = [
+        'sale_id' => $sale_id,
+        'invoice_number' => $invoice_number,
+        'new_bill_total' => $grand_total,
+        'previous_due' => $previous_due,
+        'total_payable' => $total_payable,
+        'paid_today' => $paid_amount,
+        'remaining_due' => $new_due,
+        'payment_method' => $payment_method,
+        'payment_status' => $payment_status
+    ];
+    
+    json_response(true, 'Bill created successfully', $response_data);
 
 } catch (Exception $e) {
     $pdo->rollBack();

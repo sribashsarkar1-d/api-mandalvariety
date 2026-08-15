@@ -55,8 +55,8 @@ const POS = {
         
         this.saveCart();
         
-        // Show brief visual feedback (optional toast)
-        const btn = document.querySelector(`.add-to-cart[data-id="${product.id}"]`);
+        // Show brief visual feedback
+        const btn = document.querySelector(`.product-card[data-id="${product.id}"] .add-to-cart-btn`);
         if (btn) {
             const originalHtml = btn.innerHTML;
             btn.innerHTML = '<i class="bi bi-check-lg"></i>';
@@ -95,9 +95,9 @@ const POS = {
         
         // Add to cart delegation
         document.getElementById('productList').addEventListener('click', function(e) {
-            const btn = e.target.closest('.add-to-cart');
-            if (btn) {
-                const productData = JSON.parse(btn.dataset.product);
+            const card = e.target.closest('.product-card');
+            if (card) {
+                const productData = JSON.parse(card.dataset.product);
                 self.addToCart(productData);
             }
         });
@@ -153,7 +153,7 @@ const POS = {
             
             html += `
             <div class="col-12 col-md-6 col-lg-4">
-                <div class="product-card">
+                <div class="product-card" data-id="${p.id}" data-product="${productJson}" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='var(--shadow-md)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--shadow-sm)';">
                     <img src="${p.image_url}" onerror="this.src='${this.defaultImg}'" class="product-image" alt="${p.name}">
                     <div class="product-details">
                         <div class="product-title">${p.name}</div>
@@ -164,7 +164,7 @@ const POS = {
                                 ${stockBadge}<br>
                                 <span class="text-muted small">Expiry: ${p.formatted_expiry}</span>
                             </div>
-                            <button class="btn btn-primary btn-sm rounded-circle add-to-cart" style="width: 32px; height: 32px; padding: 0;" data-id="${p.id}" data-product="${productJson}" ${parseFloat(p.stock) <= 0 ? 'disabled' : ''}>
+                            <button class="btn btn-primary btn-sm rounded-circle add-to-cart-btn" style="width: 32px; height: 32px; padding: 0; pointer-events: none;" ${parseFloat(p.stock) <= 0 ? 'disabled' : ''}>
                                 <i class="bi bi-plus-lg"></i>
                             </button>
                         </div>

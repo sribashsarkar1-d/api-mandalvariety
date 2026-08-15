@@ -16,7 +16,7 @@ require_once '../includes/header.php';
 ?>
 <style>
     body { background-color: var(--bg-color); }
-    .bottom-nav { display: none !important; }
+    /* .bottom-nav { display: none !important; } */
     
     .cart-summary {
         background: white;
@@ -86,11 +86,12 @@ require_once '../includes/header.php';
 </div>
 
 <div class="cart-summary">
-    <div class="cart-summary-row">
+    <!-- Cart Summary -->
+    <div class="cart-summary-row mt-3">
         <span>Subtotal</span>
         <span id="summarySubtotal">₹0.00</span>
     </div>
-    <div class="cart-summary-row">
+    <div class="cart-summary-row text-success">
         <span>Discount</span>
         <span id="summaryDiscount">₹0.00</span>
     </div>
@@ -98,9 +99,19 @@ require_once '../includes/header.php';
         <span>GST</span>
         <span id="summaryGST">₹0.00</span>
     </div>
-    <div class="cart-summary-row total">
-        <span>Total</span>
-        <span id="summaryTotal" class="text-primary">₹0.00</span>
+    <div class="cart-summary-row mt-2 pt-2 border-top">
+        <span>Today's Bill</span>
+        <span id="summaryTotal" class="text-primary fw-bold fs-5">₹0.00</span>
+    </div>
+    
+    <div class="cart-summary-row mt-2 text-danger" id="rowPreviousDue" style="display: none;">
+        <span>Previous Baki</span>
+        <span id="summaryPreviousDue">₹0.00</span>
+    </div>
+    
+    <div class="cart-summary-row total mt-2 pt-2 border-top" id="rowTotalPayable" style="display: none;">
+        <span>Total Payable</span>
+        <span id="summaryTotalPayable" class="text-danger fw-bold fs-4">₹0.00</span>
     </div>
     
     <button class="btn btn-primary w-100 py-3 mt-4 fw-bold fs-5 rounded-3 shadow-sm" id="checkoutBtn" disabled>
@@ -150,13 +161,33 @@ require_once '../includes/header.php';
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body bg-light">
-                <div class="text-center mb-4 pt-2">
-                    <p class="text-muted mb-1">Amount to Pay</p>
-                    <h2 class="fw-bold text-primary mb-0" id="paymentAmountDisplay">₹0.00</h2>
+                <div class="bg-white p-3 rounded mb-3 shadow-sm text-center">
+                    <p class="text-muted fw-bold mb-1">COMPLETE PAYMENT</p>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">Today's Bill</span>
+                        <span class="fw-bold" id="modalTodayBill">₹0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Previous Baki</span>
+                        <span class="fw-bold text-danger" id="modalPreviousDue">₹0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between pt-2 border-top">
+                        <span class="fw-bold">Total Payable</span>
+                        <span class="fw-bold text-primary fs-5" id="modalTotalPayable">₹0.00</span>
+                    </div>
+                </div>
+                
+                <div class="mb-3 px-1">
+                    <label class="form-label text-muted small fw-bold">Paid Today (₹)</label>
+                    <input type="number" step="0.01" class="form-control form-control-lg fw-bold" id="paidAmountInput" placeholder="Enter amount paid">
+                    <div class="d-flex justify-content-between mt-2 p-2 bg-white rounded border">
+                        <span class="fw-bold">Remaining Baki</span>
+                        <span id="remainingDueDisplay" class="text-danger fw-bold fs-5">₹0.00</span>
+                    </div>
                 </div>
                 
                 <h6 class="fw-bold mb-3 px-1">Payment Method</h6>
-                <div class="row g-2 mb-4 px-1">
+                <div class="row g-2 mb-2 px-1">
                     <div class="col-6">
                         <input type="radio" class="btn-check payment-method" name="payment_method" id="payCash" value="cash" checked>
                         <label class="btn btn-outline-primary w-100 py-3" for="payCash"><i class="bi bi-cash fs-4 d-block mb-1"></i> Cash</label>
@@ -165,24 +196,75 @@ require_once '../includes/header.php';
                         <input type="radio" class="btn-check payment-method" name="payment_method" id="payUpi" value="upi">
                         <label class="btn btn-outline-primary w-100 py-3" for="payUpi"><i class="bi bi-qr-code-scan fs-4 d-block mb-1"></i> UPI</label>
                     </div>
-                    <div class="col-6">
-                        <input type="radio" class="btn-check payment-method" name="payment_method" id="payCard" value="card">
-                        <label class="btn btn-outline-primary w-100 py-3" for="payCard"><i class="bi bi-credit-card fs-4 d-block mb-1"></i> Card</label>
+                </div>
+                
+                <div class="text-center mb-3 d-none" id="upiQrContainer">
+                    <p class="text-muted small mb-2">Scan to Pay <span id="upiAmountDisplay" class="fw-bold text-dark"></span></p>
+                    <div class="bg-white p-2 rounded d-inline-block border shadow-sm">
+                        <img src="../assets/images/image.png" alt="UPI QR Code" style="width: 200px; height: 200px; object-fit: contain;">
                     </div>
-                    <div class="col-6">
-                        <input type="radio" class="btn-check payment-method" name="payment_method" id="payCredit" value="credit">
-                        <label class="btn btn-outline-warning w-100 py-3" for="payCredit"><i class="bi bi-journal-text fs-4 d-block mb-1"></i> Credit (Udhar)</label>
+                    <p class="small text-muted mt-2">Wait for successful payment confirmation before proceeding.</p>
+                </div>
+                
+                <div class="mb-2 px-1 d-none" id="txWrapper">
+                    <input type="text" class="form-control" id="transactionId" placeholder="Transaction ID (Optional)">
+                </div>
+            </div>
+            <div class="modal-footer border-0 pb-4 px-4">
+                <button type="button" class="btn btn-primary w-100 py-3 fw-bold fs-5 rounded-3 shadow-sm" id="confirmPaymentBtn">
+                    <i class="bi bi-check2-circle me-2"></i> CONFIRM BILL
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Checkout Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-body text-center p-5">
+                <div class="mb-4">
+                    <div class="rounded-circle bg-success bg-opacity-10 d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                        <i class="bi bi-check-lg text-success" style="font-size: 3rem;"></i>
+                    </div>
+                </div>
+                <h4 class="fw-bold mb-4">BILL CREATED SUCCESSFULLY</h4>
+                
+                <div class="bg-light p-3 rounded text-start mb-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Today's Bill</span>
+                        <span class="fw-bold" id="successTodayBill">₹0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2" id="successRowPreviousBaki">
+                        <span class="text-muted">Previous Baki</span>
+                        <span class="fw-bold text-danger" id="successPreviousBaki">₹0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 pb-2 border-bottom" id="successRowPaidToday">
+                        <span class="text-muted">Paid Today</span>
+                        <span class="fw-bold text-success" id="successPaidToday">₹0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3" id="successRowRemainingBaki">
+                        <span class="fw-bold">Remaining Baki</span>
+                        <span class="fw-bold text-danger fs-5" id="successRemainingBaki">₹0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small">
+                        <span>Payment Method</span>
+                        <span class="fw-bold" id="successPaymentMethod">CASH</span>
                     </div>
                 </div>
                 
-                <div class="mb-3 px-1 d-none" id="transactionIdWrapper">
-                    <label class="form-label text-muted small">Transaction ID (Optional)</label>
-                    <input type="text" class="form-control" id="transactionId" placeholder="e.g. UTR123456789">
+                <div class="d-flex flex-column gap-2">
+                    <button class="btn btn-primary py-2 fw-bold" id="successViewBtn">
+                        <i class="bi bi-file-earmark-text me-2"></i> VIEW INVOICE
+                    </button>
+                    <button class="btn btn-outline-primary py-2 fw-bold" id="successPrintBtn">
+                        <i class="bi bi-printer me-2"></i> PRINT INVOICE
+                    </button>
+                    <button class="btn btn-light py-2 fw-bold border" id="successNewBtn">
+                        <i class="bi bi-plus-circle me-2"></i> NEW BILL
+                    </button>
                 </div>
-            </div>
-            <div class="modal-footer bg-white border-top-0 pt-3 pb-3">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary px-4 fw-bold" id="confirmPaymentBtn">Confirm Bill</button>
             </div>
         </div>
     </div>

@@ -6,6 +6,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 ?>
 <aside class="desktop-sidebar no-print">
     <div class="desktop-sidebar-brand">
+        <i class="bi bi-bag-check-fill"></i>
         <?= SITE_NAME ?>
     </div>
     
@@ -19,15 +20,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
             </a>
             <a href="<?= BASE_URL ?>/admin/categories.php" class="<?= strpos($current_page, 'categor') !== false ? 'active' : '' ?>">
                 <i class="bi bi-tags"></i> Categories
-            </a>
-            <a href="<?= BASE_URL ?>/admin/stock.php" class="<?= strpos($current_page, 'stock') !== false ? 'active' : '' ?>">
-                <i class="bi bi-boxes"></i> Stock
-            </a>
-            <a href="<?= BASE_URL ?>/admin/purchases.php" class="<?= strpos($current_page, 'purchase') !== false ? 'active' : '' ?>">
-                <i class="bi bi-cart-plus"></i> Purchases
-            </a>
-            <a href="<?= BASE_URL ?>/admin/suppliers.php" class="<?= strpos($current_page, 'supplier') !== false ? 'active' : '' ?>">
-                <i class="bi bi-truck"></i> Suppliers
             </a>
             <a href="<?= BASE_URL ?>/admin/customers.php" class="<?= strpos($current_page, 'customer') !== false ? 'active' : '' ?>">
                 <i class="bi bi-people"></i> Customers
@@ -57,10 +49,15 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <a href="<?= BASE_URL ?>/employee/sales.php" class="<?= strpos($current_page, 'sale') !== false ? 'active' : '' ?>">
                 <i class="bi bi-receipt"></i> My Sales
             </a>
+            <a href="<?= BASE_URL ?>/employee/customers.php" class="<?= strpos($current_page, 'customer') !== false ? 'active' : '' ?>">
+                <i class="bi bi-people"></i> Customers
+            </a>
         <?php endif; ?>
-        
-        <a href="<?= BASE_URL ?>/logout.php" class="text-danger mt-4">
-            <i class="bi bi-box-arrow-right"></i> Logout
-        </a>
+    </div>
+    
+    <div class="upgrade-plan-card">
+        <h6>Upgrade Your Plan</h6>
+        <p class="mb-3">Unlock more features and grow your business.</p>
+        <button class="btn btn-light">Upgrade Now</button>
     </div>
 </aside>
