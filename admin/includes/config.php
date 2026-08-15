@@ -9,9 +9,9 @@ if (session_status() === PHP_SESSION_NONE) {
 |--------------------------------------------------------------------------
 */
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'u391326945_mandalvariety');
-define('DB_USER', 'u391326945_mandalvr');
-define('DB_PASS', 'Mandal@1234567890');
+define('DB_NAME', 'u391326945_mandal');
+define('DB_USER', 'u391326945_mandal');
+define('DB_PASS', 'Sribash123');
 
 /*
 |--------------------------------------------------------------------------
