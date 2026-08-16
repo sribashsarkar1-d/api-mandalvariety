@@ -5,7 +5,7 @@ checkDeliveryLogin();
 $delivery_id = $_SESSION['delivery_id'];
 
 // Fetch profile data
-$stmt = $conn->prepare("SELECT name, email, phone, created_at FROM delivery_boys WHERE id = ?");
+$stmt = $conn->prepare("SELECT * FROM delivery_boys WHERE id = ?");
 $stmt->execute([$delivery_id]);
 $profile = $stmt->fetch();
 

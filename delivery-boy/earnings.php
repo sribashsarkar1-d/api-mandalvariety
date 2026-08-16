@@ -6,7 +6,7 @@ $delivery_id = $_SESSION['delivery_id'];
 
 // Fetch delivered orders
 $stmt = $conn->prepare("
-    SELECT id, order_number, order_no, grand_total, total_amount, created_at, payment_method, shipping_address, delivery_address, address
+    SELECT *
     FROM orders 
     WHERE assigned_delivery_id = ? AND status = 'delivered'
     ORDER BY created_at DESC
