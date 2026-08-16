@@ -13,99 +13,73 @@
     
     <style>
         :root {
-            --primary-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            --secondary-bg: #f8fafc;
-            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            --mandal-green: #07A158;
+            --mandal-green-light: #e8f7f0;
+            --mandal-green-gradient: linear-gradient(135deg, #07A158 0%, #058547 100%);
+            --secondary-bg: #f9fafb;
+            --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+            --text-dark: #111827;
+            --text-muted: #6b7280;
         }
 
         body {
             background-color: var(--secondary-bg);
             font-family: 'Inter', system-ui, sans-serif;
-            color: #1e293b;
+            color: var(--text-dark);
+            padding-bottom: 90px; /* Space for bottom nav */
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .navbar-premium {
-            background: var(--primary-gradient);
-            padding: 15px 20px;
-            color: white;
-            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
+        /* App Container for Desktop constraints */
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: #ffffff;
+            min-height: 100vh;
+            position: relative;
+            box-shadow: 0 0 40px rgba(0,0,0,0.05);
+            padding-bottom: 80px;
         }
 
-        .navbar-brand {
-            color: white;
-            font-weight: 700;
-            font-size: 1.25rem;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .navbar-brand:hover {
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        .nav-actions {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .nav-link-icon {
-            color: white;
-            font-size: 1.2rem;
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-
-        .nav-link-icon:hover {
-            color: #d1fae5;
-            transform: scale(1.1);
+        /* Responsive specific resets */
+        @media (max-width: 480px) {
+            .app-container {
+                box-shadow: none;
+                width: 100%;
+            }
         }
 
         .premium-card {
             background: #ffffff;
-            border-radius: 16px;
+            border-radius: 20px;
             box-shadow: var(--card-shadow);
-            border: 1px solid #e2e8f0;
+            border: 1px solid rgba(0,0,0,0.02);
             overflow: hidden;
             margin-bottom: 20px;
         }
 
         .btn-premium {
-            background: var(--primary-gradient);
+            background: var(--mandal-green);
             color: white;
             border: none;
-            border-radius: 12px;
-            padding: 12px 20px;
+            border-radius: 16px;
+            padding: 16px 20px;
             font-weight: 600;
             width: 100%;
-            transition: all 0.3s;
+            transition: all 0.2s ease;
         }
 
-        .btn-premium:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+        .btn-premium:hover, .btn-premium:active {
+            transform: scale(0.98);
+            background: #068a4b;
             color: white;
         }
+
+        /* Remove default link styling */
+        a { text-decoration: none; }
     </style>
 </head>
 <body>
 
-<?php if (isset($_SESSION['delivery_id'])): ?>
-<div class="navbar-premium">
-    <a href="index.php" class="navbar-brand">
-        <i class="fa-solid fa-motorcycle"></i> Partner Portal
-    </a>
-    <div class="nav-actions">
-        <a href="index.php" class="nav-link-icon"><i class="fa-solid fa-house"></i></a>
-        <a href="logout.php" class="nav-link-icon" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></a>
-    </div>
-</div>
-<?php endif; ?>
+<div class="app-container">
+<!-- Note: Top navbar removed to be replaced by page-specific native headers -->
