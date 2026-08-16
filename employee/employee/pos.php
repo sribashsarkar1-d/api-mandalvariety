@@ -37,6 +37,7 @@ require_once '../includes/header.php';
         top: 50%;
         transform: translateY(-50%);
         color: var(--text-muted);
+        pointer-events: none;
     }
     .search-box .bi-upc-scan {
         position: absolute;

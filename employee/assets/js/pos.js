@@ -74,10 +74,10 @@ const POS = {
         // Search
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
-            searchInput.addEventListener('input', function(e) {
+            searchInput.addEventListener('input', (e) => {
                 clearTimeout(self.searchTimeout);
                 self.searchTimeout = setTimeout(() => {
-                    self.fetchProducts(this.value, self.currentCategory);
+                    self.fetchProducts(e.target.value, self.currentCategory);
                 }, 300);
             });
         }
