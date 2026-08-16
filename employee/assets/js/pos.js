@@ -82,12 +82,20 @@ const POS = {
             });
         }
         
-        // Category Pills
-        const pills = document.querySelectorAll('.category-pill');
-        pills.forEach(pill => {
-            pill.addEventListener('click', function() {
-                pills.forEach(p => p.classList.remove('active'));
+        // Category Dropdown
+        const categoryItems = document.querySelectorAll('.category-dropdown-item');
+        const categoryDropdownBtn = document.getElementById('categoryDropdownBtn');
+        
+        categoryItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                categoryItems.forEach(p => p.classList.remove('active'));
                 this.classList.add('active');
+                
+                if (categoryDropdownBtn) {
+                    categoryDropdownBtn.textContent = this.dataset.name;
+                }
+                
                 self.currentCategory = this.dataset.id;
                 self.fetchProducts(searchInput ? searchInput.value : '', self.currentCategory);
             });

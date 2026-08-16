@@ -78,18 +78,27 @@ require_once '../includes/header.php';
     }
 </style>
 
-<div class="search-box">
-    <i class="bi bi-search"></i>
-    <input type="text" class="form-control" id="searchInput" placeholder="Search by name, barcode or SKU">
-    <i class="bi bi-upc-scan"></i>
-</div>
-
-<!-- Category Pills -->
-<div class="category-pills mb-3" id="categoryPills">
-    <div class="category-pill active" data-id="all">All</div>
-    <?php foreach ($categories as $cat): ?>
-        <div class="category-pill" data-id="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['name']) ?></div>
-    <?php endforeach; ?>
+<div class="row g-2 mb-3">
+    <div class="col-8 col-md-9">
+        <div class="search-box mb-0">
+            <i class="bi bi-search"></i>
+            <input type="text" class="form-control" id="searchInput" placeholder="Search by name, barcode or SKU">
+            <i class="bi bi-upc-scan"></i>
+        </div>
+    </div>
+    <div class="col-4 col-md-3">
+        <div class="dropdown">
+            <button class="form-select text-start text-truncate" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="categoryDropdownBtn">
+                All Cats
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="max-height: 300px; overflow-y: auto;" id="categoryDropdownList">
+                <li><a class="dropdown-item active category-dropdown-item" href="javascript:void(0)" data-id="all" data-name="All Cats">All Cats</a></li>
+                <?php foreach ($categories as $cat): ?>
+                    <li><a class="dropdown-item category-dropdown-item" href="javascript:void(0)" data-id="<?= $cat['id'] ?>" data-name="<?= htmlspecialchars($cat['name']) ?>"><?= htmlspecialchars($cat['name']) ?></a></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    </div>
 </div>
 
 <!-- Product List Container -->
