@@ -87,11 +87,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <span style="color: var(--text-dark);">Go Online</span>
     </a>
     
-    <a href="javascript:void(0)" class="nav-item disabled" title="Coming Soon">
+    <a href="earnings.php" class="nav-item <?= $current_page == 'earnings.php' ? 'active' : '' ?>">
         <i class="fa-solid fa-wallet"></i>
         <span>Earnings</span>
     </a>
-    <a href="javascript:void(0)" class="nav-item disabled" title="Coming Soon">
+    <a href="profile.php" class="nav-item <?= $current_page == 'profile.php' ? 'active' : '' ?>">
         <i class="fa-regular fa-user"></i>
         <span>Profile</span>
     </a>

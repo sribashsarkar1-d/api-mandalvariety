@@ -428,13 +428,13 @@ $delivered_count = $stmt->fetchColumn();
             <i class="fa-solid fa-map-location-dot" style="color: #3b82f6;"></i>
             <span>Map</span>
         </a>
-        <a href="javascript:void(0)" class="action-btn disabled">
+        <a href="earnings.php" class="action-btn">
             <i class="fa-solid fa-wallet" style="color: #f59e0b;"></i>
             <span>Earnings</span>
         </a>
-        <a href="javascript:void(0)" class="action-btn disabled">
-            <i class="fa-solid fa-headset" style="color: #8b5cf6;"></i>
-            <span>Support</span>
+        <a href="profile.php" class="action-btn">
+            <i class="fa-regular fa-user" style="color: #8b5cf6;"></i>
+            <span>Profile</span>
         </a>
     </div>
 
