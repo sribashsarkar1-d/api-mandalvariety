@@ -12,14 +12,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
+            --primary: #5438dc;
+            --primary-hover: #432ac7;
             --sidebar-bg: #0f172a;
             --sidebar-text: #94a3b8;
             --sidebar-active-bg: #1e293b;
             --sidebar-active-text: #ffffff;
-            --bg-color: #f8fafc;
-            --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --bg-color: #fafafa;
+            --card-shadow: 0 10px 25px rgba(0,0,0,0.03), 0 4px 10px rgba(0,0,0,0.02);
+            --gradient-primary: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
         }
         body {
             font-family: 'Inter', sans-serif;
@@ -27,6 +28,11 @@
             color: #334155;
             margin: 0;
             overflow-x: hidden;
+            /* Extra padding on mobile for the fixed bottom nav */
+            padding-bottom: 0;
+        }
+        @media (max-width: 767.98px) {
+            body { padding-bottom: 80px; }
         }
 
         /* --- Sidebar Styles --- */
@@ -80,7 +86,7 @@
             color: #ef4444 !important;
         }
 
-        /* --- Top Navbar (Mobile & Desktop) --- */
+        /* --- Top Navbar (Desktop Only) --- */
         .top-navbar {
             background: white;
             height: 60px;
@@ -92,13 +98,17 @@
             top: 0;
             z-index: 1030;
         }
+        @media (max-width: 767.98px) {
+            .top-navbar { display: none; }
+        }
+        
         .sidebar-toggler {
             background: none;
             border: none;
             font-size: 1.5rem;
             color: #64748b;
             cursor: pointer;
-            display: none; /* Hidden on desktop */
+            display: none;
         }
 
         /* --- Main Content Area --- */
@@ -113,28 +123,32 @@
             padding: 24px;
             flex-grow: 1;
         }
+        @media (max-width: 767.98px) {
+            .content-area { padding: 15px; }
+        }
 
         /* --- UI Components --- */
         .card {
             border: none;
-            border-radius: 12px;
+            border-radius: 16px;
             box-shadow: var(--card-shadow);
             background: #ffffff;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         .form-control, .form-select {
-            border-radius: 8px;
-            padding: 10px 15px;
-            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            font-size: 0.95rem;
         }
         .form-control:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+            box-shadow: 0 0 0 3px rgba(84, 56, 220, 0.15);
         }
         .btn {
-            border-radius: 8px;
-            padding: 8px 16px;
-            font-weight: 500;
+            border-radius: 10px;
+            padding: 10px 18px;
+            font-weight: 600;
             transition: all 0.2s;
         }
         .btn-primary, .btn-success {
