@@ -134,36 +134,42 @@ require_once '../includes/header.php';
     </div>
     
     <div class="col-6 col-md-4">
-        <div class="stat-card stat-lowstock">
-            <div class="stat-card-header">
-                <span class="stat-card-label">Low Stock</span>
-                <i class="bi bi-exclamation-triangle stat-card-icon"></i>
+        <a href="low-stock.php" class="text-decoration-none">
+            <div class="stat-card stat-lowstock">
+                <div class="stat-card-header">
+                    <span class="stat-card-label text-dark">Low Stock</span>
+                    <i class="bi bi-exclamation-triangle stat-card-icon"></i>
+                </div>
+                <div class="stat-card-value text-dark"><?= $lowStock ?></div>
+                <div class="stat-card-meta text-muted">Products need attention</div>
             </div>
-            <div class="stat-card-value"><?= $lowStock ?></div>
-            <div class="stat-card-meta">Products need attention</div>
-        </div>
+        </a>
     </div>
     
     <div class="col-6 col-md-4">
-        <div class="stat-card stat-outstock">
-            <div class="stat-card-header">
-                <span class="stat-card-label">Out of Stock</span>
-                <i class="bi bi-x-circle stat-card-icon"></i>
+        <a href="out-of-stock.php" class="text-decoration-none">
+            <div class="stat-card stat-outstock">
+                <div class="stat-card-header">
+                    <span class="stat-card-label text-dark">Out of Stock</span>
+                    <i class="bi bi-x-circle stat-card-icon"></i>
+                </div>
+                <div class="stat-card-value text-danger"><?= $outOfStock ?></div>
+                <div class="stat-card-meta text-muted">Items unavailable</div>
             </div>
-            <div class="stat-card-value text-danger"><?= $outOfStock ?></div>
-            <div class="stat-card-meta">Items unavailable</div>
-        </div>
+        </a>
     </div>
     
     <div class="col-6 col-md-4">
-        <div class="stat-card stat-expiring">
-            <div class="stat-card-header">
-                <span class="stat-card-label">Expiring Soon</span>
-                <i class="bi bi-calendar-x stat-card-icon"></i>
+        <a href="expiring-soon.php" class="text-decoration-none">
+            <div class="stat-card stat-expiring">
+                <div class="stat-card-header">
+                    <span class="stat-card-label text-dark">Expiring Soon</span>
+                    <i class="bi bi-calendar-x stat-card-icon"></i>
+                </div>
+                <div class="stat-card-value text-dark"><?= $expiringSoon ?></div>
+                <div class="stat-card-meta text-muted">Check inventory</div>
             </div>
-            <div class="stat-card-value"><?= $expiringSoon ?></div>
-            <div class="stat-card-meta">Check inventory</div>
-        </div>
+        </a>
     </div>
 </div>
 
