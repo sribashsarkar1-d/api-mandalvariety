@@ -21,33 +21,7 @@ require_once '../includes/header.php';
     /* .bottom-nav { display: none !important; } Removed to show bottom buttons */
     .main-content { padding-bottom: 20px; }
     
-    /* Search Box */
-    .search-box {
-        position: relative;
-        margin-bottom: 1rem;
-    }
-    .search-box .form-control {
-        padding-left: 2.5rem;
-        padding-right: 2.5rem;
-        border-radius: 20px;
-    }
-    .search-box .bi-search {
-        position: absolute;
-        left: 1rem;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--text-muted);
-        pointer-events: none;
-    }
-    .search-box .bi-upc-scan {
-        position: absolute;
-        right: 1rem;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--text-muted);
-        cursor: pointer;
-    }
-    
+
     /* Floating Cart Button */
     .floating-cart {
         position: fixed;
@@ -76,13 +50,25 @@ require_once '../includes/header.php';
         padding: 0.3em 0.5em;
         border-radius: 50%;
     }
+    
+    /* Search Box Fixes for POS */
+    .search-box .bi-upc-scan {
+        left: auto !important;
+        right: 1rem !important;
+        pointer-events: auto !important;
+        cursor: pointer;
+    }
+    .search-box input {
+        padding-right: 2.5rem !important;
+    }
 </style>
 
-<div class="row g-2 mb-3">
+<form onsubmit="return false;" class="mb-3">
+<div class="row g-2">
     <div class="col-8 col-md-9">
         <div class="search-box mb-0">
             <i class="bi bi-search"></i>
-            <input type="text" class="form-control" id="searchInput" placeholder="Search by name, barcode or SKU">
+            <input type="search" name="search" class="form-control" id="searchInput" placeholder="Search by name, barcode or SKU">
             <i class="bi bi-upc-scan"></i>
         </div>
     </div>
@@ -100,6 +86,7 @@ require_once '../includes/header.php';
         </div>
     </div>
 </div>
+</form>
 
 <!-- Product List Container -->
 <div id="productList" class="row g-2">
