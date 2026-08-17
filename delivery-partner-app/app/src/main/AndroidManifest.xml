@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Additional permissions only if strictly required by website functionality (e.g., calling) -->
+    <!-- The user explicitly said: "Request only the permissions that are actually necessary. Do NOT request unnecessary permissions such as Contacts, SMS, Camera, Microphone, Location." -->
+    
+    <!-- Using tel: intent does not strictly require CALL_PHONE permission if using ACTION_DIAL, 
+         but if ACTION_CALL is used it does. ACTION_DIAL is safer and requires no permission. -->
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/logo_placeholder"
+        android:label="@string/app_name"
+        android:roundIcon="@drawable/logo_placeholder"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.DeliveryPartner"
+        android:usesCleartextTraffic="false"> <!-- Security: Do not allow cleartext HTTP unless needed -->
+        
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.DeliveryPartner.Splash"> <!-- Splash screen theme -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        
+    </application>
+
+</manifest>

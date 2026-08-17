@@ -1,0 +1,24 @@
+R_DEF: Internal format may change without notice
+local
+color black
+color brand_green
+color brand_green_dark
+color splash_bg
+color white
+drawable logo_placeholder
+drawable splash_background
+id btnRetry
+id errorLayout
+id progressBar
+id webView
+layout activity_main
+layout error_layout
+string app_name
+string cancel
+string check_connection
+string exit
+string exit_app
+string no_internet
+string retry
+style Theme.DeliveryPartner
+style Theme.DeliveryPartner.Splash

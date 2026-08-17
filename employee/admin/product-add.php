@@ -32,15 +32,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Handle image upload
     $image = null;
+    $uploadDir = '../uploads/products/';
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
+    
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        $uploadDir = '../uploads/products/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
         $filename = uniqid() . '-' . basename($_FILES['image']['name']);
         $uploadFile = $uploadDir . $filename;
         if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadFile)) {
             $image = $filename;
+        }
+    } elseif (!empty($_POST['camera_image_base64'])) {
+        $base64_string = $_POST['camera_image_base64'];
+        if (preg_match('/^data:image\/(\w+);base64,/', $base64_string, $type)) {
+            $data = substr($base64_string, strpos($base64_string, ',') + 1);
+            $data = base64_decode(str_replace(' ', '+', $data));
+            if ($data !== false) {
+                $ext = strtolower($type[1]);
+                if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+                    $filename = uniqid() . '-camera.' . $ext;
+                    $uploadFile = $uploadDir . $filename;
+                    if (file_put_contents($uploadFile, $data)) {
+                        $image = $filename;
+                    }
+                }
+            }
         }
     }
     
@@ -95,7 +112,31 @@ require_once '../includes/header.php';
         
         <div class="mb-3">
             <label class="form-label text-muted small">Product Image</label>
-            <input type="file" name="image" class="form-control" accept="image/*">
+            <div class="d-flex gap-2 mb-2">
+                <input type="file" name="image" id="imageInput" class="form-control" accept="image/*">
+                <button type="button" id="openCameraBtn" class="btn btn-secondary text-nowrap">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-camera" viewBox="0 0 16 16">
+                      <path d="M15 12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h1.172a3 3 0 0 0 2.12-.879l.83-.828A1 1 0 0 1 6.827 3h2.344a1 1 0 0 1 .707.293l.828.828A3 3 0 0 0 12.828 5H14a1 1 0 0 1 1 1zM2 4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-1.172a2 2 0 0 1-1.414-.586l-.828-.828A2 2 0 0 0 9.172 2H6.828a2 2 0 0 0-1.414.586l-.828.828A2 2 0 0 1 3.172 4z"/>
+                      <path d="M8 11a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5m0 1a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7"/>
+                      <path d="M3 6.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0"/>
+                    </svg>
+                    Camera
+                </button>
+            </div>
+            
+            <div id="cameraSection" class="border rounded p-2 mb-2 bg-light text-center" style="display: none;">
+                <video id="cameraVideo" style="width: 100%; max-width: 300px; display: none;" autoplay playsinline></video>
+                <canvas id="cameraCanvas" style="display: none;"></canvas>
+                <img id="cameraPreview" style="width: 100%; max-width: 300px; display: none; border: 1px solid #ccc; border-radius: 4px;" />
+                <input type="hidden" name="camera_image_base64" id="cameraImageBase64">
+                
+                <div class="mt-2">
+                    <button type="button" id="startCameraBtn" class="btn btn-sm btn-primary">Start Camera</button>
+                    <button type="button" id="capturePhotoBtn" class="btn btn-sm btn-success" style="display: none;">Take Photo</button>
+                    <button type="button" id="retakePhotoBtn" class="btn btn-sm btn-warning" style="display: none;">Retake</button>
+                    <button type="button" id="closeCameraBtn" class="btn btn-sm btn-danger">Close</button>
+                </div>
+            </div>
         </div>
         
         <div class="row g-2 mb-3">
@@ -199,6 +240,99 @@ document.addEventListener('DOMContentLoaded', function() {
 
     sellingPriceInput.addEventListener('input', calculateFinalPrice);
     discountInput.addEventListener('input', calculateFinalPrice);
+
+    // Camera functionality
+    const openCameraBtn = document.getElementById('openCameraBtn');
+    const cameraSection = document.getElementById('cameraSection');
+    const cameraVideo = document.getElementById('cameraVideo');
+    const cameraCanvas = document.getElementById('cameraCanvas');
+    const cameraPreview = document.getElementById('cameraPreview');
+    const cameraImageBase64 = document.getElementById('cameraImageBase64');
+    
+    const startCameraBtn = document.getElementById('startCameraBtn');
+    const capturePhotoBtn = document.getElementById('capturePhotoBtn');
+    const retakePhotoBtn = document.getElementById('retakePhotoBtn');
+    const closeCameraBtn = document.getElementById('closeCameraBtn');
+    const imageInput = document.getElementById('imageInput');
+    
+    let stream = null;
+
+    openCameraBtn.addEventListener('click', function() {
+        cameraSection.style.display = 'block';
+        if (!stream && !cameraImageBase64.value) {
+            startCamera();
+        }
+    });
+
+    closeCameraBtn.addEventListener('click', function() {
+        cameraSection.style.display = 'none';
+        stopCamera();
+    });
+
+    startCameraBtn.addEventListener('click', startCamera);
+
+    async function startCamera() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            cameraVideo.srcObject = stream;
+            cameraVideo.style.display = 'inline-block';
+            cameraPreview.style.display = 'none';
+            startCameraBtn.style.display = 'none';
+            capturePhotoBtn.style.display = 'inline-block';
+            retakePhotoBtn.style.display = 'none';
+        } catch (err) {
+            console.error("Error accessing camera: ", err);
+            alert("Could not access the camera. Please make sure you have granted permission.");
+        }
+    }
+
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        cameraVideo.style.display = 'none';
+        startCameraBtn.style.display = 'inline-block';
+        capturePhotoBtn.style.display = 'none';
+    }
+
+    capturePhotoBtn.addEventListener('click', function() {
+        const context = cameraCanvas.getContext('2d');
+        cameraCanvas.width = cameraVideo.videoWidth || 300;
+        cameraCanvas.height = cameraVideo.videoHeight || 300;
+        context.drawImage(cameraVideo, 0, 0, cameraCanvas.width, cameraCanvas.height);
+        
+        const dataUrl = cameraCanvas.toDataURL('image/png');
+        cameraPreview.src = dataUrl;
+        cameraImageBase64.value = dataUrl;
+        
+        // Clear file input when using camera
+        imageInput.value = '';
+        
+        cameraVideo.style.display = 'none';
+        cameraPreview.style.display = 'inline-block';
+        capturePhotoBtn.style.display = 'none';
+        retakePhotoBtn.style.display = 'inline-block';
+        stopCamera(); // Stop stream after capture to save battery
+    });
+
+    retakePhotoBtn.addEventListener('click', function() {
+        cameraImageBase64.value = '';
+        startCamera();
+    });
+    
+    // Clear camera data when a file is selected
+    imageInput.addEventListener('change', function() {
+        if (this.value) {
+            cameraImageBase64.value = '';
+            cameraPreview.src = '';
+            cameraPreview.style.display = 'none';
+            if (cameraSection.style.display === 'block') {
+                cameraSection.style.display = 'none';
+                stopCamera();
+            }
+        }
+    });
 });
 </script>
 <?php $extra_js = ob_get_clean(); ?>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Mandal Delivery Partner</string>
+    <string name="no_internet">No Internet Connection</string>
+    <string name="check_connection">Please check your internet connection and try again.</string>
+    <string name="retry">Retry</string>
+    <string name="exit_app">Exit Mandal Delivery Partner?</string>
+    <string name="exit">Exit</string>
+    <string name="cancel">Cancel</string>
+</resources>

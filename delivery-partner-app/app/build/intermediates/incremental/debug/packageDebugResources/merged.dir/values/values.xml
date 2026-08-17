@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#000000</color>
+    <color name="brand_green">#07A158</color>
+    <color name="brand_green_dark">#057A42</color>
+    <color name="splash_bg">#FFFFFF</color>
+    <color name="white">#FFFFFF</color>
+    <string name="app_name">Mandal Delivery Partner</string>
+    <string name="cancel">Cancel</string>
+    <string name="check_connection">Please check your internet connection and try again.</string>
+    <string name="exit">Exit</string>
+    <string name="exit_app">Exit Mandal Delivery Partner?</string>
+    <string name="no_internet">No Internet Connection</string>
+    <string name="retry">Retry</string>
+    <style name="Theme.DeliveryPartner" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/brand_green</item>
+        <item name="colorPrimaryVariant">@color/brand_green_dark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:statusBarColor">@color/brand_green_dark</item>
+    </style>
+    <style name="Theme.DeliveryPartner.Splash" parent="Theme.DeliveryPartner">
+        <item name="android:windowBackground">@drawable/splash_background</item>
+        <item name="android:statusBarColor">@color/splash_bg</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>
