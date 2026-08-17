@@ -20,11 +20,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $barcode = sanitize_input($_POST['barcode']);
     $brand = sanitize_input($_POST['brand']);
     $unit = $_POST['unit'];
-    $purchase_price = $_POST['purchase_price'] ?? 0;
+    $purchase_price = 0;
     $selling_price = $_POST['selling_price'];
-    $mrp = $_POST['mrp'] ?? 0;
+    $mrp = 0;
     $gst = $_POST['gst_percent'] ?? 0;
-    $discount = $_POST['discount'] ?: 0;
+    $discount = 0;
     $expiry = !empty($_POST['expiry_date']) ? $_POST['expiry_date'] : null;
     $min_stock = $_POST['minimum_stock'] ?: 0;
     $quantity = $_POST['quantity'] ?: 0;
@@ -175,28 +175,9 @@ require_once '../includes/header.php';
             </div>
         </div>
         
-        <div class="row g-2 mb-3">
-            <div class="col-6 col-md-3">
-                <label class="form-label text-muted small">Purchase Price</label>
-                <input type="number" step="0.01" name="purchase_price" class="form-control" value="0">
-            </div>
-            <div class="col-6 col-md-3">
-                <label class="form-label text-muted small">MRP</label>
-                <input type="number" step="0.01" name="mrp" class="form-control" value="0">
-            </div>
-            <div class="col-6 col-md-3">
-                <label class="form-label text-muted small">Selling Price *</label>
-                <input type="number" step="0.01" name="selling_price" id="sellingPrice" class="form-control" required>
-            </div>
-            <div class="col-6 col-md-3">
-                <label class="form-label text-muted small">Discount</label>
-                <input type="number" step="0.01" name="discount" id="discountAmt" class="form-control" value="0">
-            </div>
-        </div>
-        
-        <div class="p-2 mb-3 bg-light rounded border d-flex justify-content-between align-items-center">
-            <span class="text-muted small fw-bold">Final Discounted Price:</span>
-            <span class="fs-5 fw-bold text-success" id="finalPriceDisplay">₹0.00</span>
+        <div class="mb-3">
+            <label class="form-label text-muted small">Selling Price *</label>
+            <input type="number" step="0.01" name="selling_price" id="sellingPrice" class="form-control" required>
         </div>
         
         <div class="row g-2 mb-3">
@@ -227,19 +208,7 @@ require_once '../includes/header.php';
 <?php ob_start(); ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const sellingPriceInput = document.getElementById('sellingPrice');
-    const discountInput = document.getElementById('discountAmt');
-    const finalPriceDisplay = document.getElementById('finalPriceDisplay');
-
-    function calculateFinalPrice() {
-        const sp = parseFloat(sellingPriceInput.value) || 0;
-        const disc = parseFloat(discountInput.value) || 0;
-        const final = Math.max(0, sp - disc);
-        finalPriceDisplay.textContent = '₹' + final.toFixed(2);
-    }
-
-    sellingPriceInput.addEventListener('input', calculateFinalPrice);
-    discountInput.addEventListener('input', calculateFinalPrice);
+    // Price calculation logic removed
 
     // Camera functionality
     const openCameraBtn = document.getElementById('openCameraBtn');
