@@ -90,9 +90,9 @@ MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\Sribash\.gradle\ca
 	android:label
 		ADDED from C:\xampp\htdocs\auth-api\delivery-partner-app\app\src\main\AndroidManifest.xml:15:9-41
 	android:roundIcon
-		ADDED from C:\xampp\htdocs\auth-api\delivery-partner-app\app\src\main\AndroidManifest.xml:16:9-55
+		ADDED from C:\xampp\htdocs\auth-api\delivery-partner-app\app\src\main\AndroidManifest.xml:16:9-47
 	android:icon
-		ADDED from C:\xampp\htdocs\auth-api\delivery-partner-app\app\src\main\AndroidManifest.xml:14:9-50
+		ADDED from C:\xampp\htdocs\auth-api\delivery-partner-app\app\src\main\AndroidManifest.xml:14:9-42
 	android:allowBackup
 		ADDED from C:\xampp\htdocs\auth-api\delivery-partner-app\app\src\main\AndroidManifest.xml:13:9-35
 	android:theme

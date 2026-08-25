@@ -5,6 +5,7 @@ color brand_green
 color brand_green_dark
 color splash_bg
 color white
+drawable app_logo
 drawable logo_placeholder
 drawable splash_background
 id btnRetry

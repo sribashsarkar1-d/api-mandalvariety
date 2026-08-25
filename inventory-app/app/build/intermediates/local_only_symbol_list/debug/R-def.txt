@@ -1,0 +1,22 @@
+R_DEF: Internal format may change without notice
+local
+color black
+color colorAccent
+color colorPrimary
+color colorPrimaryDark
+color white
+drawable app_logo
+drawable ic_launcher_background
+drawable ic_launcher_foreground
+id btnRetry
+id errorScreen
+id splashScreen
+id webView
+layout activity_main
+mipmap ic_launcher
+mipmap ic_launcher_round
+string app_name
+style Theme.InventoryPro
+style Theme.InventoryPro.NoActionBar
+xml backup_rules
+xml data_extraction_rules

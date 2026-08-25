@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "com.mandalvariety.shop.app-mergeDebugResources-30:/layout/activity_main.xml",
+        "source": "com.mandalvariety.shop.app-main-33:/layout/activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\Sribash\\.gradle\\daemon\\8.4\\com.mandalvariety.shop.app-mergeDebugResources-30:\\layout\\activity_main.xml",
+        "source": "C:\\Users\\Sribash\\.gradle\\daemon\\8.4\\com.mandalvariety.shop.app-main-33:\\layout\\activity_main.xml"
+    }
+]

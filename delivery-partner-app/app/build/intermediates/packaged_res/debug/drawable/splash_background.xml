@@ -4,6 +4,6 @@
     <item>
         <bitmap
             android:gravity="center"
-            android:src="@drawable/logo_placeholder" /> <!-- Fallback to a placeholder if no logo -->
+            android:src="@drawable/app_logo" /> <!-- Fallback to a placeholder if no logo -->
     </item>
 </layer-list>

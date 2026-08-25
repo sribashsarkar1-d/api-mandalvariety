@@ -1,0 +1,38 @@
+[
+    {
+        "merged": "C:\\Users\\Sribash\\.gradle\\daemon\\8.4\\com.mandalvariety.shop.app-merged_res-31:\\drawable_ic_launcher_foreground.xml.flat",
+        "source": "C:\\Users\\Sribash\\.gradle\\daemon\\8.4\\com.mandalvariety.shop.app-main-33:\\drawable\\ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "C:\\Users\\Sribash\\.gradle\\daemon\\8.4\\com.mandalvariety.shop.app-merged_res-31:\\xml_backup_rules.xml.flat",
+        "source": "C:\\Users\\Sribash\\.gradle\\daemon\\8.4\\com.mandalvariety.shop.app-main-33:\\xml\\backup_rules.xml"
+    },
+    {
+        "merged": "C:\\Users\\Sribash\\.gradle\\daemon\\8.4\\com.mandalvariety.shop.app-merged_res-31:\\drawable_ic_launcher_background.xml.flat",
+        "source": "C:\\Users\\Sribash\\.gradle\\daemon\\8.4\\com.mandalvariety.shop.app-main-33:\\drawable\\ic_launcher_background.xml"
+    },
+    {
+        "merged": "C:\\Users\\Sribash\\.gradle\\daemon\\8.4\\com.mandalvariety.shop.app-merged_res-31:\\mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "C:\\Users\\Sribash\\.gradle\\daemon\\8.4\\com.mandalvariety.shop.app-main-33:\\mipmap-anydpi-v26\\ic_launcher_round.xml"
+    },
+    {
+        "merged": "C:\\Users\\Sribash\\.gradle\\daemon\\8.4\\com.mandalvariety.shop.app-merged_res-31:\\layout_activity_main.xml.flat",
+        "source": "C:\\Users\\Sribash\\.gradle\\daemon\\8.4\\com.mandalvariety.shop.app-main-33:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "com.mandalvariety.shop.app-merged_res-31:/layout_activity_main.xml.flat",
+        "source": "com.mandalvariety.shop.app-main-33:/layout/activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\Sribash\\.gradle\\daemon\\8.4\\com.mandalvariety.shop.app-merged_res-31:\\mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "C:\\Users\\Sribash\\.gradle\\daemon\\8.4\\com.mandalvariety.shop.app-main-33:\\mipmap-anydpi-v26\\ic_launcher.xml"
+    },
+    {
+        "merged": "C:\\Users\\Sribash\\.gradle\\daemon\\8.4\\com.mandalvariety.shop.app-merged_res-31:\\xml_data_extraction_rules.xml.flat",
+        "source": "C:\\Users\\Sribash\\.gradle\\daemon\\8.4\\com.mandalvariety.shop.app-main-33:\\xml\\data_extraction_rules.xml"
+    },
+    {
+        "merged": "com.mandalvariety.shop.app-merged_res-31:/drawable_app_logo.jpg.flat",
+        "source": "com.mandalvariety.shop.app-main-33:/drawable/app_logo.jpg"
+    }
+]
