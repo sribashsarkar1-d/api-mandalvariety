@@ -148,11 +148,65 @@ require_once '../includes/header.php';
     }
     
     @media print {
-        @page { margin: 0; size: auto; }
-        body { margin: 1cm; background: white; }
-        .invoice-card { box-shadow: none; border: none; padding: 0; margin: 0; }
-        .app-header { display: none !important; }
-        .main-wrapper, .main-content { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+        @page { 
+            margin: 0; 
+            size: 58mm auto; 
+        }
+        body { 
+            margin: 0; 
+            padding: 2mm; 
+            background: white; 
+            color: black !important;
+            font-family: monospace;
+        }
+        
+        .invoice-card { 
+            box-shadow: none; 
+            border: none; 
+            padding: 0; 
+            margin: 0; 
+            width: 100%;
+        }
+        
+        .app-header, .no-print, .bottom-nav { display: none !important; }
+        
+        .main-wrapper, .main-content { 
+            margin: 0 !important; 
+            padding: 0 !important; 
+            width: 100% !important; 
+        }
+
+        .invoice-header {
+            border-bottom: 1px dashed black;
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+        }
+        .invoice-header h4 { font-size: 16px; font-weight: bold; margin-bottom: 2px; color: black !important; }
+        .invoice-header p { font-size: 11px; margin-bottom: 0; color: black !important; }
+        
+        .invoice-details { font-size: 11px; margin-bottom: 10px; color: black !important; }
+        .invoice-details td { padding: 1px 0; }
+        
+        .invoice-items { font-size: 11px; width: 100%; margin-bottom: 10px; color: black !important; }
+        .invoice-items th { font-size: 10px; border-bottom: 1px dashed black; padding-bottom: 2px; color: black !important; background: transparent; }
+        .invoice-items td { padding: 2px 0; border: none; }
+        
+        .invoice-totals { border-top: 1px dashed black !important; margin-top: 5px; padding-top: 5px; }
+        .invoice-totals .d-flex { margin-bottom: 2px; }
+        .invoice-totals span { font-size: 11px; color: black !important; }
+        .invoice-totals .fw-bold span { font-size: 12px; }
+        
+        .dashed, .border-top { border-top: 1px dashed black !important; }
+        
+        .grand-total { border-top: 1px solid black !important; padding-top: 3px; }
+        .grand-total span { font-size: 13px !important; font-weight: bold; color: black !important; }
+        
+        .text-muted, .text-danger, .text-success, .text-primary, .text-warning, .text-dark { 
+            color: black !important; 
+        }
+        
+        .invoice-footer { margin-top: 10px; font-size: 10px; }
+        .invoice-footer p { margin-bottom: 2px; }
     }
 </style>
 
