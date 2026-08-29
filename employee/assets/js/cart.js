@@ -360,6 +360,8 @@ const Cart = {
                 e.preventDefault();
                 const name = document.getElementById('newCustName').value;
                 const phone = document.getElementById('newCustPhone').value;
+                const address = document.getElementById('newCustAddress') ? document.getElementById('newCustAddress').value : '';
+                const opening_due = document.getElementById('newCustOpeningDue') ? parseFloat(document.getElementById('newCustOpeningDue').value) || 0 : 0;
                 
                 const btn = this.querySelector('button[type="submit"]');
                 const origText = btn.textContent;
@@ -370,7 +372,7 @@ const Cart = {
                     const response = await fetch('../api/customers/create.php', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ name, phone })
+                        body: JSON.stringify({ name, phone, address, opening_due })
                     });
                     const result = await response.json();
                     
