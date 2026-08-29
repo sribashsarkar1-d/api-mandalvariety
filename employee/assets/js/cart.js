@@ -361,7 +361,7 @@ const Cart = {
                 const name = document.getElementById('newCustName').value;
                 const phone = document.getElementById('newCustPhone').value;
                 const address = document.getElementById('newCustAddress') ? document.getElementById('newCustAddress').value : '';
-                const opening_due = document.getElementById('newCustOpeningDue') ? parseFloat(document.getElementById('newCustOpeningDue').value) || 0 : 0;
+                const opening_due = 0; // Employees cannot set opening due
                 
                 const btn = this.querySelector('button[type="submit"]');
                 const origText = btn.textContent;

@@ -26,11 +26,14 @@ $customers = $stmt->fetchAll();
 require_once '../includes/header.php';
 ?>
 
-<div class="mb-4">
-    <div class="input-group input-group-lg shadow-sm rounded-4 overflow-hidden">
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <div class="input-group input-group-lg shadow-sm rounded-4 overflow-hidden flex-grow-1 me-3">
         <span class="input-group-text bg-white border-end-0 border-0"><i class="bi bi-search text-muted"></i></span>
         <input type="text" id="customerSearchInput" class="form-control border-start-0 border-0 bg-white shadow-none" placeholder="Search by name or mobile number...">
     </div>
+    <button class="btn btn-primary btn-lg shadow-sm rounded-4 px-4" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+        <i class="bi bi-person-plus-fill me-2"></i>Add Customer
+    </button>
 </div>
 
 <div class="row g-2">
@@ -81,6 +84,40 @@ require_once '../includes/header.php';
     <?php endif; ?>
 </div>
 
+<!-- Add Customer Modal -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Add New Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addCustomerForm">
+                    <div class="mb-3">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" class="form-control" id="newCustName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number *</label>
+                        <input type="text" class="form-control" id="newCustPhone" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Address (Optional)</label>
+                        <textarea class="form-control" id="newCustAddress" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Opening Due ₹ (Optional)</label>
+                        <input type="number" class="form-control" id="newCustOpeningDue" step="0.01" min="0">
+                        <small class="text-muted">Previous balance before using the system.</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Save Customer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php ob_start(); ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -99,6 +136,43 @@ document.addEventListener('DOMContentLoaded', function() {
                     card.style.display = 'none';
                 }
             });
+        });
+    }
+
+    const addCustomerForm = document.getElementById('addCustomerForm');
+    if (addCustomerForm) {
+        addCustomerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = this.querySelector('button[type="submit"]');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+            
+            const name = document.getElementById('newCustName').value;
+            const phone = document.getElementById('newCustPhone').value;
+            const address = document.getElementById('newCustAddress').value;
+            const opening_due = parseFloat(document.getElementById('newCustOpeningDue').value) || 0;
+            
+            try {
+                const response = await fetch('../api/customers/create.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ name, phone, address, opening_due })
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    alert(result.message || 'Failed to add customer');
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            } catch (err) {
+                alert('An error occurred');
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
         });
     }
 });

@@ -45,7 +45,9 @@ require_once '../includes/header.php';
     <div>
         <h5 class="fw-bold mb-1">
             <?= htmlspecialchars($customer['name']) ?>
+            <?php if (get_user_role() === 'admin'): ?>
             <button class="btn btn-sm btn-link text-primary p-0 ms-2" onclick="editOpeningDue(<?= $customer['id'] ?>, <?= $opening_due_amount ?>)" title="Edit Opening Due"><i class="bi bi-pencil-square fs-5"></i></button>
+            <?php endif; ?>
         </h5>
         <div class="text-muted small">
             <i class="bi bi-telephone me-1"></i><?= htmlspecialchars($customer['phone'] ?? 'N/A') ?>
@@ -154,6 +156,7 @@ require_once '../includes/header.php';
     </div>
 </div>
 
+<?php if (get_user_role() === 'admin'): ?>
 <!-- Edit Opening Due Modal -->
 <div class="modal fade" id="editOpeningDueModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -216,5 +219,6 @@ document.getElementById('editOpeningDueForm').addEventListener('submit', async f
     }
 });
 </script>
+<?php endif; ?>
 
 <?php require_once '../includes/footer.php'; ?>

@@ -145,8 +145,7 @@ require_once '../includes/header.php';
                 <form id="newCustomerForm">
                     <input type="text" class="form-control mb-2" id="newCustName" placeholder="Full Name" required>
                     <input type="text" class="form-control mb-2" id="newCustPhone" placeholder="Phone Number" required>
-                    <textarea class="form-control mb-2" id="newCustAddress" placeholder="Address (Optional)" rows="2"></textarea>
-                    <input type="number" class="form-control mb-3" id="newCustOpeningDue" placeholder="Opening Due ₹ (Optional)" step="0.01" min="0">
+                    <textarea class="form-control mb-3" id="newCustAddress" placeholder="Address (Optional)" rows="2"></textarea>
                     <button type="submit" class="btn btn-outline-primary w-100">Save & Select Customer</button>
                 </form>
             </div>
