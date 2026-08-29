@@ -216,8 +216,8 @@ require_once '../includes/header.php';
             
             <div class="invoice-header">
                 <h4><?= SITE_NAME ?></h4>
-                <p>123 Store Address, City</p>
-                <p>Phone: +91 9876543210</p>
+                <p>Balarampu , sarayer par</p>
+                <p>Phone: +91 8967136033</p>
             </div>
             
             <div class="invoice-details">
