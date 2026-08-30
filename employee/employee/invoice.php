@@ -69,6 +69,64 @@ if (!empty($ledger_records)) {
     $remaining_due = $total_payable - $paid_today;
 }
 
+// Generate RawBT text (Plain Text 32-column format for 58mm Thermal Printers)
+$rawbt_text = "";
+$rawbt_text .= str_pad(SITE_NAME, 32, " ", STR_PAD_BOTH) . "\n";
+$rawbt_text .= str_pad("Balarampu, sarayer par", 32, " ", STR_PAD_BOTH) . "\n";
+$rawbt_text .= str_pad("Phone: +91 8967136033", 32, " ", STR_PAD_BOTH) . "\n";
+$rawbt_text .= str_repeat("-", 32) . "\n";
+$rawbt_text .= "Inv : " . $sale['invoice_number'] . "\n";
+$rawbt_text .= "Date: " . format_date($sale['created_at']) . "\n";
+$rawbt_text .= "Cash: " . $sale['cashier_name'] . "\n";
+$rawbt_text .= "Cust: " . ($sale['customer_name'] ?? 'Walk-in Customer') . "\n";
+if ($sale['customer_phone']) {
+    $rawbt_text .= "Phn : " . $sale['customer_phone'] . "\n";
+}
+$rawbt_text .= str_repeat("-", 32) . "\n";
+$rawbt_text .= "Item       Qty   Price   Total\n";
+$rawbt_text .= str_repeat("-", 32) . "\n";
+
+foreach ($items as $item) {
+    $name = substr($item['product_name'], 0, 32);
+    $rawbt_text .= $name . "\n";
+    $qty = (float)$item['quantity'];
+    $price = number_format($item['unit_price'], 2);
+    $total = number_format($item['total_price'], 2);
+    
+    $line = str_pad("", 10) . str_pad($qty, 5, " ", STR_PAD_LEFT) . str_pad($price, 8, " ", STR_PAD_LEFT) . str_pad($total, 9, " ", STR_PAD_LEFT);
+    $rawbt_text .= $line . "\n";
+    if ($item['discount'] > 0) {
+        $rawbt_text .= "  Disc: " . number_format($item['discount'], 2) . "\n";
+    }
+}
+$rawbt_text .= str_repeat("-", 32) . "\n";
+$rawbt_text .= str_pad("Subtotal:", 16) . str_pad(number_format($sale['subtotal'], 2), 16, " ", STR_PAD_LEFT) . "\n";
+if ($sale['discount'] > 0) {
+    $rawbt_text .= str_pad("Discount:", 16) . str_pad(number_format($sale['discount'], 2), 16, " ", STR_PAD_LEFT) . "\n";
+}
+if ($sale['gst_amount'] > 0) {
+    $rawbt_text .= str_pad("GST:", 16) . str_pad(number_format($sale['gst_amount'], 2), 16, " ", STR_PAD_LEFT) . "\n";
+}
+$rawbt_text .= str_pad("Today's Bill:", 16) . str_pad(number_format($sale['grand_total'], 2), 16, " ", STR_PAD_LEFT) . "\n";
+
+if ($has_ledger) {
+    $rawbt_text .= str_repeat("-", 32) . "\n";
+    $rawbt_text .= "Customer Credit\n";
+    $rawbt_text .= str_pad("Prev Baki:", 16) . str_pad(number_format($previous_due, 2), 16, " ", STR_PAD_LEFT) . "\n";
+    $rawbt_text .= str_pad("Today's Bill:", 16) . str_pad(number_format($sale['grand_total'], 2), 16, " ", STR_PAD_LEFT) . "\n";
+    $rawbt_text .= str_pad("Total Payable:", 16) . str_pad(number_format($total_payable, 2), 16, " ", STR_PAD_LEFT) . "\n";
+    $rawbt_text .= str_pad("Paid Today:", 16) . str_pad(number_format($paid_today, 2), 16, " ", STR_PAD_LEFT) . "\n";
+    $rawbt_text .= str_pad("Remaining Baki:", 16) . str_pad(number_format($remaining_due, 2), 16, " ", STR_PAD_LEFT) . "\n";
+}
+$rawbt_text .= str_repeat("-", 32) . "\n";
+$rawbt_text .= "Method: " . ucfirst($sale['payment_method']) . "\n";
+$rawbt_text .= "Status: " . ucfirst($sale['payment_status']) . "\n";
+$rawbt_text .= str_repeat("-", 32) . "\n";
+$rawbt_text .= str_pad("Thank you for shopping!", 32, " ", STR_PAD_BOTH) . "\n";
+$rawbt_text .= str_pad("Visit Again", 32, " ", STR_PAD_BOTH) . "\n\n\n";
+
+$rawbt_text_json = json_encode($rawbt_text);
+
 $page_title = 'Invoice';
 $show_back_btn = true;
 $header_action_html = '<i class="bi bi-printer" onclick="window.print()" style="cursor:pointer;" title="Print Invoice"></i>';
@@ -346,9 +404,12 @@ require_once '../includes/header.php';
             
         </div>
         
-        <div class="d-flex gap-2 no-print">
-            <button class="btn btn-outline-primary w-50" onclick="window.print()"><i class="bi bi-printer me-2"></i>Print</button>
-            <a href="pos.php" class="btn btn-primary w-50"><i class="bi bi-cart-plus me-2"></i>New Bill</a>
+        <div class="d-flex flex-column gap-2 no-print">
+            <button class="btn btn-primary w-100 py-2 fs-5" onclick="printRawBT()"><i class="bi bi-bluetooth me-2"></i>Bluetooth Print (RawBT)</button>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary w-50" onclick="window.print()"><i class="bi bi-printer me-2"></i>Normal Print</button>
+                <a href="pos.php" class="btn btn-outline-primary w-50"><i class="bi bi-cart-plus me-2"></i>New Bill</a>
+            </div>
         </div>
         
     </div>
@@ -357,6 +418,18 @@ require_once '../includes/header.php';
 <?php 
 require_once '../includes/footer.php'; 
 ?>
+
+<script>
+function printRawBT() {
+    var printText = <?= $rawbt_text_json ?>;
+    // Convert text to base64 properly handling UTF-8
+    var b64 = btoa(unescape(encodeURIComponent(printText)));
+    // Use base64 format with RawBT intent
+    var rawBtUrl = "intent:base64," + b64 + "#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;action=android.intent.action.VIEW;end;";
+    window.location.href = rawBtUrl;
+}
+</script>
+
 <?php if (isset($_GET['auto_print']) && $_GET['auto_print'] == '1'): ?>
 <script>
 window.addEventListener('load', function() {
