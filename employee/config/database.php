@@ -13,6 +13,10 @@ try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     // Set default fetch mode to associative array
     $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+    
+    // Set Timezone for India
+    date_default_timezone_set('Asia/Kolkata');
+    $pdo->exec("SET time_zone = '+05:30'");
 } catch(PDOException $e) {
     die("ERROR: Could not connect to database. " . $e->getMessage());
 }

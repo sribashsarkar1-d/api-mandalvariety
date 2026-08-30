@@ -69,63 +69,71 @@ if (!empty($ledger_records)) {
     $remaining_due = $total_payable - $paid_today;
 }
 
-// Generate RawBT text (Plain Text 32-column format for 58mm Thermal Printers)
-$rawbt_text = "";
-$rawbt_text .= str_pad(SITE_NAME, 32, " ", STR_PAD_BOTH) . "\n";
-$rawbt_text .= str_pad("Balarampu, sarayer par", 32, " ", STR_PAD_BOTH) . "\n";
-$rawbt_text .= str_pad("Phone: +91 8967136033", 32, " ", STR_PAD_BOTH) . "\n";
-$rawbt_text .= str_repeat("-", 32) . "\n";
-$rawbt_text .= "Inv : " . $sale['invoice_number'] . "\n";
-$rawbt_text .= "Date: " . format_date($sale['created_at']) . "\n";
-$rawbt_text .= "Cash: " . $sale['cashier_name'] . "\n";
-$rawbt_text .= "Cust: " . ($sale['customer_name'] ?? 'Walk-in Customer') . "\n";
+// Generate RawBT text (HTML format for 58mm Thermal Printers to support Bengali fonts)
+$rawbt_html = "<html><head><style>
+    body { font-family: sans-serif; font-size: 24px; color: black; margin: 0; padding: 10px; }
+    .text-center { text-align: center; }
+    .fw-bold { font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { text-align: left; padding: 5px 0; border-bottom: 1px dashed black; }
+    .text-end { text-align: right; }
+    .text-center-td { text-align: center; }
+    .border-top { border-top: 2px solid black; margin-top: 10px; padding-top: 10px; }
+</style></head><body>";
+
+$rawbt_html .= "<div class='text-center fw-bold' style='font-size: 32px;'>" . SITE_NAME . "</div>";
+$rawbt_html .= "<div class='text-center'>Balarampu, sarayer par<br>Phone: +91 8967136033</div>";
+$rawbt_html .= "<div style='border-top: 2px dashed black; margin: 10px 0;'></div>";
+$rawbt_html .= "<div><b>Inv :</b> " . $sale['invoice_number'] . "</div>";
+$rawbt_html .= "<div><b>Date:</b> " . format_date($sale['created_at']) . "</div>";
+$rawbt_html .= "<div><b>Cash:</b> " . $sale['cashier_name'] . "</div>";
+$rawbt_html .= "<div><b>Cust:</b> " . ($sale['customer_name'] ?? 'Walk-in Customer') . "</div>";
 if ($sale['customer_phone']) {
-    $rawbt_text .= "Phn : " . $sale['customer_phone'] . "\n";
+    $rawbt_html .= "<div><b>Phn :</b> " . $sale['customer_phone'] . "</div>";
 }
-$rawbt_text .= str_repeat("-", 32) . "\n";
-$rawbt_text .= "Item       Qty   Price   Total\n";
-$rawbt_text .= str_repeat("-", 32) . "\n";
+$rawbt_html .= "<table><tr><th>Item</th><th class='text-center-td'>Qty</th><th class='text-end'>Price</th><th class='text-end'>Total</th></tr>";
 
 foreach ($items as $item) {
-    $name = substr($item['product_name'], 0, 32);
-    $rawbt_text .= $name . "\n";
-    $qty = (float)$item['quantity'];
-    $price = number_format($item['unit_price'], 2);
-    $total = number_format($item['total_price'], 2);
-    
-    $line = str_pad("", 10) . str_pad($qty, 5, " ", STR_PAD_LEFT) . str_pad($price, 8, " ", STR_PAD_LEFT) . str_pad($total, 9, " ", STR_PAD_LEFT);
-    $rawbt_text .= $line . "\n";
-    if ($item['discount'] > 0) {
-        $rawbt_text .= "  Disc: " . number_format($item['discount'], 2) . "\n";
-    }
+    $rawbt_html .= "<tr>";
+    $rawbt_html .= "<td>" . $item['product_name'] . ($item['discount'] > 0 ? "<br><small>Disc: " . number_format($item['discount'], 2) . "</small>" : "") . "</td>";
+    $rawbt_html .= "<td class='text-center-td'>" . (float)$item['quantity'] . "</td>";
+    $rawbt_html .= "<td class='text-end'>" . number_format($item['unit_price'], 2) . "</td>";
+    $rawbt_html .= "<td class='text-end fw-bold'>" . number_format($item['total_price'], 2) . "</td>";
+    $rawbt_html .= "</tr>";
 }
-$rawbt_text .= str_repeat("-", 32) . "\n";
-$rawbt_text .= str_pad("Subtotal:", 16) . str_pad(number_format($sale['subtotal'], 2), 16, " ", STR_PAD_LEFT) . "\n";
+$rawbt_html .= "</table>";
+
+$rawbt_html .= "<table style='border: none;'>";
+$rawbt_html .= "<tr><td>Subtotal:</td><td class='text-end'>" . number_format($sale['subtotal'], 2) . "</td></tr>";
 if ($sale['discount'] > 0) {
-    $rawbt_text .= str_pad("Discount:", 16) . str_pad(number_format($sale['discount'], 2), 16, " ", STR_PAD_LEFT) . "\n";
+    $rawbt_html .= "<tr><td>Discount:</td><td class='text-end'>" . number_format($sale['discount'], 2) . "</td></tr>";
 }
 if ($sale['gst_amount'] > 0) {
-    $rawbt_text .= str_pad("GST:", 16) . str_pad(number_format($sale['gst_amount'], 2), 16, " ", STR_PAD_LEFT) . "\n";
+    $rawbt_html .= "<tr><td>GST:</td><td class='text-end'>" . number_format($sale['gst_amount'], 2) . "</td></tr>";
 }
-$rawbt_text .= str_pad("Today's Bill:", 16) . str_pad(number_format($sale['grand_total'], 2), 16, " ", STR_PAD_LEFT) . "\n";
+$rawbt_html .= "<tr><td class='fw-bold' style='font-size: 28px;'>Today's Bill:</td><td class='text-end fw-bold' style='font-size: 28px;'>" . number_format($sale['grand_total'], 2) . "</td></tr>";
+$rawbt_html .= "</table>";
 
 if ($has_ledger) {
-    $rawbt_text .= str_repeat("-", 32) . "\n";
-    $rawbt_text .= "Customer Credit\n";
-    $rawbt_text .= str_pad("Prev Baki:", 16) . str_pad(number_format($previous_due, 2), 16, " ", STR_PAD_LEFT) . "\n";
-    $rawbt_text .= str_pad("Today's Bill:", 16) . str_pad(number_format($sale['grand_total'], 2), 16, " ", STR_PAD_LEFT) . "\n";
-    $rawbt_text .= str_pad("Total Payable:", 16) . str_pad(number_format($total_payable, 2), 16, " ", STR_PAD_LEFT) . "\n";
-    $rawbt_text .= str_pad("Paid Today:", 16) . str_pad(number_format($paid_today, 2), 16, " ", STR_PAD_LEFT) . "\n";
-    $rawbt_text .= str_pad("Remaining Baki:", 16) . str_pad(number_format($remaining_due, 2), 16, " ", STR_PAD_LEFT) . "\n";
+    $rawbt_html .= "<div class='border-top fw-bold'>Customer Credit</div>";
+    $rawbt_html .= "<table style='border: none; margin-top: 5px;'>";
+    $rawbt_html .= "<tr><td>Prev Baki:</td><td class='text-end'>" . number_format($previous_due, 2) . "</td></tr>";
+    $rawbt_html .= "<tr><td>Today's Bill:</td><td class='text-end'>" . number_format($sale['grand_total'], 2) . "</td></tr>";
+    $rawbt_html .= "<tr><td class='fw-bold'>Total Payable:</td><td class='text-end fw-bold'>" . number_format($total_payable, 2) . "</td></tr>";
+    $rawbt_html .= "<tr><td class='fw-bold'>Paid Today:</td><td class='text-end fw-bold'>" . number_format($paid_today, 2) . "</td></tr>";
+    $rawbt_html .= "<tr><td class='fw-bold'>Remaining Baki:</td><td class='text-end fw-bold'>" . number_format($remaining_due, 2) . "</td></tr>";
+    $rawbt_html .= "</table>";
 }
-$rawbt_text .= str_repeat("-", 32) . "\n";
-$rawbt_text .= "Method: " . ucfirst($sale['payment_method']) . "\n";
-$rawbt_text .= "Status: " . ucfirst($sale['payment_status']) . "\n";
-$rawbt_text .= str_repeat("-", 32) . "\n";
-$rawbt_text .= str_pad("Thank you for shopping!", 32, " ", STR_PAD_BOTH) . "\n";
-$rawbt_text .= str_pad("Visit Again", 32, " ", STR_PAD_BOTH) . "\n\n\n";
 
-$rawbt_text_json = json_encode($rawbt_text);
+$rawbt_html .= "<div style='border-top: 2px dashed black; margin: 10px 0;'></div>";
+$rawbt_html .= "<div><b>Method:</b> " . ucfirst($sale['payment_method']) . "</div>";
+$rawbt_html .= "<div><b>Status:</b> " . ucfirst($sale['payment_status']) . "</div>";
+$rawbt_html .= "<div style='border-top: 2px dashed black; margin: 10px 0;'></div>";
+$rawbt_html .= "<div class='text-center fw-bold' style='margin-top: 20px;'>Thank you for shopping!</div>";
+$rawbt_html .= "<div class='text-center'>Visit Again ❤</div>";
+$rawbt_html .= "</body></html>";
+
+$rawbt_text_json = json_encode($rawbt_html);
 
 $page_title = 'Invoice';
 $show_back_btn = true;
