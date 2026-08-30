@@ -432,8 +432,8 @@ function printRawBT() {
     var printText = <?= $rawbt_text_json ?>;
     // Convert text to base64 properly handling UTF-8
     var b64 = btoa(unescape(encodeURIComponent(printText)));
-    // Use direct rawbt: scheme which works better in custom Android WebViews
-    var rawBtUrl = "rawbt:base64," + b64;
+    // Use data URI format so RawBT knows it's HTML and renders it
+    var rawBtUrl = "rawbt:data:text/html;base64," + b64;
     window.location.href = rawBtUrl;
 }
 </script>
