@@ -424,8 +424,8 @@ function printRawBT() {
     var printText = <?= $rawbt_text_json ?>;
     // Convert text to base64 properly handling UTF-8
     var b64 = btoa(unescape(encodeURIComponent(printText)));
-    // Use base64 format with RawBT intent
-    var rawBtUrl = "intent:base64," + b64 + "#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;action=android.intent.action.VIEW;end;";
+    // Use direct rawbt: scheme which works better in custom Android WebViews
+    var rawBtUrl = "rawbt:base64," + b64;
     window.location.href = rawBtUrl;
 }
 </script>
