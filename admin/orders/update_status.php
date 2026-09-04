@@ -734,91 +734,111 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
             padding: 10px 16px;
             font-weight: 600;
         }
-        .invoice-preview {
-            background: #ffffff;
-            border: 1px solid #dbe4ee;
-            border-radius: 18px;
-            overflow: hidden;
-        }
-        .invoice-head {
-            background: linear-gradient(135deg, #0f172a, #2563eb);
-            color: #fff;
-            padding: 24px;
-        }
-        .invoice-head .brand {
-            font-size: 28px;
-            font-weight: 800;
-            line-height: 1.1;
-        }
-        .invoice-head .tag {
-            color: rgba(255,255,255,.85);
-            font-size: 13px;
-            margin-top: 5px;
-        }
-        .invoice-body {
-            padding: 24px;
-        }
-        .invoice-box {
-            background: #f8fbff;
-            border: 1px solid #dbe4ee;
-            border-radius: 14px;
-            padding: 16px;
-            height: 100%;
-        }
-        .invoice-box .title {
-            font-size: 12px;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: .08em;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-        .status-strip {
-            margin-top: 16px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            padding: 14px;
-        }
-        .status-strip .item {
-            margin-bottom: 8px;
-        }
-        .status-strip .item:last-child {
-            margin-bottom: 0;
-        }
-        .admin-remark-box {
-            margin-top: 16px;
-            background: #fffdf4;
-            border: 1px dashed #f59e0b;
-            border-radius: 14px;
-            padding: 14px;
-        }
-        .table-invoice th {
-            background: #0f172a;
-            color: #fff;
-            border: 0 !important;
-            padding: 12px 10px;
-            font-size: 12px;
-        }
-        .table-invoice td {
-            vertical-align: middle;
-            padding: 12px 10px;
-            border-color: #e5edf5;
-        }
-        .totals-card {
-            max-width: 380px;
-            margin-left: auto;
-        }
-        .totals-card .summary-row {
+        .receipt-card {
             background: #fff;
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            max-width: 380px;
+            margin: 0 auto;
+            color: #000;
+            font-family: monospace;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
-        .grand-total {
-            background: linear-gradient(135deg, #eff6ff, #dbeafe) !important;
-            border-color: #bfdbfe !important;
+        .receipt-header {
+            text-align: center;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+        .receipt-header h2 {
+            font-size: 26px;
             font-weight: 800;
-            color: #0f172a;
+            margin-bottom: 5px;
+            color: #000;
+            font-family: sans-serif;
         }
+        .receipt-header p {
+            font-size: 13px;
+            margin-bottom: 2px;
+            color: #000;
+            font-family: sans-serif;
+        }
+        .receipt-details {
+            font-size: 13px;
+            margin-bottom: 15px;
+            font-family: sans-serif;
+        }
+        .receipt-details table {
+            width: 100%;
+        }
+        .receipt-details td {
+            padding: 2px 0;
+            color: #000;
+            vertical-align: top;
+        }
+        .receipt-items {
+            width: 100%;
+            font-size: 13px;
+            margin-bottom: 15px;
+            border-top: 1px dashed #000;
+            border-bottom: 1px dashed #000;
+            font-family: sans-serif;
+        }
+        .receipt-items th {
+            font-size: 12px;
+            padding: 8px 5px;
+            text-align: center;
+            text-transform: uppercase;
+            border-bottom: 1px solid #000;
+        }
+        .receipt-items th:nth-child(2) { text-align: left; }
+        .receipt-items td {
+            padding: 8px 5px;
+            color: #000;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+        .receipt-items td:nth-child(2) { text-align: left; }
+        .receipt-totals {
+            font-size: 14px;
+            font-family: sans-serif;
+        }
+        .receipt-totals .d-flex {
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .receipt-totals .grand-total-row {
+            border-top: 1px dashed #000;
+            border-bottom: 1px dashed #000;
+            padding: 10px 0;
+            margin-top: 10px;
+            font-weight: 800;
+            font-size: 16px;
+        }
+        .receipt-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-family: sans-serif;
+        }
+        .receipt-footer h5 {
+            font-weight: 800;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        
         @media print {
+            @page { 
+                margin: 0; 
+                size: 80mm auto; 
+            }
+            body { 
+                margin: 0; 
+                padding: 0;
+                background: white; 
+                color: black !important;
+            }
             body * {
                 visibility: hidden !important;
             }
@@ -832,7 +852,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
                 width: 100%;
                 background: #fff;
                 margin: 0;
+                padding: 4mm;
+                border: none;
+                box-shadow: none;
+                max-width: 100%;
+            }
+            .receipt-card {
+                border: none;
                 padding: 0;
+                max-width: 100%;
             }
             .no-print {
                 display: none !important;
@@ -841,7 +869,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
     </style>
 
     <div class="container-fluid py-4 status-page">
-        <div class="page-card mb-4">
+        <div class="page-card mb-4 no-print">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
                     <h4 class="mb-1">Update Order Status</h4>
@@ -852,7 +880,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
         </div>
 
         <?php if (!empty($errors)): ?>
-            <div class="alert alert-danger">
+            <div class="alert alert-danger no-print">
                 <ul class="mb-0">
                     <?php foreach ($errors as $error): ?>
                         <li><?= e($error) ?></li>
@@ -862,11 +890,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
         <?php endif; ?>
 
         <?php if ($success): ?>
-            <div class="alert alert-success"><?= e($success) ?></div>
+            <div class="alert alert-success no-print"><?= e($success) ?></div>
         <?php endif; ?>
 
         <div class="row g-4">
-            <div class="col-lg-4">
+            <div class="col-lg-4 no-print">
                 <div class="soft-card mb-4">
                     <div class="heading-mini">Order Summary</div>
                     <div class="summary-row"><strong>Order No</strong><strong><?= e($orderNumber) ?></strong></div>
@@ -891,7 +919,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
             </div>
 
             <div class="col-lg-8">
-                <div class="soft-card mb-4">
+                <div class="soft-card mb-4 no-print">
                     <div class="heading-mini">Update Status</div>
 
                     <form method="POST">
@@ -964,112 +992,120 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
                             <div class="col-12">
                                 <div class="d-flex flex-wrap gap-2">
                                     <button type="submit" name="action" value="save" class="btn btn-primary btn-ui">Save</button>
-                                    <a href="download_invoice.php?id=<?= (int)$orderId ?>" class="btn btn-outline-dark btn-ui">Download Bill</a>
-                                    <button type="button" class="btn btn-dark btn-ui" onclick="printBillOnly()">Print</button>
+                                    <a href="download_invoice.php?id=<?= (int)$orderId ?>" class="btn btn-outline-dark btn-ui">Download PDF</a>
+                                    <button type="button" class="btn btn-dark btn-ui" onclick="printBillOnly()">Print Thermal Bill</button>
                                 </div>
                             </div>
                         </div>
                     </form>
                 </div>
 
-                <div class="invoice-preview" id="printBillArea">
-                    <div class="invoice-head">
-                        <div class="row g-3 align-items-center">
-                            <div class="col-md-7">
-                                <div class="brand">Mandal Variety</div>
-                                <div class="tag">Order Invoice / Stylish Bill Preview</div>
-                            </div>
-                            <div class="col-md-5 text-md-end">
-                                <div><strong>Invoice:</strong> <?= e($invoiceNo) ?></div>
-                                <div><strong>Order:</strong> <?= e($orderNumber) ?></div>
-                                <div><strong>Date:</strong> <?= !empty($order['created_at']) ? e(date('d M Y', strtotime($order['created_at']))) : e(date('d M Y')) ?></div>
-                                <div><strong>Status:</strong> <?= e(formatStatus($currentStatus)) ?></div>
-                            </div>
+                <div id="printBillArea">
+                    <div class="receipt-card">
+                        <div class="receipt-header">
+                            <h2>Mandal Variety</h2>
+                            <p>6JJ5+6M3, Balarampur, Jalpaiguri Division</p>
+                            <p>West Bengal, 736134</p>
+                            <p><strong>Contact: 8972541454</strong></p>
                         </div>
-                    </div>
-
-                    <div class="invoice-body">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <div class="invoice-box">
-                                    <div class="title">Customer Details</div>
-                                    <strong><?= e($customerName) ?></strong><br>
-                                    <?= e($customerEmail ?: '-') ?><br>
-                                    <?= e($customerPhone ?: '-') ?>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="invoice-box">
-                                    <div class="title">Shipping Address</div>
-                                    <?= nl2br(e($shippingAddress ?: '-')) ?>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="status-strip mt-3">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <div class="item"><strong>Order Status:</strong> <?= e(formatStatus($currentStatus)) ?></div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="item"><strong>Tracking Status:</strong> <?= e(formatStatus($currentTrackingStatus)) ?></div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="item"><strong>Payment Status:</strong> <?= e(formatStatus($currentPaymentStatus)) ?></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <?php if (!empty($currentRemark)): ?>
-                            <div class="admin-remark-box">
-                                <strong>Admin Remark</strong><br>
-                                <?= nl2br(e($currentRemark)) ?>
-                            </div>
-                        <?php endif; ?>
-
-                        <div class="table-responsive mt-4">
-                            <table class="table table-bordered align-middle table-invoice mb-0">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 6%;">#</th>
-                                        <th>Product</th>
-                                        <th style="width: 14%;">SKU</th>
-                                        <th style="width: 13%;" class="text-end">Price</th>
-                                        <th style="width: 10%;" class="text-end">Qty</th>
-                                        <th style="width: 16%;" class="text-end">Subtotal</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php if (!empty($invoiceItems)): ?>
-                                        <?php foreach ($invoiceItems as $index => $item): ?>
-                                            <tr>
-                                                <td><?= $index + 1 ?></td>
-                                                <td><?= e($item['product_name']) ?></td>
-                                                <td><?= e($item['sku']) ?></td>
-                                                <td class="text-end">₹<?= number_format($item['price'], 2) ?></td>
-                                                <td class="text-end"><?= (int)$item['quantity'] ?></td>
-                                                <td class="text-end">₹<?= number_format($item['subtotal'], 2) ?></td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <tr>
-                                            <td colspan="6" class="text-center text-muted">No items found</td>
-                                        </tr>
-                                    <?php endif; ?>
-                                </tbody>
+                        
+                        <div class="receipt-details">
+                            <table>
+                                <tr>
+                                    <td style="width: 25%;"><strong>Invoice</strong></td>
+                                    <td style="width: 45%;">: <?= e($invoiceNo) ?></td>
+                                    <td style="width: 12%;"><strong>Date</strong></td>
+                                    <td style="width: 18%;">: <?= !empty($order['created_at']) ? e(date('d M Y', strtotime($order['created_at']))) : e(date('d M Y')) ?></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Order</strong></td>
+                                    <td>: <?= e($orderNumber) ?></td>
+                                    <td><strong>Time</strong></td>
+                                    <td>: <?= !empty($order['created_at']) ? e(date('h:i A', strtotime($order['created_at']))) : e(date('h:i A')) ?></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status</strong></td>
+                                    <td colspan="3">: <?= e(formatStatus($currentStatus)) ?></td>
+                                </tr>
                             </table>
                         </div>
 
-                        <div class="totals-card mt-4">
-                            <div class="summary-row"><strong>Items Subtotal</strong><strong>₹<?= number_format($itemsSubtotal, 2) ?></strong></div>
-                            <div class="summary-row"><strong>Offer Name</strong><strong><?= e($offerName ?: 'No Offer') ?></strong></div>
-                            <div class="summary-row"><strong>Discount</strong><strong class="text-success">- ₹<?= number_format($offerDiscount, 2) ?></strong></div>
-                            <div class="summary-row"><strong>Delivery Charge</strong><strong>₹<?= number_format($deliveryCharge, 2) ?></strong></div>
-                            <div class="summary-row grand-total"><strong>Grand Total</strong><strong>₹<?= number_format($grandTotal, 2) ?></strong></div>
+                        <div class="receipt-details border-bottom-0 pb-0">
+                            <p class="mb-1" style="text-transform: uppercase;"><strong>CUSTOMER DETAILS</strong></p>
+                            <table>
+                                <tr>
+                                    <td style="width: 25%;"><strong>Name</strong></td>
+                                    <td style="width: 75%;">: <?= e($customerName) ?></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Contact</strong></td>
+                                    <td>: <?= e($customerPhone ?: '-') ?></td>
+                                </tr>
+                            </table>
                         </div>
 
-                        <div class="text-center text-muted mt-4" style="font-size: 13px;">
-                            Thank you for shopping with us.
+                        <div class="receipt-details border-bottom-0">
+                            <p class="mb-1" style="text-transform: uppercase;"><strong>CUSTOMER ADDRESS</strong></p>
+                            <p class="mb-0" style="line-height: 1.4;"><?= nl2br(e($shippingAddress ?: '-')) ?></p>
+                        </div>
+
+                        <table class="receipt-items" cellpadding="0" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 10%;">SL</th>
+                                    <th style="width: 45%;">PRODUCT</th>
+                                    <th style="width: 10%;">QTY</th>
+                                    <th style="width: 15%;">PRICE</th>
+                                    <th style="width: 20%; text-align: right;">SUBTOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (!empty($invoiceItems)): ?>
+                                    <?php foreach ($invoiceItems as $index => $item): ?>
+                                        <tr>
+                                            <td><?= $index + 1 ?></td>
+                                            <td><?= e($item['product_name']) ?></td>
+                                            <td><?= (int)$item['quantity'] ?></td>
+                                            <td>₹<?= number_format($item['price'], 2) ?></td>
+                                            <td style="text-align: right;">₹<?= number_format($item['subtotal'], 2) ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+
+                        <div class="receipt-totals">
+                            <div class="d-flex">
+                                <strong>Items Subtotal</strong>
+                                <strong>₹<?= number_format($itemsSubtotal, 2) ?></strong>
+                            </div>
+                            <?php if ($offerName): ?>
+                            <div class="d-flex">
+                                <strong>Offer Name</strong>
+                                <span><?= e($offerName) ?></span>
+                            </div>
+                            <?php endif; ?>
+                            <?php if ($offerDiscount > 0): ?>
+                            <div class="d-flex">
+                                <strong>Discount</strong>
+                                <span>- ₹<?= number_format($offerDiscount, 2) ?></span>
+                            </div>
+                            <?php endif; ?>
+                            <div class="d-flex">
+                                <strong>Delivery Charge</strong>
+                                <span>₹<?= number_format($deliveryCharge, 2) ?></span>
+                            </div>
+                            
+                            <div class="d-flex grand-total-row">
+                                <span>Grand Total</span>
+                                <span>₹<?= number_format($grandTotal, 2) ?></span>
+                            </div>
+                        </div>
+
+                        <div class="receipt-footer">
+                            <p style="font-family: 'Brush Script MT', cursive; font-size: 22px; margin-bottom: 5px;">Thank you for shopping with</p>
+                            <h5>Mandal Variety</h5>
+                            <p style="letter-spacing: 2px; text-transform: uppercase; font-size: 11px;">Visit Again !</p>
                         </div>
                     </div>
                 </div>
