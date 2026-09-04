@@ -108,7 +108,7 @@ function getThumb($imagesJson) {
     if (!$imagesJson) return '../assets/images/placeholder.png';
     $images = json_decode($imagesJson, true);
     if (is_array($images) && !empty($images[0])) {
-        return '../uploads/' . $images[0];
+        return 'https://mandal-variety.com/admin/uploads/' . $images[0];
     }
     return '../assets/images/placeholder.png';
 }
