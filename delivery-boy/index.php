@@ -377,6 +377,9 @@ $delivered_count = $stmt->fetchColumn();
         </div>
         
         <div class="header-right">
+            <a href="index.php" class="header-icon mt-2 me-2" onclick="this.querySelector('i').classList.add('fa-spin')">
+                <i class="fa-solid fa-rotate-right"></i>
+            </a>
             <a href="javascript:void(0)" class="header-icon mt-2">
                 <i class="fa-regular fa-bell"></i>
                 <span class="notification-badge"></span>
@@ -517,6 +520,39 @@ $delivered_count = $stmt->fetchColumn();
             this.appendChild(hidden);
         }
     });
+</script>
+
+<!-- Pull to Refresh Logic -->
+<style>
+    body {
+        overscroll-behavior-y: contain; /* Prevents default browser pull-to-refresh to use our custom one if needed, but actually native is fine. We will just let native do its thing and add a fallback refresh button. */
+    }
+</style>
+<script>
+    let touchstartY = 0;
+    let touchendY = 0;
+    
+    document.addEventListener('touchstart', e => {
+        touchstartY = e.changedTouches[0].screenY;
+    });
+
+    document.addEventListener('touchend', e => {
+        touchendY = e.changedTouches[0].screenY;
+        handleSwipe();
+    });
+
+    function handleSwipe() {
+        // If swiped down significantly and at the very top of the page
+        if (window.scrollY === 0 && (touchendY - touchstartY) > 100) {
+            // Optional: Show a loading indicator here
+            const refreshIcon = document.querySelector('.fa-rotate-right');
+            if (refreshIcon) refreshIcon.classList.add('fa-spin');
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 300);
+        }
+    }
 </script>
 
 <?php include 'includes/footer.php'; ?>
