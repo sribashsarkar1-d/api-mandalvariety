@@ -46,6 +46,12 @@ require_once '../includes/header.php';
             <div class="text-muted small">Current Baki / Due</div>
             <h2 class="text-danger fw-bold mb-0">₹<span id="displayDue"><?= number_format($current_due, 2) ?></span></h2>
         </div>
+        
+        <?php if (get_user_role() === 'admin'): ?>
+        <div class="mt-2 text-end">
+            <a href="add-due.php?id=<?= $customer_id ?>" class="btn btn-sm btn-outline-warning text-dark border-2 fw-bold"><i class="bi bi-plus-circle me-1"></i> Add Manual Baki</a>
+        </div>
+        <?php endif; ?>
     </div>
 
     <form id="receivePaymentForm">

@@ -65,7 +65,10 @@ require_once '../includes/header.php';
     </div>
 </div>
 
-<div class="mb-3 d-flex justify-content-end">
+<div class="mb-3 d-flex justify-content-end gap-2">
+    <?php if (get_user_role() === 'admin'): ?>
+    <a href="add-due.php?id=<?= $customer['id'] ?>" class="btn btn-warning shadow-sm text-dark"><i class="bi bi-plus-circle me-1"></i> Add Baki</a>
+    <?php endif; ?>
     <a href="receive-payment.php?id=<?= $customer['id'] ?>" class="btn btn-primary shadow-sm"><i class="bi bi-cash me-1"></i> Receive Payment</a>
 </div>
 
@@ -89,6 +92,8 @@ require_once '../includes/header.php';
                                         <span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> PAYMENT</span>
                                     <?php elseif ($item['transaction_type'] === 'opening_due'): ?>
                                         <span class="text-warning text-darken" style="color: #d97706 !important;"><i class="bi bi-clock-history me-1"></i> OPENING DUE</span>
+                                    <?php elseif ($item['transaction_type'] === 'manual_due'): ?>
+                                        <span class="text-danger"><i class="bi bi-plus-circle-fill me-1"></i> ADDED DUE</span>
                                     <?php else: ?>
                                         <span class="text-secondary"><i class="bi bi-info-circle-fill me-1"></i> <?= strtoupper($item['transaction_type']) ?></span>
                                     <?php endif; ?>
@@ -133,6 +138,24 @@ require_once '../includes/header.php';
                                     <span>Opening Due:</span>
                                     <span class="fw-bold text-dark"><?= format_currency($item['amount']) ?></span>
                                 </div>
+                                <div class="d-flex justify-content-between pt-2 border-top">
+                                    <span class="fw-bold text-muted small">New Outstanding:</span>
+                                    <span class="fw-bold text-danger"><?= format_currency($item['new_due']) ?></span>
+                                </div>
+                            <?php elseif ($item['transaction_type'] === 'manual_due'): ?>
+                                <div class="d-flex justify-content-between text-muted small mb-1">
+                                    <span>Added Due:</span>
+                                    <span class="fw-bold text-dark"><?= format_currency($item['amount']) ?></span>
+                                </div>
+                                <div class="d-flex justify-content-between text-muted small mb-2">
+                                    <span>Previous Baki:</span>
+                                    <span class="fw-bold text-dark"><?= format_currency($item['previous_due']) ?></span>
+                                </div>
+                                <?php if (!empty($item['description'])): ?>
+                                <div class="text-muted small mb-2 fst-italic">
+                                    "<?= htmlspecialchars(str_replace('Manual Due Added: ', '', $item['description'])) ?>"
+                                </div>
+                                <?php endif; ?>
                                 <div class="d-flex justify-content-between pt-2 border-top">
                                     <span class="fw-bold text-muted small">New Outstanding:</span>
                                     <span class="fw-bold text-danger"><?= format_currency($item['new_due']) ?></span>
