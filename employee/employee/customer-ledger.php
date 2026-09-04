@@ -38,7 +38,7 @@ foreach ($ledger as $l) {
 $sale_items_map = [];
 if (!empty($sale_ids)) {
     $in = str_repeat('?,', count($sale_ids) - 1) . '?';
-    $stmtItems = $pdo->prepare("SELECT sale_id, product_name, quantity, subtotal FROM employee_sale_items WHERE sale_id IN ($in)");
+    $stmtItems = $pdo->prepare("SELECT sale_id, product_name, quantity, total_price FROM employee_sale_items WHERE sale_id IN ($in)");
     $stmtItems->execute($sale_ids);
     $all_items = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
     foreach ($all_items as $item) {
@@ -134,7 +134,7 @@ require_once '../includes/header.php';
                                             <?php foreach ($sale_items_map[$item['sale_id']] as $s_item): ?>
                                                 <li class="d-flex justify-content-between mb-1">
                                                     <span><?= htmlspecialchars($s_item['product_name']) ?> <span class="text-muted">x<?= $s_item['quantity'] ?></span></span>
-                                                    <span><?= format_currency($s_item['subtotal']) ?></span>
+                                                    <span><?= format_currency($s_item['total_price']) ?></span>
                                                 </li>
                                             <?php endforeach; ?>
                                         </ul>
