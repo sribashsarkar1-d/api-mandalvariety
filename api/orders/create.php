@@ -35,16 +35,19 @@ $grand_total = $total_amount + $delivery_charge + $tax_amount;
 // Generate order number
 $order_number = 'NEX' . date('Ymd') . rand(1000, 9999);
 
+date_default_timezone_set('Asia/Kolkata');
+$created_at = date('Y-m-d H:i:s');
+
 // Create order
 $stmt = $pdo->prepare("
     INSERT INTO orders (
         user_id, order_number, total_amount, delivery_charge, 
-        tax_amount, grand_total, delivery_address, pincode, status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+        tax_amount, grand_total, delivery_address, pincode, status, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
 ");
 $stmt->execute([
     $user_id, $order_number, $total_amount, $delivery_charge, 
-    $tax_amount, $grand_total, $delivery_address, $pincode
+    $tax_amount, $grand_total, $delivery_address, $pincode, $created_at
 ]);
 $order_id = $pdo->lastInsertId();
 
