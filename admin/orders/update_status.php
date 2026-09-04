@@ -685,7 +685,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
             }
             $errors[] = $ex->getMessage();
         }
-        }
     }
 }
 
