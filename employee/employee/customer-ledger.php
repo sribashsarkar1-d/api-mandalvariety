@@ -27,6 +27,25 @@ $stmt = $pdo->prepare("
 $stmt->execute([$customer_id]);
 $ledger = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Fetch items for these sales
+$sale_ids = [];
+foreach ($ledger as $l) {
+    if (!empty($l['sale_id'])) {
+        $sale_ids[] = (int)$l['sale_id'];
+    }
+}
+
+$sale_items_map = [];
+if (!empty($sale_ids)) {
+    $in = str_repeat('?,', count($sale_ids) - 1) . '?';
+    $stmtItems = $pdo->prepare("SELECT sale_id, product_name, quantity, subtotal FROM employee_sale_items WHERE sale_id IN ($in)");
+    $stmtItems->execute($sale_ids);
+    $all_items = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($all_items as $item) {
+        $sale_items_map[$item['sale_id']][] = $item;
+    }
+}
+
 $current_due = $ledger ? (float)$ledger[0]['new_due'] : 0.00;
 $opening_due_amount = 0;
 foreach ($ledger as $l) {
@@ -108,6 +127,21 @@ require_once '../includes/header.php';
                             <?php endif; ?>
                             
                             <?php if ($item['transaction_type'] === 'sale_credit'): ?>
+                                <div class="mb-3 p-2 bg-white rounded border">
+                                    <div class="text-muted small fw-bold mb-2 border-bottom pb-1">Items Purchased:</div>
+                                    <?php if (!empty($sale_items_map[$item['sale_id']])): ?>
+                                        <ul class="list-unstyled mb-0 small">
+                                            <?php foreach ($sale_items_map[$item['sale_id']] as $s_item): ?>
+                                                <li class="d-flex justify-content-between mb-1">
+                                                    <span><?= htmlspecialchars($s_item['product_name']) ?> <span class="text-muted">x<?= $s_item['quantity'] ?></span></span>
+                                                    <span><?= format_currency($s_item['subtotal']) ?></span>
+                                                </li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    <?php else: ?>
+                                        <div class="text-muted small fst-italic">No items recorded.</div>
+                                    <?php endif; ?>
+                                </div>
                                 <div class="d-flex justify-content-between text-muted small mb-1">
                                     <span>Today's Bill:</span>
                                     <span class="fw-bold text-dark"><?= format_currency($item['amount']) ?></span>
