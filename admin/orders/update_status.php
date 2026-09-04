@@ -993,7 +993,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
                                 <div class="d-flex flex-wrap gap-2">
                                     <button type="submit" name="action" value="save" class="btn btn-primary btn-ui">Save</button>
                                     <a href="download_invoice.php?id=<?= (int)$orderId ?>" class="btn btn-outline-dark btn-ui">Download PDF</a>
-                                    <button type="button" class="btn btn-dark btn-ui" onclick="printBillOnly()">Print Thermal Bill</button>
+                                    <button type="button" class="btn btn-dark btn-ui" onclick="printBillOnly()">Web Print</button>
+                                    <button type="button" class="btn btn-success btn-ui" onclick="printRawBT()"><i class="fa-solid fa-bluetooth me-1"></i> Bluetooth Print (RawBT)</button>
                                 </div>
                             </div>
                         </div>
@@ -1110,7 +1111,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
                     </div>
                 </div>
 
-
             </div>
         </div>
     </div>
@@ -1119,6 +1119,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
 <script>
 function printBillOnly() {
     window.print();
+}
+
+function printRawBT() {
+    var printContent = document.getElementById('printBillArea').innerHTML;
+    
+    // Create a complete HTML document for RawBT to parse correctly
+    var fullHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            body { margin: 0; padding: 2mm; font-family: monospace; color: #000; background: #fff; font-size: 12px; }
+            .receipt-card { width: 100%; }
+            .receipt-header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
+            .receipt-header h2 { font-size: 22px; margin: 0 0 5px 0; font-family: sans-serif; }
+            .receipt-header p { font-size: 12px; margin: 0 0 2px 0; }
+            .receipt-details { margin-bottom: 10px; font-size: 12px; }
+            .receipt-details table { width: 100%; }
+            .receipt-details td { padding: 2px 0; vertical-align: top; }
+            .receipt-items { width: 100%; font-size: 12px; margin-bottom: 10px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; border-collapse: collapse; }
+            .receipt-items th { font-size: 11px; padding: 5px 2px; text-align: center; border-bottom: 1px solid #000; text-transform: uppercase; }
+            .receipt-items th:nth-child(2) { text-align: left; }
+            .receipt-items td { padding: 5px 2px; text-align: center; border-bottom: 1px solid #eee; }
+            .receipt-items td:nth-child(2) { text-align: left; }
+            .receipt-totals { font-size: 12px; }
+            .receipt-totals .d-flex { display: flex; justify-content: space-between; margin-bottom: 5px; }
+            .receipt-totals .grand-total-row { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 8px 0; margin-top: 8px; font-weight: bold; font-size: 14px; }
+            .receipt-footer { text-align: center; margin-top: 15px; }
+            .receipt-footer h5 { font-size: 18px; margin: 5px 0 10px 0; }
+            .pb-0 { padding-bottom: 0 !important; }
+            .border-bottom-0 { border-bottom: 0 !important; }
+            .mb-0 { margin-bottom: 0 !important; }
+            .mb-1 { margin-bottom: 5px !important; }
+            strong { font-weight: bold; }
+        </style>
+    </head>
+    <body>
+        ${printContent}
+    </body>
+    </html>
+    `;
+
+    // Convert to base64 for data URI (handles unicode properly)
+    var b64 = btoa(unescape(encodeURIComponent(fullHtml)));
+    var rawBtUrl = "rawbt:data:text/html;base64," + b64;
+    window.location.href = rawBtUrl;
 }
 </script>
 
