@@ -685,8 +685,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
             }
             $errors[] = $ex->getMessage();
         }
+        }
     }
 }
+
+// Generate RawBT text (HTML format for 58mm Thermal Printers to support fonts correctly)
+$rawbt_html = "<html><head><style>
+    body { font-family: sans-serif; font-size: 24px; color: black; margin: 0; padding: 10px; }
+    .text-center { text-align: center; }
+    .fw-bold { font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { text-align: left; padding: 5px 0; border-bottom: 1px dashed black; }
+    .text-end { text-align: right; }
+    .text-center-td { text-align: center; }
+    .border-top { border-top: 2px dashed black; margin-top: 10px; padding-top: 10px; }
+</style></head><body>";
+
+$rawbt_html .= "<div class='text-center fw-bold' style='font-size: 32px;'>Mandal Variety</div>";
+$rawbt_html .= "<div class='text-center'>6JJ5+6M3, Balarampur, Jalpaiguri Division<br>West Bengal, 736134<br>Phone: 8972541454</div>";
+$rawbt_html .= "<div style='border-top: 2px dashed black; margin: 10px 0;'></div>";
+$rawbt_html .= "<div><b>Inv:</b> " . e($invoiceNo) . "</div>";
+$rawbt_html .= "<div><b>Date:</b> " . (!empty($order['created_at']) ? e(date('d M Y', strtotime($order['created_at']))) : e(date('d M Y'))) . "</div>";
+$rawbt_html .= "<div><b>Time:</b> " . (!empty($order['created_at']) ? e(date('h:i A', strtotime($order['created_at']))) : e(date('h:i A'))) . "</div>";
+$rawbt_html .= "<div><b>Order:</b> " . e($orderNumber) . "</div>";
+$rawbt_html .= "<div><b>Status:</b> " . e(formatStatus($currentStatus)) . "</div>";
+
+$rawbt_html .= "<div style='border-top: 2px dashed black; margin: 10px 0;'></div>";
+$rawbt_html .= "<div><b>Cust:</b> " . e($customerName) . "</div>";
+if ($customerPhone) {
+    $rawbt_html .= "<div><b>Phn:</b> " . e($customerPhone) . "</div>";
+}
+if ($shippingAddress) {
+    $rawbt_html .= "<div><b>Address:</b> " . e($shippingAddress) . "</div>";
+}
+
+$rawbt_html .= "<table><tr><th>Item</th><th class='text-center-td'>Qty</th><th class='text-end'>Price</th><th class='text-end'>Total</th></tr>";
+
+if (!empty($invoiceItems)) {
+    foreach ($invoiceItems as $item) {
+        $rawbt_html .= "<tr>";
+        $rawbt_html .= "<td>" . e($item['product_name']) . "</td>";
+        $rawbt_html .= "<td class='text-center-td'>" . (int)$item['quantity'] . "</td>";
+        $rawbt_html .= "<td class='text-end'>" . number_format($item['price'], 2) . "</td>";
+        $rawbt_html .= "<td class='text-end fw-bold'>" . number_format($item['subtotal'], 2) . "</td>";
+        $rawbt_html .= "</tr>";
+    }
+}
+$rawbt_html .= "</table>";
+
+$rawbt_html .= "<table style='border: none;'>";
+$rawbt_html .= "<tr><td>Subtotal:</td><td class='text-end'>" . number_format($itemsSubtotal, 2) . "</td></tr>";
+if ($offerName) {
+    $rawbt_html .= "<tr><td>Offer:</td><td class='text-end'>" . e($offerName) . "</td></tr>";
+}
+if ($offerDiscount > 0) {
+    $rawbt_html .= "<tr><td>Discount:</td><td class='text-end'>-" . number_format($offerDiscount, 2) . "</td></tr>";
+}
+if ($deliveryCharge > 0) {
+    $rawbt_html .= "<tr><td>Delivery:</td><td class='text-end'>" . number_format($deliveryCharge, 2) . "</td></tr>";
+}
+$rawbt_html .= "<tr><td class='fw-bold' style='font-size: 28px;'>Grand Total:</td><td class='text-end fw-bold' style='font-size: 28px;'>" . number_format($grandTotal, 2) . "</td></tr>";
+$rawbt_html .= "</table>";
+
+$rawbt_html .= "<div style='border-top: 2px dashed black; margin: 10px 0;'></div>";
+$rawbt_html .= "<div class='text-center fw-bold' style='margin-top: 20px;'>Thank you for shopping with Mandal Variety!</div>";
+$rawbt_html .= "<div class='text-center'>Visit Again!</div>";
+$rawbt_html .= "</body></html>";
+
+$rawbt_text_json = json_encode($rawbt_html);
 ?>
 
 <div class="w-100">
@@ -1122,48 +1188,10 @@ function printBillOnly() {
 }
 
 function printRawBT() {
-    var printContent = document.getElementById('printBillArea').innerHTML;
-    
-    // Create a complete HTML document for RawBT to parse correctly
-    var fullHtml = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <style>
-            body { margin: 0; padding: 2mm; font-family: monospace; color: #000; background: #fff; font-size: 12px; }
-            .receipt-card { width: 100%; }
-            .receipt-header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px; }
-            .receipt-header h2 { font-size: 22px; margin: 0 0 5px 0; font-family: sans-serif; }
-            .receipt-header p { font-size: 12px; margin: 0 0 2px 0; }
-            .receipt-details { margin-bottom: 10px; font-size: 12px; }
-            .receipt-details table { width: 100%; }
-            .receipt-details td { padding: 2px 0; vertical-align: top; }
-            .receipt-items { width: 100%; font-size: 12px; margin-bottom: 10px; border-top: 1px dashed #000; border-bottom: 1px dashed #000; border-collapse: collapse; }
-            .receipt-items th { font-size: 11px; padding: 5px 2px; text-align: center; border-bottom: 1px solid #000; text-transform: uppercase; }
-            .receipt-items th:nth-child(2) { text-align: left; }
-            .receipt-items td { padding: 5px 2px; text-align: center; border-bottom: 1px solid #eee; }
-            .receipt-items td:nth-child(2) { text-align: left; }
-            .receipt-totals { font-size: 12px; }
-            .receipt-totals .d-flex { display: flex; justify-content: space-between; margin-bottom: 5px; }
-            .receipt-totals .grand-total-row { border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 8px 0; margin-top: 8px; font-weight: bold; font-size: 14px; }
-            .receipt-footer { text-align: center; margin-top: 15px; }
-            .receipt-footer h5 { font-size: 18px; margin: 5px 0 10px 0; }
-            .pb-0 { padding-bottom: 0 !important; }
-            .border-bottom-0 { border-bottom: 0 !important; }
-            .mb-0 { margin-bottom: 0 !important; }
-            .mb-1 { margin-bottom: 5px !important; }
-            strong { font-weight: bold; }
-        </style>
-    </head>
-    <body>
-        ${printContent}
-    </body>
-    </html>
-    `;
-
-    // Convert to base64 for data URI (handles unicode properly)
-    var b64 = btoa(unescape(encodeURIComponent(fullHtml)));
+    var printText = <?= $rawbt_text_json ?>;
+    // Convert text to base64 properly handling UTF-8
+    var b64 = btoa(unescape(encodeURIComponent(printText)));
+    // Use data URI format so RawBT knows it's HTML and renders it
     var rawBtUrl = "rawbt:data:text/html;base64," + b64;
     window.location.href = rawBtUrl;
 }
