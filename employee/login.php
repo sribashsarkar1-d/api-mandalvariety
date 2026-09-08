@@ -78,11 +78,10 @@ if (is_logged_in()) {
                     <h6>Secure & Trusted</h6>
                     <p>Your data is protected with enterprise-grade security</p>
                 </div>
-            </div>
-            
-            <div class="auth-bottom-text">
+            </div> 
+            <!-- <div class="auth-bottom-text">
                 Don't have an account? <a href="signup.php">Sign Up</a>
-            </div>
+            </div> -->
         </form>
     </div>
 </div>

@@ -101,7 +101,12 @@ require_once '../includes/header.php';
         <?php else: ?>
             <div class="ledger-timeline">
                 <?php foreach ($ledger as $item): ?>
-                    <div class="card mb-3 shadow-sm border-0 bg-light border-start border-4 <?= $item['transaction_type'] === 'sale_credit' ? 'border-danger' : ($item['transaction_type'] === 'payment' ? 'border-success' : 'border-secondary') ?>">
+                    <?php 
+                        if (empty($item['transaction_type'])) {
+                            $item['transaction_type'] = 'manual_due';
+                        }
+                    ?>
+                    <div class="card mb-3 shadow-sm border-0 bg-light border-start border-4 <?= $item['transaction_type'] === 'sale_credit' ? 'border-danger' : ($item['transaction_type'] === 'payment' ? 'border-success' : 'border-warning') ?>">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <div class="fw-bold">
@@ -112,7 +117,7 @@ require_once '../includes/header.php';
                                     <?php elseif ($item['transaction_type'] === 'opening_due'): ?>
                                         <span class="text-warning text-darken" style="color: #d97706 !important;"><i class="bi bi-clock-history me-1"></i> OPENING DUE</span>
                                     <?php elseif ($item['transaction_type'] === 'manual_due'): ?>
-                                        <span class="text-danger"><i class="bi bi-plus-circle-fill me-1"></i> ADDED DUE</span>
+                                        <span class="text-warning text-darken" style="color: #d97706 !important;"><i class="bi bi-plus-circle-fill me-1"></i> ADDED DUE</span>
                                     <?php else: ?>
                                         <span class="text-secondary"><i class="bi bi-info-circle-fill me-1"></i> <?= strtoupper($item['transaction_type']) ?></span>
                                     <?php endif; ?>
@@ -186,11 +191,12 @@ require_once '../includes/header.php';
                                     <span class="fw-bold text-dark"><?= format_currency($item['previous_due']) ?></span>
                                 </div>
                                 <?php if (!empty($item['description'])): ?>
-                                <div class="text-muted small mb-2 fst-italic">
-                                    "<?= htmlspecialchars(str_replace('Manual Due Added: ', '', $item['description'])) ?>"
+                                <div class="p-2 mb-2 mt-2 bg-white border border-warning rounded small shadow-sm">
+                                    <div class="fw-bold text-dark mb-1"><i class="bi bi-journal-text me-1"></i> Note / Reason:</div>
+                                    <div class="text-secondary"><?= nl2br(htmlspecialchars(str_replace('Manual Due Added: ', '', $item['description']))) ?></div>
                                 </div>
                                 <?php endif; ?>
-                                <div class="d-flex justify-content-between pt-2 border-top">
+                                <div class="d-flex justify-content-between pt-2 border-top mt-2">
                                     <span class="fw-bold text-muted small">New Outstanding:</span>
                                     <span class="fw-bold text-danger"><?= format_currency($item['new_due']) ?></span>
                                 </div>
@@ -199,7 +205,13 @@ require_once '../includes/header.php';
                                     <span>Amount:</span>
                                     <span class="fw-bold text-dark"><?= format_currency($item['amount']) ?></span>
                                 </div>
-                                <div class="d-flex justify-content-between pt-2 border-top">
+                                <?php if (!empty($item['description'])): ?>
+                                <div class="p-2 mb-2 mt-2 bg-white border rounded small shadow-sm">
+                                    <div class="fw-bold text-dark mb-1"><i class="bi bi-journal-text me-1"></i> Note / Reason:</div>
+                                    <div class="text-secondary"><?= nl2br(htmlspecialchars(str_replace('Manual Due Added: ', '', $item['description']))) ?></div>
+                                </div>
+                                <?php endif; ?>
+                                <div class="d-flex justify-content-between pt-2 border-top mt-2">
                                     <span class="fw-bold text-muted small">New Outstanding:</span>
                                     <span class="fw-bold text-danger"><?= format_currency($item['new_due']) ?></span>
                                 </div>

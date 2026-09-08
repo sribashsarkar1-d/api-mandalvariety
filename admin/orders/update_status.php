@@ -701,7 +701,7 @@ $rawbt_html = "<html><head><style>
 </style></head><body>";
 
 $rawbt_html .= "<div class='text-center fw-bold' style='font-size: 32px;'>Mandal Variety</div>";
-$rawbt_html .= "<div class='text-center'>6JJ5+6M3, Balarampur, Jalpaiguri Division<br>West Bengal, 736134<br>Phone: 8972541454</div>";
+$rawbt_html .= "<div class='text-center'>6JJ5+6M3, Balarampur, Jalpaiguri Division<br>West Bengal, 736134<br>Phone: +91 8967136033</div>";
 $rawbt_html .= "<div style='border-top: 2px dashed black; margin: 10px 0;'></div>";
 $rawbt_html .= "<div><b>Inv:</b> " . e($invoiceNo) . "</div>";
 $rawbt_html .= "<div><b>Date:</b> " . (!empty($order['created_at']) ? e(date('d M Y', strtotime($order['created_at']))) : e(date('d M Y'))) . "</div>";
@@ -741,7 +741,7 @@ if ($offerDiscount > 0) {
     $rawbt_html .= "<tr><td>Discount:</td><td class='text-end'>-" . number_format($offerDiscount, 2) . "</td></tr>";
 }
 if ($deliveryCharge > 0) {
-    $rawbt_html .= "<tr><td>Delivery:</td><td class='text-end'>" . number_format($deliveryCharge, 2) . "</td></tr>";
+    $rawbt_html .= "<tr><td>Delivery Charge:</td><td class='text-end'>" . number_format($deliveryCharge, 2) . "</td></tr>";
 }
 $rawbt_html .= "<tr><td class='fw-bold' style='font-size: 28px;'>Grand Total:</td><td class='text-end fw-bold' style='font-size: 28px;'>" . number_format($grandTotal, 2) . "</td></tr>";
 $rawbt_html .= "</table>";
