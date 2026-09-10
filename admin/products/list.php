@@ -29,6 +29,15 @@ $offset = ($page - 1) * $limit;
 
 $search   = trim($_GET['search'] ?? '');
 $category = isset($_GET['category']) ? (int)$_GET['category'] : 0;
+
+$parentToLegacy = [
+    1 => 52,
+    2 => 53,
+    3 => 54,
+    4 => 55
+];
+
+$legacyFilterId = $category > 0 ? ($parentToLegacy[$category] ?? 0) : 0;
 $status   = trim($_GET['status'] ?? '');
 $sort     = trim($_GET['sort'] ?? 'latest');
 $lowStockLimit = 5;
@@ -45,9 +54,9 @@ if ($search !== '') {
     $params[':search4'] = $searchPattern;
 }
 
-if ($category > 0) {
+if ($legacyFilterId > 0) {
     $where[] = "p.category_id = :category";
-    $params[':category'] = $category;
+    $params[':category'] = $legacyFilterId;
 }
 
 if ($status === 'active') {
@@ -109,6 +118,7 @@ $pages = max(1, (int)ceil($total / $limit));
 $sql = "SELECT 
             p.*,
             c.name AS category_name,
+            cc.name AS child_category_name,
             o.offer_name,
             o.offer_type,
             o.offer_value,
@@ -119,6 +129,7 @@ $sql = "SELECT
             o.product_id AS offer_product_id
         FROM products p
         LEFT JOIN categories c ON c.id = p.category_id
+        LEFT JOIN child_categories cc ON cc.id = p.subcategory_id
         LEFT JOIN offers o ON (o.product_id = p.id OR o.category_id = p.category_id)
         $whereSql
         GROUP BY p.id
@@ -134,7 +145,10 @@ $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
 $stmt->execute();
 $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$cats = $conn->query("SELECT id, name FROM categories ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+$cats = [];
+try {
+    $cats = $conn->query("SELECT id, name FROM parent_categories WHERE is_active = 1 ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {}
 
 function offerStatus($start, $end) {
     $today = date('Y-m-d');
@@ -468,8 +482,15 @@ function getAttributesHtml($jsonAttr) {
                                             <?php endif; ?>
                                             <div>
                                                 <div class="fw-bold text-dark mb-1" style="font-size: 1.05rem;"><?= e($row['name']) ?></div>
-                                                <div class="small text-muted d-flex gap-2 align-items-center">
-                                                    <span class="badge bg-light border text-secondary px-2"><i class="fa-solid fa-layer-group me-1"></i><?= e($row['category_name'] ?? 'N/A') ?></span>
+                                                <div class="small text-muted d-flex gap-2 align-items-center mt-1">
+                                                    <span class="badge bg-light border text-secondary px-2">
+                                                        <i class="fa-solid fa-layer-group me-1"></i>
+                                                        <?= e($row['category_name'] ?? 'N/A') ?>
+                                                        <?php if (!empty($row['child_category_name'])): ?>
+                                                            <i class="fa-solid fa-chevron-right mx-1" style="font-size: 0.7em;"></i>
+                                                            <?= e($row['child_category_name']) ?>
+                                                        <?php endif; ?>
+                                                    </span>
                                                     <span>SKU: <?= e($row['sku']) ?></span>
                                                 </div>
                                                 <?= getAttributesHtml($row['attributes'] ?? '') ?>

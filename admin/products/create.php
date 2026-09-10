@@ -101,7 +101,21 @@ $data = [
     'attr_food_type' => ''
 ];
 
-$categories = $conn->query("SELECT id, name FROM categories WHERE is_active = 1 ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+$parentCategories = [];
+$childCategories = [];
+try {
+    $parentCategories = $conn->query("SELECT id, name FROM parent_categories WHERE is_active = 1 ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+    $childCategories = $conn->query("SELECT id, parent_category_id, name FROM child_categories WHERE is_active = 1 ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    // If tables don't exist yet
+}
+
+$parentToLegacy = [
+    1 => 52,
+    2 => 53,
+    3 => 54,
+    4 => 55
+];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data['name'] = trim($_POST['name'] ?? '');
@@ -111,7 +125,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data['sku'] = trim($_POST['sku'] ?? '');
     $data['stock_quantity'] = (int)($_POST['stock_quantity'] ?? 0);
     $data['stock'] = (int)($_POST['stock'] ?? 0);
-    $data['category_id'] = (int)($_POST['category_id'] ?? 0);
+    $data['parent_category_id'] = (int)($_POST['parent_category_id'] ?? 0);
+    $data['subcategory_id'] = (int)($_POST['subcategory_id'] ?? 0);
+    $data['category_id'] = $parentToLegacy[$data['parent_category_id']] ?? 0;
     $data['weight'] = ($_POST['weight'] ?? '') !== '' ? (float)$_POST['weight'] : '';
     $data['is_active'] = (string)($_POST['is_active'] ?? '1');
 
@@ -131,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($data['name'] === '') $errors[] = 'Product name required';
     if ($data['price'] === '' || !is_numeric($data['price'])) $errors[] = 'Valid price required';
-    if ($data['category_id'] <= 0) $errors[] = 'Category required';
+    if ($data['category_id'] <= 0) $errors[] = 'Valid Parent Category required. Ensure the mapping is correct.';
 
     if (!in_array($data['offer_type'], ['none', 'flat', 'percent'], true)) {
         $errors[] = 'Invalid offer type';
@@ -222,9 +238,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Using standard logic but now adding attributes if column exists. 
             // The DB update script added `attributes` to products table.
             $stmt = $conn->prepare("INSERT INTO products
-                (name, slug, description, price, discount_price, sku, stock_quantity, category_id, images, weight, is_active, stock, attributes)
+                (name, slug, description, price, discount_price, sku, stock_quantity, category_id, subcategory_id, images, weight, is_active, stock, attributes)
                 VALUES
-                (:name, :slug, :description, :price, :discount_price, :sku, :stock_quantity, :category_id, :images, :weight, :is_active, :stock, :attributes)");
+                (:name, :slug, :description, :price, :discount_price, :sku, :stock_quantity, :category_id, :subcategory_id, :images, :weight, :is_active, :stock, :attributes)");
 
             $stmt->execute([
                 ':name' => $data['name'],
@@ -235,6 +251,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':sku' => $sku,
                 ':stock_quantity' => $data['stock_quantity'],
                 ':category_id' => $data['category_id'],
+                ':subcategory_id' => $data['subcategory_id'] > 0 ? $data['subcategory_id'] : null,
                 ':images' => $imagesJson,
                 ':weight' => $data['weight'] !== '' ? $data['weight'] : null,
                 ':is_active' => (int)$data['is_active'],
@@ -555,17 +572,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <input type="text" name="name" class="form-control-premium" value="<?= e($data['name']) ?>" placeholder="e.g. Nike Air Max, Brittania Biscuits" required>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Category *</label>
-                                    <select name="category_id" class="form-select-premium" required>
-                                        <option value="">Select Category</option>
-                                        <?php foreach ($categories as $cat): ?>
-                                            <option value="<?= (int)$cat['id'] ?>" <?= ((int)$data['category_id'] === (int)$cat['id']) ? 'selected' : '' ?>>
+                                    <label class="form-label">Parent Category *</label>
+                                    <select name="parent_category_id" id="parent_category_id" class="form-select-premium" required>
+                                        <option value="">Select Parent Category</option>
+                                        <?php foreach ($parentCategories as $cat): ?>
+                                            <option value="<?= (int)$cat['id'] ?>" <?= ((int)($data['parent_category_id'] ?? 0) === (int)$cat['id']) ? 'selected' : '' ?>>
                                                 <?= e($cat['name']) ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
                                 <div class="col-md-6">
+                                    <label class="form-label">Child Category</label>
+                                    <select name="subcategory_id" id="subcategory_id" class="form-select-premium" disabled>
+                                        <option value="">Select Child Category</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-12">
                                     <label class="form-label">SKU (Optional)</label>
                                     <input type="text" name="sku" class="form-control-premium" value="<?= e($data['sku']) ?>" placeholder="Auto-generated if left blank">
                                 </div>
@@ -732,7 +755,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script>
+const childCategoriesData = <?= json_encode($childCategories) ?>;
+const oldSubcategoryId = <?= (int)($data['subcategory_id'] ?? 0) ?>;
+
 document.addEventListener('DOMContentLoaded', function () {
+    const parentSelect = document.getElementById('parent_category_id');
+    const childSelect = document.getElementById('subcategory_id');
+
+    function populateChildren() {
+        const parentId = parseInt(parentSelect.value) || 0;
+        childSelect.innerHTML = '<option value="">Select Child Category</option>';
+        childSelect.disabled = true;
+
+        if (parentId > 0) {
+            const children = childCategoriesData.filter(c => parseInt(c.parent_category_id) === parentId);
+            if (children.length > 0) {
+                childSelect.disabled = false;
+                children.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+                    if (parseInt(c.id) === oldSubcategoryId) {
+                        opt.selected = true;
+                    }
+                    childSelect.appendChild(opt);
+                });
+            }
+        }
+    }
+
+    if (parentSelect) {
+        parentSelect.addEventListener('change', populateChildren);
+        populateChildren(); // Run on load in case of validation errors
+    }
     const priceInput = document.getElementById('price');
     const offerTypeInput = document.getElementById('offer_type');
     const offerValueInput = document.getElementById('offer_value');

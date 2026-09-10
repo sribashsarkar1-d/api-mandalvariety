@@ -73,7 +73,25 @@ if ($id <= 0) {
 $errors = [];
 $success = '';
 
-$cats = $conn->query("SELECT id, name FROM categories ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+$parentCategories = [];
+$childCategories = [];
+try {
+    $parentCategories = $conn->query("SELECT id, name FROM parent_categories WHERE is_active = 1 ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+    $childCategories = $conn->query("SELECT id, parent_category_id, name FROM child_categories WHERE is_active = 1 ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {}
+
+$parentToLegacy = [
+    1 => 52,
+    2 => 53,
+    3 => 54,
+    4 => 55
+];
+$legacyToParent = [
+    52 => 1,
+    53 => 2,
+    54 => 3,
+    55 => 4
+];
 
 $stmt = $conn->prepare("
     SELECT p.*, c.name AS category_name
@@ -111,6 +129,8 @@ $data = [
     'stock_quantity' => $product['stock_quantity'] ?? 0,
     'stock' => $product['stock'] ?? 0,
     'category_id' => $product['category_id'] ?? '',
+    'parent_category_id' => $legacyToParent[$product['category_id']] ?? '',
+    'subcategory_id' => $product['subcategory_id'] ?? '',
     'weight' => $product['weight'] ?? '',
     'is_active' => (string)($product['is_active'] ?? '1'),
     'offer_name' => $offer['offer_name'] ?? '',
@@ -135,7 +155,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data['sku'] = trim($_POST['sku'] ?? '');
     $data['stock_quantity'] = (int)($_POST['stock_quantity'] ?? 0);
     $data['stock'] = (int)($_POST['stock'] ?? 0);
-    $data['category_id'] = (int)($_POST['category_id'] ?? 0);
+    $data['parent_category_id'] = (int)($_POST['parent_category_id'] ?? 0);
+    $data['subcategory_id'] = (int)($_POST['subcategory_id'] ?? 0);
+    $data['category_id'] = $parentToLegacy[$data['parent_category_id']] ?? 0;
     $data['weight'] = ($_POST['weight'] ?? '') !== '' ? (float)$_POST['weight'] : '';
     $data['is_active'] = (string)($_POST['is_active'] ?? '1');
 
@@ -154,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($data['name'] === '') $errors[] = 'Product name required';
     if ($data['price'] === '' || !is_numeric($data['price'])) $errors[] = 'Valid price required';
-    if ($data['category_id'] <= 0) $errors[] = 'Category required';
+    if ($data['category_id'] <= 0) $errors[] = 'Valid Parent Category required. Ensure the mapping is correct.';
 
     if ($data['discount_price'] !== '' && !is_numeric($data['discount_price'])) {
         $errors[] = 'Discount price must be numeric';
@@ -246,6 +268,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 sku = :sku,
                 stock_quantity = :stock_quantity,
                 category_id = :category_id,
+                subcategory_id = :subcategory_id,
                 images = :images,
                 weight = :weight,
                 is_active = :is_active,
@@ -263,6 +286,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':sku' => $sku,
                 ':stock_quantity' => $data['stock_quantity'],
                 ':category_id' => $data['category_id'],
+                ':subcategory_id' => $data['subcategory_id'] > 0 ? $data['subcategory_id'] : null,
                 ':images' => $imagesJson,
                 ':weight' => $data['weight'] !== '' ? $data['weight'] : null,
                 ':is_active' => $data['is_active'],
@@ -585,21 +609,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <input type="text" name="name" class="form-control-premium" value="<?= e($data['name']) ?>" required>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Category *</label>
-                                    <select name="category_id" class="form-select-premium" required>
-                                        <option value="">Select Category</option>
-                                        <?php foreach ($cats as $cat): ?>
-                                            <option value="<?= (int)$cat['id'] ?>" <?= ((int)$data['category_id'] === (int)$cat['id']) ? 'selected' : '' ?>>
+                                    <label class="form-label">Parent Category *</label>
+                                    <select name="parent_category_id" id="parent_category_id" class="form-select-premium" required>
+                                        <option value="">Select Parent Category</option>
+                                        <?php if (!isset($legacyToParent[$product['category_id']])): ?>
+                                            <option value="<?= (int)$product['category_id'] ?>" selected>
+                                                <?= e($product['category_name'] ?? 'Unknown Category') ?> (Legacy)
+                                            </option>
+                                        <?php endif; ?>
+                                        <?php foreach ($parentCategories as $cat): ?>
+                                            <option value="<?= (int)$cat['id'] ?>" <?= ((int)$data['parent_category_id'] === (int)$cat['id']) ? 'selected' : '' ?>>
                                                 <?= e($cat['name']) ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
                                 <div class="col-md-6">
+                                    <label class="form-label">Child Category</label>
+                                    <select name="subcategory_id" id="subcategory_id" class="form-select-premium" disabled>
+                                        <option value="">Select Child Category</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
                                     <label class="form-label">Slug</label>
                                     <input type="text" name="slug" class="form-control-premium" value="<?= e($data['slug']) ?>">
                                 </div>
-                                <div class="col-md-12">
+                                <div class="col-md-6">
                                     <label class="form-label">SKU</label>
                                     <input type="text" name="sku" class="form-control-premium" value="<?= e($data['sku']) ?>">
                                 </div>
@@ -766,7 +801,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script>
+const childCategoriesData = <?= json_encode($childCategories) ?>;
+const oldSubcategoryId = <?= (int)($data['subcategory_id'] ?? 0) ?>;
+
 document.addEventListener('DOMContentLoaded', function () {
+    const parentSelect = document.getElementById('parent_category_id');
+    const childSelect = document.getElementById('subcategory_id');
+
+    function populateChildren() {
+        const parentId = parseInt(parentSelect.value) || 0;
+        childSelect.innerHTML = '<option value="">Select Child Category</option>';
+        childSelect.disabled = true;
+
+        if (parentId > 0) {
+            const children = childCategoriesData.filter(c => parseInt(c.parent_category_id) === parentId);
+            if (children.length > 0) {
+                childSelect.disabled = false;
+                children.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+                    if (parseInt(c.id) === oldSubcategoryId) {
+                        opt.selected = true;
+                    }
+                    childSelect.appendChild(opt);
+                });
+            }
+        }
+    }
+
+    if (parentSelect) {
+        parentSelect.addEventListener('change', populateChildren);
+        populateChildren(); // Run on load to pre-fill child options
+    }
     const priceInput = document.getElementById('price');
     const offerTypeInput = document.getElementById('offer_type');
     const offerValueInput = document.getElementById('offer_value');
