@@ -2,9 +2,28 @@
 include '../includes/header.php';
 
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$type = isset($_GET['type']) ? $_GET['type'] : 'parent';
 
-if ($id > 0) {
-    $stmt = $conn->prepare("SELECT image FROM categories WHERE id = ?");
+if ($id > 0 && in_array($type, ['parent', 'child'])) {
+    
+    if ($type === 'parent') {
+        // Prevent deletion if children exist
+        $checkStmt = $conn->prepare("SELECT COUNT(*) FROM child_categories WHERE parent_category_id = ?");
+        $checkStmt->execute([$id]);
+        $childCount = $checkStmt->fetchColumn();
+
+        if ($childCount > 0) {
+            http_response_code(400);
+            echo "This parent category contains child categories. Please remove or move the child categories before deleting.";
+            exit;
+        }
+        
+        $table = 'parent_categories';
+    } else {
+        $table = 'child_categories';
+    }
+
+    $stmt = $conn->prepare("SELECT image FROM $table WHERE id = ?");
     $stmt->execute([$id]);
     $category = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -17,12 +36,8 @@ if ($id > 0) {
         }
 
         try {
-            // Optional: Handle products that have this category id by setting category_id to NULL or handling it
-            // Assuming ON DELETE CASCADE is NOT set, you might want to reset products category_id.
-            $conn->prepare("UPDATE products SET category_id = NULL WHERE category_id = ?")->execute([$id]);
-            
-            $conn->prepare("DELETE FROM offers WHERE category_id = ?")->execute([$id]);
-            $conn->prepare("DELETE FROM categories WHERE id = ?")->execute([$id]);
+            // NOTE: We do not modify product category relationships as requested.
+            $conn->prepare("DELETE FROM $table WHERE id = ?")->execute([$id]);
             
             echo "deleted";
         } catch (Exception $e) {
@@ -35,5 +50,5 @@ if ($id > 0) {
     }
 } else {
     http_response_code(400);
-    echo "invalid";
+    echo "invalid parameter";
 }

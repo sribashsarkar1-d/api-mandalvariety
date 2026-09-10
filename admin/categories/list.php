@@ -1,71 +1,27 @@
-<?php include '../includes/header.php'; ?>
-<?php include '../includes/sidebar.php'; ?>
-
 <?php
+include '../includes/header.php';
+include '../includes/sidebar.php';
+
 if (!function_exists('e')) {
     function e($string) {
         return htmlspecialchars((string)$string, ENT_QUOTES, 'UTF-8');
     }
 }
 
-$limit  = 10;
-$page   = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
-$offset = ($page - 1) * $limit;
+// Fetch Parent Categories with their Children
+$sql = "SELECT * FROM parent_categories ORDER BY sort_order ASC, name ASC";
+$stmt = $conn->query($sql);
+$parents = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$search   = trim($_GET['search'] ?? '');
-$status   = trim($_GET['status'] ?? '');
-$sort     = trim($_GET['sort'] ?? 'latest');
+$sqlChild = "SELECT * FROM child_categories ORDER BY sort_order ASC, name ASC";
+$stmtChild = $conn->query($sqlChild);
+$childrenResult = $stmtChild->fetchAll(PDO::FETCH_ASSOC);
 
-$where = [];
-$params = [];
-
-if ($search !== '') {
-    $where[] = "(name LIKE :search OR slug LIKE :search OR description LIKE :search)";
-    $params[':search'] = "%{$search}%";
+// Group children by parent_id
+$childrenByParent = [];
+foreach ($childrenResult as $child) {
+    $childrenByParent[$child['parent_category_id']][] = $child;
 }
-
-if ($status === 'active') {
-    $where[] = "is_active = 1";
-} elseif ($status === 'inactive') {
-    $where[] = "is_active = 0";
-}
-
-$whereSql = !empty($where) ? ' WHERE ' . implode(' AND ', $where) : '';
-
-switch ($sort) {
-    case 'name_az':
-        $orderBy = "name ASC";
-        break;
-    case 'name_za':
-        $orderBy = "name DESC";
-        break;
-    case 'oldest':
-        $orderBy = "id ASC";
-        break;
-    default:
-        $orderBy = "id DESC";
-        break;
-}
-
-$countSql = "SELECT COUNT(id) FROM categories $whereSql";
-$countStmt = $conn->prepare($countSql);
-foreach ($params as $key => $val) {
-    $countStmt->bindValue($key, $val);
-}
-$countStmt->execute();
-$total = (int)$countStmt->fetchColumn();
-$pages = max(1, (int)ceil($total / $limit));
-
-$sql = "SELECT c.*, (SELECT COUNT(id) FROM products WHERE category_id = c.id) as product_count FROM categories c $whereSql ORDER BY $orderBy LIMIT :limit OFFSET :offset";
-
-$stmt = $conn->prepare($sql);
-foreach ($params as $key => $val) {
-    $stmt->bindValue($key, $val);
-}
-$stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-$stmt->execute();
-$categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 ?>
 <style>
@@ -112,19 +68,6 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
         z-index: 2;
     }
 
-    @media (max-width: 768px) {
-        .page-header-premium {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 15px;
-            padding: 20px;
-        }
-        .page-header-premium .btn {
-            width: 100%;
-            justify-content: center;
-        }
-    }
-
     .premium-card {
         background: var(--glass-bg);
         backdrop-filter: blur(16px);
@@ -132,25 +75,6 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
         border-radius: 20px;
         box-shadow: var(--card-shadow);
         overflow: hidden;
-    }
-
-    .premium-card-body {
-        padding: 25px;
-    }
-
-    .form-control-premium, .form-select-premium {
-        border-radius: 12px;
-        border: 1px solid #cbd5e1;
-        padding: 10px 16px;
-        font-size: 0.9rem;
-        background: #ffffff;
-        transition: all 0.3s ease;
-    }
-
-    .form-control-premium:focus, .form-select-premium:focus {
-        border-color: #8b5cf6;
-        box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15);
-        outline: none;
     }
 
     .table-premium {
@@ -186,6 +110,13 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
     .table-premium tbody tr:hover {
         background-color: #f8fafc;
     }
+    
+    .row-child td {
+        background-color: #fcfcfd;
+    }
+    .row-child:hover td {
+        background-color: #f1f5f9 !important;
+    }
 
     .btn-action {
         width: 36px;
@@ -217,12 +148,19 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
     .cat-img-thumb {
-        width: 50px; 
-        height: 50px; 
-        border-radius: 12px;
+        width: 40px; 
+        height: 40px; 
+        border-radius: 10px;
         object-fit: cover;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         background: #fff;
+    }
+
+    .tree-indicator {
+        color: #cbd5e1;
+        margin-right: 10px;
+        font-family: monospace;
+        font-size: 1.2rem;
     }
 </style>
 
@@ -233,43 +171,12 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="page-header-premium">
             <div>
                 <h3 class="mb-2 fw-bold"><i class="fa-solid fa-layer-group me-2"></i> Categories</h3>
-                <p class="mb-0 text-white-50">Manage product categories to keep your store organized.</p>
+                <p class="mb-0 text-white-50">Manage parent and child categories.</p>
             </div>
-            <a href="create.php" class="btn btn-light rounded-pill px-4 fw-bold shadow-sm" style="color: #6d28d9;">
-                <i class="fa-solid fa-plus me-2"></i> Add Category
-            </a>
-        </div>
-
-        <!-- Filters -->
-        <div class="premium-card mb-4">
-            <div class="premium-card-body pb-3">
-                <form method="GET" class="row g-3">
-                    <div class="col-lg-4 col-md-4">
-                        <label class="form-label text-muted small fw-bold"><i class="fa-solid fa-magnifying-glass me-1"></i> SEARCH</label>
-                        <input type="text" name="search" value="<?= e($search) ?>" class="form-control-premium" placeholder="Name, slug, description...">
-                    </div>
-                    <div class="col-lg-4 col-md-4">
-                        <label class="form-label text-muted small fw-bold"><i class="fa-solid fa-box-open me-1"></i> STATUS</label>
-                        <select name="status" class="form-select-premium">
-                            <option value="">All</option>
-                            <option value="active" <?= ($status === 'active') ? 'selected' : '' ?>>Active</option>
-                            <option value="inactive" <?= ($status === 'inactive') ? 'selected' : '' ?>>Inactive</option>
-                        </select>
-                    </div>
-                    <div class="col-lg-4 col-md-4">
-                        <label class="form-label text-muted small fw-bold"><i class="fa-solid fa-sort me-1"></i> SORT</label>
-                        <select name="sort" class="form-select-premium">
-                            <option value="latest" <?= ($sort === 'latest') ? 'selected' : '' ?>>Latest</option>
-                            <option value="name_az" <?= ($sort === 'name_az') ? 'selected' : '' ?>>Name A-Z</option>
-                            <option value="name_za" <?= ($sort === 'name_za') ? 'selected' : '' ?>>Name Z-A</option>
-                            <option value="oldest" <?= ($sort === 'oldest') ? 'selected' : '' ?>>Oldest</option>
-                        </select>
-                    </div>
-                    <div class="col-12 d-flex justify-content-end gap-2 mt-3">
-                        <a href="list.php" class="btn btn-light rounded-pill px-4 fw-bold text-muted border">Reset</a>
-                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" style="background: var(--primary-gradient); border:none;">Apply Filters</button>
-                    </div>
-                </form>
+            <div>
+                <a href="create.php" class="btn btn-light rounded-pill px-4 fw-bold shadow-sm" style="color: #6d28d9;">
+                    <i class="fa-solid fa-plus me-2"></i> Add Parent / Child Category
+                </a>
             </div>
         </div>
 
@@ -280,74 +187,114 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <thead>
                         <tr>
                             <th>Category</th>
-                            <th>Products</th>
+                            <th>Type</th>
+                            <th>Sort Order</th>
                             <th>Status</th>
-                            <th>Created</th>
                             <th class="text-end">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (!empty($categories)): ?>
-                            <?php foreach ($categories as $row): ?>
-                                <tr id="row-<?= (int)$row['id'] ?>">
+                        <?php if (!empty($parents)): ?>
+                            <?php foreach ($parents as $parent): ?>
+                                <tr id="row-parent-<?= (int)$parent['id'] ?>">
                                     <td>
                                         <div class="d-flex align-items-center gap-3">
-                                            <?php if (!empty($row['image'])): ?>
-                                                <div class="position-relative">
-                                                    <img src="../uploads/<?= e($row['image']) ?>" alt="img" class="cat-img-thumb">
-                                                </div>
+                                            <?php if (!empty($parent['image'])): ?>
+                                                <img src="../uploads/<?= e($parent['image']) ?>" alt="img" class="cat-img-thumb">
                                             <?php else: ?>
-                                                <div class="cat-img-thumb d-flex align-items-center justify-content-center text-muted" style="background: #f1f5f9; font-size: 0.8rem;">
+                                                <div class="cat-img-thumb d-flex align-items-center justify-content-center text-muted" style="background: #e2e8f0;">
                                                     <i class="fa-solid fa-image-slash"></i>
                                                 </div>
                                             <?php endif; ?>
                                             <div>
-                                                <div class="fw-bold text-dark mb-1" style="font-size: 1.05rem;"><?= e($row['name']) ?></div>
-                                                <div class="small text-muted d-flex gap-2 align-items-center">
-                                                    <span>Slug: <?= e($row['slug']) ?></span>
-                                                </div>
+                                                <div class="fw-bold text-dark" style="font-size: 1.05rem;"><?= e($parent['name']) ?></div>
+                                                <div class="small text-muted">Slug: <?= e($parent['slug']) ?></div>
                                             </div>
                                         </div>
                                     </td>
-
                                     <td>
-                                        <span class="badge bg-light text-dark border px-2 py-1">
-                                            <i class="fa-solid fa-cube me-1"></i><?= (int)$row['product_count'] ?> items
-                                        </span>
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill">Parent</span>
                                     </td>
-
+                                    <td><?= (int)$parent['sort_order'] ?></td>
                                     <td>
-                                        <?php if ((int)$row['is_active'] === 1): ?>
-                                            <span class="badge rounded-pill bg-success-subtle text-success px-3 py-1"><i class="fa-solid fa-eye me-1"></i>Active</span>
+                                        <?php if ((int)$parent['is_active'] === 1): ?>
+                                            <span class="badge rounded-pill bg-success-subtle text-success px-3 py-1">Active</span>
                                         <?php else: ?>
-                                            <span class="badge rounded-pill bg-secondary-subtle text-secondary px-3 py-1"><i class="fa-solid fa-eye-slash me-1"></i>Hidden</span>
+                                            <span class="badge rounded-pill bg-secondary-subtle text-secondary px-3 py-1">Inactive</span>
                                         <?php endif; ?>
                                     </td>
-
-                                    <td>
-                                        <span class="text-muted small">
-                                            <?= date('M d, Y', strtotime($row['created_at'])) ?>
-                                        </span>
-                                    </td>
-
                                     <td class="text-end">
                                         <div class="d-flex justify-content-end gap-2">
-                                            <a href="edit.php?id=<?= (int)$row['id'] ?>" class="btn-action btn-edit" title="Edit Category">
+                                            <a href="edit.php?id=<?= (int)$parent['id'] ?>&type=parent" class="btn-action btn-edit" title="Edit Parent">
                                                 <i class="fa-solid fa-pen"></i>
                                             </a>
-                                            <button class="btn-action btn-delete deleteBtn" data-id="<?= (int)$row['id'] ?>" title="Delete Category">
+                                            <button class="btn-action btn-delete deleteBtn" data-id="<?= (int)$parent['id'] ?>" data-type="parent" title="Delete Parent">
                                                 <i class="fa-solid fa-trash-can"></i>
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
+
+                                <?php 
+                                // Render children
+                                if (isset($childrenByParent[$parent['id']])): 
+                                    $children = $childrenByParent[$parent['id']];
+                                    $childCount = count($children);
+                                    foreach ($children as $index => $child):
+                                        $isLast = ($index === $childCount - 1);
+                                        $treePrefix = $isLast ? '└──' : '├──';
+                                ?>
+                                    <tr id="row-child-<?= (int)$child['id'] ?>" class="row-child">
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2" style="padding-left: 30px;">
+                                                <span class="tree-indicator"><?= $treePrefix ?></span>
+                                                <?php if (!empty($child['image'])): ?>
+                                                    <img src="../uploads/<?= e($child['image']) ?>" alt="img" class="cat-img-thumb" style="width: 32px; height: 32px;">
+                                                <?php else: ?>
+                                                    <div class="cat-img-thumb d-flex align-items-center justify-content-center text-muted" style="background: #e2e8f0; width: 32px; height: 32px; font-size: 0.7rem;">
+                                                        <i class="fa-solid fa-image-slash"></i>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <div>
+                                                    <div class="text-dark fw-medium"><?= e($child['name']) ?></div>
+                                                    <div class="small text-muted">Slug: <?= e($child['slug']) ?></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1 rounded-pill">Child</span>
+                                        </td>
+                                        <td><?= (int)$child['sort_order'] ?></td>
+                                        <td>
+                                            <?php if ((int)$child['is_active'] === 1): ?>
+                                                <span class="badge rounded-pill bg-success-subtle text-success px-3 py-1">Active</span>
+                                            <?php else: ?>
+                                                <span class="badge rounded-pill bg-secondary-subtle text-secondary px-3 py-1">Inactive</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="d-flex justify-content-end gap-2">
+                                                <a href="edit.php?id=<?= (int)$child['id'] ?>&type=child" class="btn-action btn-edit" title="Edit Child">
+                                                    <i class="fa-solid fa-pen"></i>
+                                                </a>
+                                                <button class="btn-action btn-delete deleteBtn" data-id="<?= (int)$child['id'] ?>" data-type="child" title="Delete Child">
+                                                    <i class="fa-solid fa-trash-can"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php 
+                                    endforeach; 
+                                endif; 
+                                ?>
+
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
                                 <td colspan="5" class="text-center py-5">
                                     <div class="text-muted mb-3">
                                         <i class="fa-solid fa-layer-group fa-3x mb-3 text-light"></i><br>
-                                        No categories found matching your criteria.
+                                        No categories found.
                                     </div>
                                     <a href="create.php" class="btn btn-primary rounded-pill px-4 shadow-sm" style="background: var(--primary-gradient); border:none;">
                                         Create Your First Category
@@ -358,23 +305,6 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </tbody>
                 </table>
             </div>
-            
-            <?php if ($pages > 1): ?>
-                <div class="card-footer bg-white border-top p-4 d-flex justify-content-between align-items-center">
-                    <span class="text-muted small">Showing page <?= $page ?> of <?= $pages ?></span>
-                    <nav>
-                        <ul class="pagination pagination-sm mb-0">
-                            <?php for ($i = 1; $i <= $pages; $i++): ?>
-                                <li class="page-item <?= ($page == $i) ? 'active' : '' ?>">
-                                    <a class="page-link" href="?page=<?= $i ?>&search=<?= urlencode($search) ?>&status=<?= urlencode($status) ?>&sort=<?= urlencode($sort) ?>">
-                                        <?= $i ?>
-                                    </a>
-                                </li>
-                            <?php endfor; ?>
-                        </ul>
-                    </nav>
-                </div>
-            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -385,19 +315,35 @@ $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 document.querySelectorAll('.deleteBtn').forEach(btn => {
     btn.addEventListener('click', function () {
         const id = this.dataset.id;
-        if (confirm('Are you absolutely sure you want to delete this category? Products within this category will not be deleted but they will lose their category association.')) {
-            fetch('delete.php?id=' + id)
-                .then(res => res.text())
+        const type = this.dataset.type;
+        
+        let confirmMsg = 'Are you sure you want to delete this category?';
+        if (type === 'parent') {
+            confirmMsg = 'Are you sure you want to delete this parent category? Note: You cannot delete a parent if it has child categories.';
+        }
+
+        if (confirm(confirmMsg)) {
+            fetch(`delete.php?id=${id}&type=${type}`)
+                .then(res => {
+                    if (!res.ok) {
+                        return res.text().then(text => { throw new Error(text) });
+                    }
+                    return res.text();
+                })
                 .then(() => {
-                    const row = document.getElementById('row-' + id);
+                    const row = document.getElementById(`row-${type}-${id}`);
                     if (row) {
                         row.style.transition = "opacity 0.3s";
                         row.style.opacity = 0;
                         setTimeout(() => row.remove(), 300);
                     }
+                    // For parent, reload page to safely remove child rows from view
+                    if (type === 'parent') {
+                        setTimeout(() => window.location.reload(), 300);
+                    }
                 })
-                .catch(() => {
-                    alert('Delete failed! Please try again.');
+                .catch(err => {
+                    alert(err.message || 'Delete failed! Please try again.');
                 });
         }
     });

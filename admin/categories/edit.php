@@ -17,14 +17,14 @@ function makeSlug($text)
     return trim($text, '-');
 }
 
-function uniqueSlug(PDO $conn, $slug, $currentId = 0)
+function uniqueSlug(PDO $conn, $slug, $table, $currentId = 0)
 {
     $base = $slug ?: 'category';
     $newSlug = $base;
     $i = 1;
 
     while (true) {
-        $stmt = $conn->prepare("SELECT id FROM categories WHERE slug = ? AND id != ?");
+        $stmt = $conn->prepare("SELECT id FROM $table WHERE slug = ? AND id != ?");
         $stmt->execute([$newSlug, $currentId]);
         if (!$stmt->fetch()) {
             return $newSlug;
@@ -34,16 +34,26 @@ function uniqueSlug(PDO $conn, $slug, $currentId = 0)
 }
 
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-if ($id <= 0) {
-    die('Invalid Category ID');
+$type = isset($_GET['type']) ? $_GET['type'] : 'parent';
+
+if ($id <= 0 || !in_array($type, ['parent', 'child'])) {
+    die('Invalid Category Parameter');
 }
 
-$stmt = $conn->prepare("SELECT * FROM categories WHERE id = ?");
+$table = ($type === 'child') ? 'child_categories' : 'parent_categories';
+$stmt = $conn->prepare("SELECT * FROM $table WHERE id = ?");
 $stmt->execute([$id]);
 $category = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$category) {
     die('Category not found');
+}
+
+// Fetch active parents if editing a child
+$activeParents = [];
+if ($type === 'child') {
+    $parentStmt = $conn->query("SELECT id, name FROM parent_categories WHERE is_active = 1 ORDER BY name ASC");
+    $activeParents = $parentStmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 $errors = [];
@@ -54,6 +64,8 @@ $data = [
     'slug' => $category['slug'] ?? '',
     'description' => $category['description'] ?? '',
     'is_active' => (string)($category['is_active'] ?? '1'),
+    'sort_order' => (string)($category['sort_order'] ?? '0'),
+    'parent_id' => $category['parent_category_id'] ?? ''
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -61,9 +73,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data['slug'] = trim($_POST['slug'] ?? '');
     $data['description'] = trim($_POST['description'] ?? '');
     $data['is_active'] = (string)($_POST['is_active'] ?? '1');
+    $data['sort_order'] = (int)($_POST['sort_order'] ?? 0);
+    $data['parent_id'] = $_POST['parent_category_id'] ?? '';
 
     if ($data['name'] === '') {
         $errors[] = 'Category name is required';
+    }
+
+    if ($type === 'child' && empty($data['parent_id'])) {
+        $errors[] = 'Parent category must be selected for a child category';
     }
 
     $uploadedImage = $category['image'] ?? null;
@@ -94,21 +112,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($errors)) {
         try {
-            $slug = uniqueSlug($conn, makeSlug($data['slug'] ?: $data['name']), $id);
+            $slug = uniqueSlug($conn, makeSlug($data['slug'] ?: $data['name']), $table, $id);
 
-            $stmt = $conn->prepare("UPDATE categories SET name = :name, slug = :slug, description = :description, image = :image, is_active = :is_active WHERE id = :id");
-            $stmt->execute([
-                ':name' => $data['name'],
-                ':slug' => $slug,
-                ':description' => $data['description'] !== '' ? $data['description'] : null,
-                ':image' => $uploadedImage,
-                ':is_active' => (int)$data['is_active'],
-                ':id' => $id
-            ]);
+            if ($type === 'child') {
+                $stmt = $conn->prepare("UPDATE child_categories SET parent_category_id = :parent_category_id, name = :name, slug = :slug, description = :description, image = :image, is_active = :is_active, sort_order = :sort_order WHERE id = :id");
+                $stmt->execute([
+                    ':parent_category_id' => $data['parent_id'],
+                    ':name' => $data['name'],
+                    ':slug' => $slug,
+                    ':description' => $data['description'] !== '' ? $data['description'] : null,
+                    ':image' => $uploadedImage,
+                    ':is_active' => (int)$data['is_active'],
+                    ':sort_order' => $data['sort_order'],
+                    ':id' => $id
+                ]);
+            } else {
+                $stmt = $conn->prepare("UPDATE parent_categories SET name = :name, slug = :slug, description = :description, image = :image, is_active = :is_active, sort_order = :sort_order WHERE id = :id");
+                $stmt->execute([
+                    ':name' => $data['name'],
+                    ':slug' => $slug,
+                    ':description' => $data['description'] !== '' ? $data['description'] : null,
+                    ':image' => $uploadedImage,
+                    ':is_active' => (int)$data['is_active'],
+                    ':sort_order' => $data['sort_order'],
+                    ':id' => $id
+                ]);
+            }
 
-            $success = 'Category updated successfully';
+            $success = ucfirst($type) . ' category updated successfully';
 
-            $stmt = $conn->prepare("SELECT * FROM categories WHERE id = ?");
+            // Refresh data
+            $stmt = $conn->prepare("SELECT * FROM $table WHERE id = ?");
             $stmt->execute([$id]);
             $category = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -161,19 +195,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     .page-header-premium > * {
         z-index: 2;
-    }
-
-    @media (max-width: 768px) {
-        .page-header-premium {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 15px;
-            padding: 20px;
-        }
-        .page-header-premium .btn {
-            width: 100%;
-            justify-content: center;
-        }
     }
 
     .premium-card {
@@ -316,7 +337,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         <div class="page-header-premium">
             <div>
-                <h3 class="mb-2 fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i> Edit Category</h3>
+                <h3 class="mb-2 fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i> Edit <?= ucfirst($type) ?> Category</h3>
                 <p class="mb-0 text-white-50">Update category information and settings.</p>
             </div>
             <a href="list.php" class="btn btn-light rounded-pill px-4 fw-bold shadow-sm" style="color: #0369a1;">
@@ -350,8 +371,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                         <div class="premium-card-body">
                             <div class="row g-4">
+                                <?php if ($type === 'child'): ?>
+                                <div class="col-12">
+                                    <label class="form-label">Parent Category *</label>
+                                    <select name="parent_category_id" class="form-select-premium" required>
+                                        <option value="">Select Parent Category</option>
+                                        <?php foreach($activeParents as $p): ?>
+                                            <option value="<?= $p['id'] ?>" <?= $data['parent_id'] == $p['id'] ? 'selected' : '' ?>><?= e($p['name']) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <?php endif; ?>
+
                                 <div class="col-md-6">
-                                    <label class="form-label">Category Name *</label>
+                                    <label class="form-label"><?= ucfirst($type) ?> Category Name *</label>
                                     <input type="text" name="name" class="form-control-premium" value="<?= e($data['name']) ?>" required>
                                 </div>
                                 <div class="col-md-6">
@@ -362,12 +395,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <label class="form-label">Description</label>
                                     <textarea name="description" class="form-control-premium" rows="4"><?= e($data['description']) ?></textarea>
                                 </div>
-                                <div class="col-md-12">
+                                <div class="col-md-6">
                                     <label class="form-label">Status</label>
                                     <select name="is_active" class="form-select-premium">
                                         <option value="1" <?= $data['is_active'] === '1' ? 'selected' : '' ?>>Active (Visible)</option>
                                         <option value="0" <?= $data['is_active'] === '0' ? 'selected' : '' ?>>Inactive (Hidden)</option>
                                     </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Display Order</label>
+                                    <input type="number" name="sort_order" class="form-control-premium" value="<?= e($data['sort_order']) ?>">
                                 </div>
                             </div>
                         </div>
