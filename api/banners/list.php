@@ -15,8 +15,8 @@ try {
     $sql = "SELECT id, title, subtitle, description, image, button_text, button_link, sort_order 
             FROM home_banners 
             WHERE is_active = 1 
-            AND (start_date IS NULL OR start_date <= NOW()) 
-            AND (end_date IS NULL OR end_date >= NOW()) 
+            AND (start_date IS NULL OR start_date = '' OR start_date = '0000-00-00 00:00:00' OR start_date <= NOW()) 
+            AND (end_date IS NULL OR end_date = '' OR end_date = '0000-00-00 00:00:00' OR end_date >= NOW()) 
             ORDER BY sort_order ASC, created_at DESC";
             
     $stmt = $pdo->query($sql);
@@ -36,9 +36,15 @@ try {
 
     foreach ($banners as &$banner) {
         if (!empty($banner['image'])) {
-            $banner['image'] = (filter_var($banner['image'], FILTER_VALIDATE_URL) || strpos($banner['image'], 'http') === 0) 
-                ? $banner['image'] 
-                : $uploads_url . ltrim($banner['image'], '/');
+            if (filter_var($banner['image'], FILTER_VALIDATE_URL) || strpos($banner['image'], 'http') === 0) {
+                // Keep it as is
+            } else {
+                $image_path = ltrim($banner['image'], '/');
+                if (strpos($image_path, 'banners/') !== 0) {
+                    $image_path = 'banners/' . $image_path;
+                }
+                $banner['image'] = $uploads_url . $image_path;
+            }
         } else {
             $banner['image'] = null;
         }

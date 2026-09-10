@@ -2,7 +2,7 @@
     "info": {
         "name": "Mandal Variety E-Commerce API",
         "description": "Complete REST API documentation for the E-Commerce platform.",
-        "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "item": [
         {
@@ -15,11 +15,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/health",
+                            "raw": "{{base_url}}/health",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -27,7 +27,7 @@
                                 "health"
                             ]
                         },
-                        "description": "Returns API uptime\/basic health information."
+                        "description": "Returns API uptime/basic health information."
                     }
                 }
             ]
@@ -42,11 +42,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/categories\/list.php",
+                            "raw": "{{base_url}}/categories/list.php",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -65,11 +65,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/categories\/products.php?id=1",
+                            "raw": "{{base_url}}/categories/products.php?id=1",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -99,11 +99,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/products\/list.php",
+                            "raw": "{{base_url}}/products/list.php",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -122,11 +122,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/products\/detail.php?id=1",
+                            "raw": "{{base_url}}/products/detail.php?id=1",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -151,15 +151,15 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             },
                             {
                                 "key": "Content-Type",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/products\/manage.php",
+                            "raw": "{{base_url}}/products/manage.php",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -192,11 +192,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/cart\/cart.php?user_id=1",
+                            "raw": "{{base_url}}/cart/cart.php?user_id=1",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -221,15 +221,15 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             },
                             {
                                 "key": "Content-Type",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/cart\/add.php?user_id=1",
+                            "raw": "{{base_url}}/cart/add.php?user_id=1",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -263,15 +263,15 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             },
                             {
                                 "key": "Content-Type",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/cart\/update.php?user_id=1",
+                            "raw": "{{base_url}}/cart/update.php?user_id=1",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -305,11 +305,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/cart\/remove.php?user_id=1&cart_item_id=1",
+                            "raw": "{{base_url}}/cart/remove.php?user_id=1&cart_item_id=1",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -338,11 +338,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/cart\/clear.php?user_id=1",
+                            "raw": "{{base_url}}/cart/clear.php?user_id=1",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -372,11 +372,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/wishlist\/list.php?user_id=1",
+                            "raw": "{{base_url}}/wishlist/list.php?user_id=1",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -401,15 +401,15 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             },
                             {
                                 "key": "Content-Type",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/wishlist\/add.php?user_id=1",
+                            "raw": "{{base_url}}/wishlist/add.php?user_id=1",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -443,11 +443,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/wishlist\/remove.php?user_id=1&product_id=1",
+                            "raw": "{{base_url}}/wishlist/remove.php?user_id=1&product_id=1",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -481,11 +481,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/orders\/list.php?user_id=1",
+                            "raw": "{{base_url}}/orders/list.php?user_id=1",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -510,11 +510,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/orders\/detail.php?user_id=1&order_id=1",
+                            "raw": "{{base_url}}/orders/detail.php?user_id=1&order_id=1",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -543,15 +543,15 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             },
                             {
                                 "key": "Content-Type",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/orders\/create.php?user_id=1",
+                            "raw": "{{base_url}}/orders/create.php?user_id=1",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -585,11 +585,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/orders\/cancel.php?user_id=1&order_id=1",
+                            "raw": "{{base_url}}/orders/cancel.php?user_id=1&order_id=1",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -623,15 +623,15 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             },
                             {
                                 "key": "Content-Type",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/auth\/register.php",
+                            "raw": "{{base_url}}/auth/register.php",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -659,15 +659,15 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             },
                             {
                                 "key": "Content-Type",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/auth\/verify.php",
+                            "raw": "{{base_url}}/auth/verify.php",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -695,15 +695,15 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             },
                             {
                                 "key": "Content-Type",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/auth\/login.php",
+                            "raw": "{{base_url}}/auth/login.php",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -731,11 +731,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/auth\/logout.php",
+                            "raw": "{{base_url}}/auth/logout.php",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -754,11 +754,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/auth\/profile.php",
+                            "raw": "{{base_url}}/auth/profile.php",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -782,11 +782,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/reviews\/list.php?product_id=1",
+                            "raw": "{{base_url}}/reviews/list.php?product_id=1",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -811,15 +811,15 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             },
                             {
                                 "key": "Content-Type",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/reviews\/add.php?user_id=1",
+                            "raw": "{{base_url}}/reviews/add.php?user_id=1",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -858,11 +858,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/coupons\/list.php",
+                            "raw": "{{base_url}}/coupons/list.php",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -881,15 +881,15 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             },
                             {
                                 "key": "Content-Type",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/coupons\/manage.php",
+                            "raw": "{{base_url}}/coupons/manage.php",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -898,7 +898,7 @@
                                 "manage.php"
                             ]
                         },
-                        "description": "Create\/Update\/Delete coupons",
+                        "description": "Create/Update/Delete coupons",
                         "body": {
                             "mode": "raw",
                             "raw": "{\n    \"code\": \"DISCOUNT10\",\n    \"discount\": 10\n}",
@@ -922,11 +922,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/offers\/list.php",
+                            "raw": "{{base_url}}/offers/list.php",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -945,15 +945,15 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             },
                             {
                                 "key": "Content-Type",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/offers\/manage.php",
+                            "raw": "{{base_url}}/offers/manage.php",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -962,7 +962,7 @@
                                 "manage.php"
                             ]
                         },
-                        "description": "Create\/Update\/Delete offers",
+                        "description": "Create/Update/Delete offers",
                         "body": {
                             "mode": "raw",
                             "raw": "{\n    \"offer_name\": \"Summer Sale\",\n    \"offer_value\": 20\n}",
@@ -986,11 +986,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/settings\/get.php",
+                            "raw": "{{base_url}}/settings/get.php",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -1009,15 +1009,15 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             },
                             {
                                 "key": "Content-Type",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/settings\/update.php",
+                            "raw": "{{base_url}}/settings/update.php",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -1050,11 +1050,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/policies\/list.php",
+                            "raw": "{{base_url}}/policies/list.php",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -1073,11 +1073,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/policies\/detail.php?slug=privacy-policy",
+                            "raw": "{{base_url}}/policies/detail.php?slug=privacy-policy",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -1102,15 +1102,15 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             },
                             {
                                 "key": "Content-Type",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/policies\/manage.php",
+                            "raw": "{{base_url}}/policies/manage.php",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -1119,7 +1119,7 @@
                                 "manage.php"
                             ]
                         },
-                        "description": "Create\/Update\/Delete policies",
+                        "description": "Create/Update/Delete policies",
                         "body": {
                             "mode": "raw",
                             "raw": "{\n    \"title\": \"Privacy\",\n    \"content\": \"Data...\"\n}",
@@ -1143,11 +1143,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/age_verifications\/list.php",
+                            "raw": "{{base_url}}/age_verifications/list.php",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -1166,15 +1166,15 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             },
                             {
                                 "key": "Content-Type",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/age_verifications\/manage.php",
+                            "raw": "{{base_url}}/age_verifications/manage.php",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -1183,7 +1183,7 @@
                                 "manage.php"
                             ]
                         },
-                        "description": "Submit\/Review verifications",
+                        "description": "Submit/Review verifications",
                         "body": {
                             "mode": "raw",
                             "raw": "{\n    \"user_id\": 1,\n    \"full_name\": \"John Doe\"\n}",
@@ -1207,11 +1207,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/search\/global.php?q=milk",
+                            "raw": "{{base_url}}/search/global.php?q=milk",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -1236,11 +1236,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/search\/products.php?q=milk",
+                            "raw": "{{base_url}}/search/products.php?q=milk",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -1265,11 +1265,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/search\/categories.php?q=milk",
+                            "raw": "{{base_url}}/search/categories.php?q=milk",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -1294,11 +1294,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/search\/suggestions.php?q=sh",
+                            "raw": "{{base_url}}/search/suggestions.php?q=sh",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -1323,11 +1323,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/search\/related.php",
+                            "raw": "{{base_url}}/search/related.php",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -1346,11 +1346,11 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/search\/popular.php",
+                            "raw": "{{base_url}}/search/popular.php",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -1369,15 +1369,15 @@
                         "header": [
                             {
                                 "key": "Accept",
-                                "value": "application\/json"
+                                "value": "application/json"
                             },
                             {
                                 "key": "Content-Type",
-                                "value": "application\/json"
+                                "value": "application/json"
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}\/search\/voice.php",
+                            "raw": "{{base_url}}/search/voice.php",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -1399,12 +1399,40 @@
                     }
                 }
             ]
+        },
+        {
+            "name": "Banners",
+            "item": [
+                {
+                    "name": "All Banners",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/banners/list.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "banners",
+                                "list.php"
+                            ]
+                        },
+                        "description": "Get all active banners."
+                    }
+                }
+            ]
         }
     ],
     "variable": [
         {
             "key": "base_url",
-            "value": "https:\/\/api.mandal-variety.com",
+            "value": "https://api.mandal-variety.com",
             "type": "string"
         }
     ]
