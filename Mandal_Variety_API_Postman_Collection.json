@@ -86,6 +86,87 @@
                         },
                         "description": "Get products for a specific category."
                     }
+                },
+                {
+                    "name": "Category Details",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/categories/details.php?id=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "categories",
+                                "details.php"
+                            ],
+                            "query": [
+                                {
+                                    "key": "id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Get specific category details."
+                    }
+                },
+                {
+                    "name": "Category Children",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/categories/children.php?parent_id=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "categories",
+                                "children.php"
+                            ],
+                            "query": [
+                                {
+                                    "key": "parent_id",
+                                    "value": "1"
+                                }
+                            ]
+                        },
+                        "description": "Get children categories for a specific parent."
+                    }
+                },
+                {
+                    "name": "Category Hierarchy",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/categories/hierarchy.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "categories",
+                                "hierarchy.php"
+                            ]
+                        },
+                        "description": "Get category hierarchy."
+                    }
                 }
             ]
         },

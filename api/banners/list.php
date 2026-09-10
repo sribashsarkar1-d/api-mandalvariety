@@ -15,8 +15,8 @@ try {
     $sql = "SELECT id, title, subtitle, description, image, button_text, button_link, sort_order 
             FROM home_banners 
             WHERE is_active = 1 
-            AND (start_date IS NULL OR start_date = '' OR start_date = '0000-00-00 00:00:00' OR start_date <= NOW()) 
-            AND (end_date IS NULL OR end_date = '' OR end_date = '0000-00-00 00:00:00' OR end_date >= NOW()) 
+            AND (start_date IS NULL OR start_date = '' OR start_date = '0000-00-00 00:00:00' OR DATE(start_date) <= CURDATE()) 
+            AND (end_date IS NULL OR end_date = '' OR end_date = '0000-00-00 00:00:00' OR DATE(end_date) >= CURDATE()) 
             ORDER BY sort_order ASC, created_at DESC";
             
     $stmt = $pdo->query($sql);
