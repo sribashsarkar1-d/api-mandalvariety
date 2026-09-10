@@ -14,15 +14,22 @@ if (!is_numeric($id)) {
 try {
     // Simple query for your mondal-vr schema
     $stmt = $pdo->prepare("
-        SELECT p.*, c.name as category_name 
+        SELECT p.*, c.name as category_name, cc.name as child_category_name 
         FROM products p 
         LEFT JOIN categories c ON p.category_id = c.id 
+        LEFT JOIN child_categories cc ON p.subcategory_id = cc.id 
         WHERE p.id = ?
     ");
     $stmt->execute([$id]);
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($product) {
+        $legacyToParent = [52 => 1, 53 => 2, 54 => 3, 55 => 4];
+        $product['parent_category_id'] = isset($product['category_id']) && isset($legacyToParent[$product['category_id']]) ? $legacyToParent[$product['category_id']] : null;
+        $product['parent_category_name'] = $product['category_name'] ?? null;
+        $product['subcategory_id'] = $product['subcategory_id'] ? (int)$product['subcategory_id'] : null;
+        $product['child_category_name'] = $product['child_category_name'] ?? null;
+
         // Fix images JSON
         $images = json_decode($product['images'] ?? '[]', true);
         if (!is_array($images)) $images = [];

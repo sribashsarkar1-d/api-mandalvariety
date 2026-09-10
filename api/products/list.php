@@ -11,16 +11,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once __DIR__ . '/../config/database.php'; 
 
 try {
-    $category_id = $_GET['category_id'] ?? null;
-    $where = $category_id ? "WHERE p.category_id = ? AND p.is_active = 1" : "WHERE p.is_active = 1";
+    $parentToLegacy = [1 => 52, 2 => 53, 3 => 54, 4 => 55];
+    $legacyToParent = [52 => 1, 53 => 2, 54 => 3, 55 => 4];
+
+    $legacy_category_id = $_GET['category_id'] ?? null;
+    $parent_category_id = $_GET['parent_category_id'] ?? null;
+
+    if ($parent_category_id !== null && isset($parentToLegacy[$parent_category_id])) {
+        $search_category_id = $parentToLegacy[$parent_category_id];
+    } else {
+        $search_category_id = $legacy_category_id;
+    }
+
+    $where = $search_category_id ? "WHERE p.category_id = ? AND p.is_active = 1" : "WHERE p.is_active = 1";
     
     // Select all fields (p.*) to ensure frontend models map correctly just like in detail.php
-    $sql = "SELECT p.*, c.name as category_name 
+    $sql = "SELECT p.*, c.name as category_name, cc.name as child_category_name 
             FROM products p 
-            LEFT JOIN categories c ON p.category_id = c.id $where";
+            LEFT JOIN categories c ON p.category_id = c.id 
+            LEFT JOIN child_categories cc ON p.subcategory_id = cc.id 
+            $where";
     
     $stmt = $pdo->prepare($sql);
-    if ($category_id) $stmt->execute([$category_id]);
+    if ($search_category_id) $stmt->execute([$search_category_id]);
     else $stmt->execute();
     
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -38,6 +51,11 @@ try {
     }
 
     foreach ($products as &$product) {
+        $product['parent_category_id'] = isset($product['category_id']) && isset($legacyToParent[$product['category_id']]) ? $legacyToParent[$product['category_id']] : null;
+        $product['parent_category_name'] = $product['category_name'] ?? null;
+        $product['subcategory_id'] = $product['subcategory_id'] ? (int)$product['subcategory_id'] : null;
+        $product['child_category_name'] = $product['child_category_name'] ?? null;
+
         $images = json_decode($product['images'] ?? '[]', true);
         if (!is_array($images)) $images = [];
         
