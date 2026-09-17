@@ -64,13 +64,13 @@ function sendInvoiceMail($toEmail, $toName, $subject, $body, $pdfPath = null)
         $mail->isSMTP();
         $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'roy338004@gmail.com'; // CHANGE
-        $mail->Password   = 'npny pdiu brbj tlly'; // CHANGE
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-        $mail->Port       = 465;
-        $mail->CharSet    = 'UTF-8';
+        $mail->Username   = 'sribashsarkarblp@gmail.com'; // CHANGE
+        $mail->Password   = 'mjkl wzow ycsq jnps'; // CHANGE
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port       = 587;
 
-        $mail->setFrom('roy338004@gmail.com', 'Mandal Variety'); // CHANGE
+        //Recipients
+        $mail->setFrom('sribashsarkarblp@gmail.com', 'Mandal Variety'); // CHANGE
         $mail->addAddress($toEmail, $toName);
 
         if (!empty($pdfPath) && file_exists($pdfPath)) {

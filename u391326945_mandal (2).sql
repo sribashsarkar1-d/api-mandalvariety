@@ -178,7 +178,7 @@ INSERT INTO `delivery_boys` (`id`, `name`, `email`, `phone`, `password`, `vehicl
 (5, 'Yash roy', 'sribash@gmail.com', '415454545', '$2y$10$NOiZqwaDxAZ7Uecv.5xG/e5/E6owuYD0Cf8xVy9h2z/j3Ernp7nri', 'Bike', 'WB1165', 1, 1, '2026-08-16 08:12:47', '2026-08-16 08:12:47'),
 (6, 'rm', 'sribas@gmail.com', '7828282886', '$2y$10$Nr4M5e/ao0FjkzxNKzjgEuCBzEm5vMyJvuiCfyNGRyU1TscHm8AtG', 'Bike', 'WB 56773', 1, 1, '2026-08-17 09:56:45', '2026-08-17 09:56:45'),
 (7, 'sahh', 'sa@gmail.com', '7878780000', '$2y$10$tRO38DNq2fHQU/V2RQYeh.b.J7BxiTpKFvNlnvyWhlV7zR8zWpfPW', 'Bicycle', 'dmi454', 1, 1, '2026-08-17 09:59:38', '2026-08-17 13:27:43'),
-(8, 'Sribash Sarkar', 'roy338004@gmail.com', '919083646603', '$2y$10$mWAtWqdq9hz6JlHOlQobCe5m3m8T4pnu.s8kcn0mO7drybMmxVNda', 'Scooter', 'roy338', 1, 1, '2026-08-30 13:41:16', '2026-08-30 13:41:16'),
+(8, 'Sribash Sarkar', 'sribashsarkarblp@gmail.com', '919083646603', '$2y$10$mWAtWqdq9hz6JlHOlQobCe5m3m8T4pnu.s8kcn0mO7drybMmxVNda', 'Scooter', 'roy338', 1, 1, '2026-08-30 13:41:16', '2026-08-30 13:41:16'),
 (9, 'Imran', 'imramanda884@gmail.com', '8001748622', '$2y$10$rjAUJ4pfRzYoQi3MvWACX.uBYo.lSrJLDKnTvSbGkWUeqgvL17Okq', 'Bike', 'Wb64p6150', 1, 1, '2026-09-01 07:16:53', '2026-09-01 07:31:57');
 
 -- --------------------------------------------------------
@@ -737,7 +737,7 @@ INSERT INTO `employee_users` (`id`, `name`, `email`, `password`, `reset_otp`, `r
 (6, 'Ajgar Ali', 'rkmandal78666@gmail.com', '$2y$10$0NReoYRjeoDhQvOZ.0MWjOnDbjvxenNHYx6oDgyxO4JMtesjg6wK6', NULL, NULL, 'employee', NULL, NULL, 'active', '2026-08-30 21:23:46', '2026-08-16 06:25:03', '2026-08-30 15:53:46'),
 (7, 'Ziaul', 'ziaulmandal20@gmail.com', '$2y$10$2O.B5G.Su83ZQKZ7MhmhuOQV/wC3.Og8Oi6KbSOchDSp/AsVUSuFK', NULL, NULL, 'admin', NULL, NULL, 'active', '2026-08-30 21:37:46', '2026-08-16 06:29:17', '2026-08-30 16:07:46'),
 (11, 'sribast', 'sribashsarkarblp@gmail.com', '$2y$10$cgRKXM4vMWiVoTX94Irc2eFtjzhhqaJrrNIzag5cockCuunL7AZJm', NULL, NULL, 'admin', NULL, NULL, 'active', '2026-09-04 13:12:30', '2026-08-26 15:57:03', '2026-09-04 07:42:30'),
-(12, 'Yash roy', 'roy338004@gmail.com', '$2y$10$H90th8xI/NK5S8TZhnH3c.vVegCNdogM2FIUXOPR3YLnk9Lzy1SRS', NULL, NULL, 'employee', NULL, NULL, 'active', '2026-09-04 13:04:07', '2026-08-29 10:20:56', '2026-09-04 07:34:07');
+(12, 'Yash roy', 'sribashsarkarblp@gmail.com', '$2y$10$H90th8xI/NK5S8TZhnH3c.vVegCNdogM2FIUXOPR3YLnk9Lzy1SRS', NULL, NULL, 'employee', NULL, NULL, 'active', '2026-09-04 13:04:07', '2026-08-29 10:20:56', '2026-09-04 07:34:07');
 
 -- --------------------------------------------------------
 
@@ -959,7 +959,7 @@ INSERT INTO `inventory_users` (`id`, `username`, `password`, `created_at`) VALUE
 (2, 'b@gmail.com', '$2y$10$gAhyYzIyPddUbLYfr0e8su.cv8nZBAo77ZsXRI4mNTchRYsOlYdOu', '2026-06-11 08:32:44'),
 (3, 'Ziaul', '$2y$10$XuM0htEIYdGtP8PQzIRgeueDCaIiq2zI6a.ls5vGKj2yq4hCYVWfq', '2026-06-11 08:51:21'),
 (4, 'Ziaull', '$2y$10$q9dQ9R9kIqUH5kUOleIawOaD7qBA35.rdm9L31nw90kJ9gZspD8li', '2026-06-13 08:41:40'),
-(5, 'roy338004@gmail.com', '$2y$10$h40vrZMZFcc7P6UYN2IkwuFapW3nVpRc3E/1oGnell.cmfTD.CsLy', '2026-08-16 08:52:44');
+(5, 'sribashsarkarblp@gmail.com', '$2y$10$h40vrZMZFcc7P6UYN2IkwuFapW3nVpRc3E/1oGnell.cmfTD.CsLy', '2026-08-16 08:52:44');
 
 -- --------------------------------------------------------
 
@@ -1434,7 +1434,7 @@ INSERT INTO `users` (`id`, `name`, `email`, `phone`, `password`, `role`, `addres
 (153, 'ram', 'sribash@gmail.com', '7887787667', '$2y$10$Us10teuCMcPoqC6wagUo5Ojs9aqg4V80sZ9jmnzS34/rFp93WzMmC', 'admin', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2026-06-13 08:44:51', '2026-06-13 08:44:51', NULL, NULL, 1, '2026-06-13 08:44:51', NULL, NULL, NULL, NULL, NULL),
 (154, 'Akku Mandal', 'rkmandal78666@gmail.com', '8967092471', '$2y$10$3VqdY6QbgbbrguLYC5YX3.3vuI2GrbZkKw2.UxxzUzjIrs0Tzsc9S', 'customer', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2026-06-19 08:47:49', '2026-08-12 16:21:29', NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL),
 (155, 'Sayan Banik', 'sayanbanikcob@gmail.com', '8768412832', '$2y$10$i2.9UMBruwdxLbDhekRULufT.gviOg1oUCMAaQ0rUiUvTsqRNTDGO', 'customer', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2026-06-21 17:44:01', '2026-06-21 17:45:12', NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL),
-(156, 'ram', 'roy338004@gmail.com', '9635160436', '$2y$10$Sp9OwHWH8Qhzt6qaf7nUru/VxySzEkFzVZ59aYTopU4KQKss2N3Ou', 'customer', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2026-07-04 06:39:01', '2026-07-04 09:22:18', NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL),
+(156, 'ram', 'sribashsarkarblp@gmail.com', '9635160436', '$2y$10$Sp9OwHWH8Qhzt6qaf7nUru/VxySzEkFzVZ59aYTopU4KQKss2N3Ou', 'customer', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2026-07-04 06:39:01', '2026-07-04 09:22:18', NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL),
 (165, 'ajgat', 'ajgarali70009@gmail.com', '8967092471', '$2y$10$QpIc/8/p4r7edfyklx9RFeA7pgNnUZnBSNlM392Ci2Q2ZX47PMO4y', 'customer', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2026-07-05 04:18:30', '2026-09-01 02:39:03', NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL),
 (166, 'Rahul Ali', 'alirahul62891@gmail.com', '7768953079', '$2y$10$OFxN0RIsCELjdZ1vidhM6.cxvodERsf6t09NdNKsYvWEfrrkW8tiK', 'customer', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2026-07-06 12:00:28', '2026-07-06 12:02:16', NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL),
 (167, 'pabitra roy', 'pabitraroy182@gmail.com', '8348663686', '$2y$10$sBq6N2Rz/FHoN1CB/V7lSuKP97p4k/C0KN6iGEGQAEwwo/GJCQh7m', 'customer', NULL, NULL, NULL, NULL, NULL, NULL, 1, '2026-07-06 15:43:53', '2026-07-06 15:47:35', NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL),

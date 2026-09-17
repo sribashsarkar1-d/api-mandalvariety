@@ -11,12 +11,12 @@ function sendAdminPasswordResetLink($email, $resetLink) {
         $mail->isSMTP();
         $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'roy338004@gmail.com';
-        $mail->Password   = 'npny pdiu brbj tlly';
+        $mail->Username   = 'sribashsarkarblp@gmail.com';
+        $mail->Password   = 'mjkl wzow ycsq jnps';
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
 
-        $mail->setFrom('roy338004@gmail.com', 'Mandal Variety');
+        $mail->setFrom('sribashsarkarblp@gmail.com', 'Mandal Variety');
         $mail->addAddress($email);
 
         $mail->isHTML(true);

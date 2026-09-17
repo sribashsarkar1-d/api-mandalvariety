@@ -10,15 +10,16 @@ function sendInvoiceMail($toEmail, $toName, $subject, $body, $pdfPath = null)
         $mail->isSMTP();
         $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'roy338004@gmail.com';
-        $mail->Password   = 'npny pdiu brbj tlly'; // not normal gmail password
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;  // for 465
-        $mail->Port       = 465;
+        $mail->Username   = 'sribashsarkarblp@gmail.com';
+        $mail->Password   = 'mjkl wzow ycsq jnps'; // not normal gmail password
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;            
+        $mail->Port       = 465;                                   
 
         $mail->CharSet = 'UTF-8';
-        $mail->setFrom('roy338004@gmail.com', 'Mandal Variety');
+        //Recipients
+        $mail->setFrom('sribashsarkarblp@gmail.com', 'Mandal Variety');
         $mail->addAddress($toEmail, $toName);
-        $mail->addReplyTo('roy338004@gmail.com', 'Mandal Variety');
+        $mail->addReplyTo('sribashsarkarblp@gmail.com', 'Mandal Variety');
 
         if (!empty($pdfPath) && file_exists($pdfPath)) {
             $mail->addAttachment($pdfPath);

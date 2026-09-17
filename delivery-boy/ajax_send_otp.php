@@ -90,13 +90,13 @@ try {
     $mail->isSMTP();
     $mail->Host       = 'smtp.gmail.com';
     $mail->SMTPAuth   = true;
-    $mail->Username   = 'roy338004@gmail.com';
-    $mail->Password   = 'npny pdiu brbj tlly';
-    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-    $mail->Port       = 465;
-    $mail->CharSet    = 'UTF-8';
+    $mail->Username   = 'sribashsarkarblp@gmail.com';
+    $mail->Password   = 'mjkl wzow ycsq jnps';
+    $mail->SMTPSecure = 'tls';
+    $mail->Port       = 587;
 
-    $mail->setFrom('roy338004@gmail.com', 'Mandal Variety Delivery');
+    // Recipients
+    $mail->setFrom('sribashsarkarblp@gmail.com', 'Mandal Variety Delivery');
     $mail->addAddress($customerEmail, $customerName);
 
     $mail->isHTML(true);
