@@ -282,6 +282,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $conn->commit();
             $success = 'Product created successfully';
 
+            // Trigger FCM Notification
+            require_once __DIR__ . '/../includes/fcm_helper.php';
+            
+            // Construct the full image URL. Adjust the base URL as needed (e.g., using a config constant or $_SERVER['HTTP_HOST']).
+            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+            $domainName = $_SERVER['HTTP_HOST'];
+            $baseUrl = $protocol . $domainName . '/auth-api/'; // Adjust /auth-api/ if your app root is different
+            $imageUrl = !empty($uploadedImages) ? $baseUrl . 'uploads/' . $uploadedImages[0] : null;
+
+            $title = "New Product Alert: " . $data['name'];
+            $body = "Check out our latest product, now available at just ₹" . ($data['discount_price'] !== '' ? $data['discount_price'] : $data['price']) . "!";
+            $fcmData = [
+                'type' => 'new_product',
+                'product_id' => $productId,
+                'slug' => $slug
+            ];
+
+            // Option 1: Send to a topic (all users subscribed to 'all_users')
+            // sendFCMNotification('/topics/all_users', $title, $body, $imageUrl, $fcmData);
+            
+            // Option 2: Fetch all FCM tokens from database and send multicast
+            $fcmTokens = [];
+            try {
+                $tokenStmt = $conn->query("SELECT fcm_token FROM users WHERE fcm_token IS NOT NULL AND fcm_token != ''");
+                while($row = $tokenStmt->fetch(PDO::FETCH_ASSOC)) {
+                    $fcmTokens[] = $row['fcm_token'];
+                }
+            } catch (Exception $e) {}
+
+            if (!empty($fcmTokens)) {
+                // FCM multicast supports max 500 tokens per request, chunking is recommended for production
+                $tokenChunks = array_chunk($fcmTokens, 500);
+                foreach($tokenChunks as $chunk) {
+                    sendFCMNotification($chunk, $title, $body, $imageUrl, $fcmData);
+                }
+            }
+
             // Reset Data
             foreach ($data as $k => $v) $data[$k] = '';
             $data['stock_quantity'] = 0; $data['stock'] = 0; $data['is_active'] = '1';

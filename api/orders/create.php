@@ -68,6 +68,29 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$user_id]);
 
+// Trigger FCM Notification for Order Confirmation
+require_once __DIR__ . '/../../admin/includes/fcm_helper.php';
+
+try {
+    $tokenStmt = $pdo->prepare("SELECT fcm_token FROM users WHERE id = ? AND fcm_token IS NOT NULL AND fcm_token != ''");
+    $tokenStmt->execute([$user_id]);
+    
+    if ($row = $tokenStmt->fetch(PDO::FETCH_ASSOC)) {
+        $fcmToken = $row['fcm_token'];
+        $title = "Order Confirmed! 🎉";
+        $body = "Thank you for your order (Order ID: #" . $order_number . "). We are processing it!";
+        $fcmData = [
+            'type' => 'order_status',
+            'order_id' => $order_id
+        ];
+        
+        sendFCMNotification($fcmToken, $title, $body, null, $fcmData);
+    }
+} catch (Exception $e) {
+    // Silently fail notification if there is an error to avoid breaking order flow
+    error_log('Order FCM Error: ' . $e->getMessage());
+}
+
 echo json_encode([
     'success' => true,
     'message' => 'Order created successfully! 🎉',
