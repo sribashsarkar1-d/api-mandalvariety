@@ -401,6 +401,13 @@ $adminEmail = $_SESSION['admin_email'] ?? 'admin@example.com';
         <div class="sidebar-group-title">System</div>
         <ul class="sidebar-menu">
             <li>
+                <a href="<?= $basePath ?>appbackimage/list.php" class="<?= isMenuActive(['appbackimage']) ? 'active' : '' ?>">
+                    <i class="fa-solid fa-mobile-screen" style="width:20px; text-align:center; flex-shrink:0;"></i>
+                    <span>App Background</span>
+                </a>
+            </li>
+
+            <li>
                 <a href="<?= $basePath ?>settings/index.php" class="<?= isMenuActive(['settings']) ? 'active' : '' ?>">
                     <svg class="icon"><use href="#icon-settings"></use></svg>
                     <span>Settings</span>
