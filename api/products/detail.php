@@ -14,7 +14,9 @@ if (!is_numeric($id)) {
 try {
     // Simple query for your mondal-vr schema
     $stmt = $pdo->prepare("
-        SELECT p.*, c.name as category_name, cc.name as child_category_name 
+        SELECT p.*, c.name as category_name, cc.name as child_category_name,
+        (SELECT COALESCE(AVG(rating), 0) FROM reviews r WHERE r.product_id = p.id AND r.status = 'approved') as rating,
+        (SELECT COUNT(*) FROM reviews r WHERE r.product_id = p.id AND r.status = 'approved') as reviewCount
         FROM products p 
         LEFT JOIN categories c ON p.category_id = c.id 
         LEFT JOIN child_categories cc ON p.subcategory_id = cc.id 
@@ -124,6 +126,10 @@ try {
         
         // 15. freeDelivery
         $product['freeDelivery'] = isset($product['free_delivery']) ? (bool)$product['free_delivery'] : ($deliveryCharge == 0);
+
+        // 16. rating & reviewCount
+        $product['rating'] = isset($product['rating']) ? round((float)$product['rating'], 1) : 0;
+        $product['reviewCount'] = isset($product['reviewCount']) ? (int)$product['reviewCount'] : 0;
 
         echo json_encode(['success' => true, 'data' => $product]);
     } else {

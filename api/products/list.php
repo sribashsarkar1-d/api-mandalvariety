@@ -26,7 +26,9 @@ try {
     $where = $search_category_id ? "WHERE p.category_id = ? AND p.is_active = 1" : "WHERE p.is_active = 1";
     
     // Select all fields (p.*) to ensure frontend models map correctly just like in detail.php
-    $sql = "SELECT p.*, c.name as category_name, cc.name as child_category_name 
+    $sql = "SELECT p.*, c.name as category_name, cc.name as child_category_name,
+            (SELECT COALESCE(AVG(rating), 0) FROM reviews r WHERE r.product_id = p.id AND r.status = 'approved') as rating,
+            (SELECT COUNT(*) FROM reviews r WHERE r.product_id = p.id AND r.status = 'approved') as reviewCount
             FROM products p 
             LEFT JOIN categories c ON p.category_id = c.id 
             LEFT JOIN child_categories cc ON p.subcategory_id = cc.id 
@@ -105,6 +107,9 @@ try {
             $deliveryCharge = isset($product['delivery_charge']) ? (float)$product['delivery_charge'] : 10.00;
             $product['deliveryCharge'] = $deliveryCharge;
             $product['freeDelivery'] = isset($product['free_delivery']) ? (bool)$product['free_delivery'] : ($deliveryCharge == 0);
+            
+            $product['rating'] = isset($product['rating']) ? round((float)$product['rating'], 1) : 0;
+            $product['reviewCount'] = isset($product['reviewCount']) ? (int)$product['reviewCount'] : 0;
     }
 
     echo json_encode(['success' => true, 'data' => $products]);
