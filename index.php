@@ -825,6 +825,8 @@
 
             <li><a href="#">Contact</a></li>
 
+            <li><a href="apps.php">Shop All App Download</a></li>
+
           </ul>
 
         </div>
