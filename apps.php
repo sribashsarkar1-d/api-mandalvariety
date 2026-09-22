@@ -203,7 +203,7 @@
                 The official customer app. Order fresh groceries, snacks, and daily essentials with fast local delivery within 1 hour.
               </p>
             </div>
-            <a href="mandal-variety-official-web/mandal-variety.apk" class="download-btn">
+            <a href="shop-app/app/build/outputs/apk/debug/shop.apk" class="download-btn">
               <i class="bi bi-download"></i> Download APK
             </a>
           </div>
@@ -222,7 +222,7 @@
               </p>
             </div>
             <!-- The actual APK download link can be added here when available -->
-            <a href="#" class="download-btn">
+            <a href="delivery-partner-app/app/build/outputs/apk/debug/delivery-boy.apk" class="download-btn">
               <i class="bi bi-download"></i> Download APK
             </a>
           </div>
@@ -241,7 +241,7 @@
               </p>
             </div>
             <!-- The actual APK download link can be added here when available -->
-            <a href="#" class="download-btn">
+            <a href="inventory-app/app/build/outputs/apk/debug/inventory.apk" class="download-btn">
               <i class="bi bi-download"></i> Download APK
             </a>
           </div>
