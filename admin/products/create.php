@@ -288,8 +288,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Construct the full image URL. Adjust the base URL as needed (e.g., using a config constant or $_SERVER['HTTP_HOST']).
             $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
             $domainName = $_SERVER['HTTP_HOST'];
-            $baseUrl = $protocol . $domainName . '/auth-api/'; // Adjust /auth-api/ if your app root is different
-            $imageUrl = !empty($uploadedImages) ? $baseUrl . 'uploads/' . $uploadedImages[0] : null;
+            $basePath = (strpos($domainName, 'localhost') !== false) ? '/auth-api/' : '/';
+            $imageUrl = !empty($uploadedImages) ? $protocol . $domainName . $basePath . 'uploads/' . $uploadedImages[0] : null;
 
             $title = "New Product Alert: " . $data['name'];
             $body = "Check out our latest product, now available at just ₹" . ($data['discount_price'] !== '' ? $data['discount_price'] : $data['price']) . "!";

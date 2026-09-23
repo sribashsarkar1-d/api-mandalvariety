@@ -84,7 +84,21 @@ try {
             'order_id' => $order_id
         ];
         
-        sendFCMNotification($fcmToken, $title, $body, null, $fcmData);
+        // Fetch first product image for the notification
+        $imgStmt = $pdo->prepare("SELECT p.images FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ? LIMIT 1");
+        $imgStmt->execute([$order_id]);
+        $imageUrl = null;
+        if ($imgRow = $imgStmt->fetch(PDO::FETCH_ASSOC)) {
+            $imagesArray = json_decode($imgRow['images'], true);
+            if (!empty($imagesArray) && is_array($imagesArray)) {
+                $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+                $domainName = $_SERVER['HTTP_HOST'];
+                $basePath = (strpos($domainName, 'localhost') !== false) ? '/auth-api/' : '/';
+                $imageUrl = $protocol . $domainName . $basePath . 'uploads/' . $imagesArray[0];
+            }
+        }
+        
+        sendFCMNotification($fcmToken, $title, $body, $imageUrl, $fcmData);
     }
 } catch (Exception $e) {
     // Silently fail notification if there is an error to avoid breaking order flow
