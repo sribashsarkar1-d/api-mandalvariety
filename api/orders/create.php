@@ -10,9 +10,10 @@ $pincode = $input['pincode'] ?? $input['pin_code'] ?? '000000';
 
 // 🔥 FIXED: Use ci.id (cart_items.id) instead of just 'id'
 $stmt = $pdo->prepare("
-    SELECT ci.id, ci.product_id, ci.quantity, ci.price_at_purchase 
+    SELECT ci.id, ci.product_id, ci.quantity, ci.price_at_purchase, p.name 
     FROM cart_items ci 
     JOIN carts c ON ci.cart_id = c.id 
+    JOIN products p ON ci.product_id = p.id
     WHERE c.user_id = ?
 ");
 $stmt->execute([$user_id]);
@@ -78,7 +79,17 @@ try {
     if ($row = $tokenStmt->fetch(PDO::FETCH_ASSOC)) {
         $fcmToken = $row['fcm_token'];
         $title = "Order Confirmed! 🎉";
-        $body = "Thank you for your order (Order ID: #" . $order_number . "). We are processing it!";
+        
+        $product_names = [];
+        foreach ($cart_items as $item) {
+            $product_names[] = $item['name'] . ' (x' . $item['quantity'] . ')';
+        }
+        $product_list_str = implode(', ', $product_names);
+        if (strlen($product_list_str) > 50) {
+            $product_list_str = substr($product_list_str, 0, 47) . '...';
+        }
+        
+        $body = "Order #" . $order_number . " of ₹" . round($grand_total, 2) . " confirmed! Items: " . $product_list_str;
         $fcmData = [
             'type' => 'order_status',
             'order_id' => $order_id
