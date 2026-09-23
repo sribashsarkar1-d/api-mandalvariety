@@ -15,11 +15,16 @@ use GuzzleHttp\Client;
  * @return string|array|bool The response from FCM or false on failure
  */
 function sendFCMNotification($to, $title, $body, $imageUrl = null, $data = []) {
-    // Path to the Service Account JSON file
-    $keyFilePath = __DIR__ . '/../../config/firebase_credentials.json';
+    // Check local path (XAMPP) and live server path (Hostinger)
+    $localKeyFilePath = __DIR__ . '/../../config/firebase_credentials.json';
+    $serverKeyFilePath = '/home/u391326945/firebase-secrets/firebase_credentials.json';
     
-    if (!file_exists($keyFilePath)) {
-        error_log('FCM Send Error: Service account JSON file not found at ' . $keyFilePath);
+    if (file_exists($serverKeyFilePath)) {
+        $keyFilePath = $serverKeyFilePath;
+    } elseif (file_exists($localKeyFilePath)) {
+        $keyFilePath = $localKeyFilePath;
+    } else {
+        error_log('FCM Send Error: Service account JSON file not found at local or server path.');
         return false;
     }
 
