@@ -1,0 +1,6 @@
+# Firebase credentials
+config/firebase_credentials.json
+
+# Environment secrets
+.env
+.env.*
