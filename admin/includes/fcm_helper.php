@@ -24,8 +24,7 @@ function sendFCMNotification($to, $title, $body, $imageUrl = null, $data = []) {
     } elseif (file_exists($localKeyFilePath)) {
         $keyFilePath = $localKeyFilePath;
     } else {
-        error_log('FCM Send Error: Service account JSON file not found at local or server path.');
-        return false;
+        return ['error' => 'Service account JSON file not found at local or server path. Checked: ' . $serverKeyFilePath];
     }
 
     try {
@@ -34,8 +33,7 @@ function sendFCMNotification($to, $title, $body, $imageUrl = null, $data = []) {
         $projectId = $keyData['project_id'] ?? null;
 
         if (!$projectId) {
-            error_log('FCM Send Error: Project ID not found in Service Account JSON.');
-            return false;
+            return ['error' => 'Project ID not found in Service Account JSON.'];
         }
 
         // Initialize Google Client for Auth
@@ -100,8 +98,7 @@ function sendFCMNotification($to, $title, $body, $imageUrl = null, $data = []) {
 
                 $results[] = json_decode($response->getBody()->getContents(), true);
             } catch (\Exception $e) {
-                error_log('FCM Send Error for token ' . $token . ': ' . $e->getMessage());
-                $results[] = false;
+                $results[] = ['error' => 'FCM Send Error for token ' . $token . ': ' . $e->getMessage()];
             }
         }
 
@@ -109,8 +106,7 @@ function sendFCMNotification($to, $title, $body, $imageUrl = null, $data = []) {
         return is_array($to) ? $results : json_encode($results[0] ?? false);
 
     } catch (\Exception $e) {
-        error_log('FCM Auth/Init Error: ' . $e->getMessage());
-        return false;
+        return ['error' => 'FCM Auth/Init Error: ' . $e->getMessage()];
     }
 }
 ?>
