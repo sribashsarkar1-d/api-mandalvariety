@@ -51,7 +51,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <i class="fa-solid fa-house"></i>
         <span>Home</span>
     </a>
-    <a href="index.php#tasks" class="nav-item">
+    <a href="orders.php" class="nav-item <?= $current_page == 'orders.php' ? 'active' : '' ?>">
         <i class="fa-regular fa-clipboard"></i>
         <span>Orders</span>
     </a>

@@ -222,27 +222,27 @@ $joined = !empty($profile['created_at']) ? date('M Y', strtotime($profile['creat
     </div>
 
     <div class="menu-list">
-        <a href="#" class="menu-item">
+        <a href="profile_personal.php" class="menu-item">
             <div class="menu-icon"><i class="fa-regular fa-user"></i></div>
             <div class="menu-text">Personal Information</div>
             <i class="fa-solid fa-chevron-right menu-arrow"></i>
         </a>
-        <a href="#" class="menu-item">
+        <a href="profile_documents.php" class="menu-item">
             <div class="menu-icon"><i class="fa-regular fa-file-lines"></i></div>
             <div class="menu-text">Documents</div>
             <i class="fa-solid fa-chevron-right menu-arrow"></i>
         </a>
-        <a href="#" class="menu-item">
+        <a href="profile_bank.php" class="menu-item">
             <div class="menu-icon"><i class="fa-solid fa-building-columns"></i></div>
             <div class="menu-text">Bank Details</div>
             <i class="fa-solid fa-chevron-right menu-arrow"></i>
         </a>
-        <a href="#" class="menu-item">
+        <a href="profile_settings.php" class="menu-item">
             <div class="menu-icon"><i class="fa-solid fa-gear"></i></div>
             <div class="menu-text">App Settings</div>
             <i class="fa-solid fa-chevron-right menu-arrow"></i>
         </a>
-        <a href="#" class="menu-item">
+        <a href="profile_help.php" class="menu-item">
             <div class="menu-icon"><i class="fa-regular fa-circle-question"></i></div>
             <div class="menu-text">Help & Support</div>
             <i class="fa-solid fa-chevron-right menu-arrow"></i>
