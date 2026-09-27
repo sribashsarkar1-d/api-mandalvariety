@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
 // Fetch items
 $stmtItems = $conn->prepare("
-    SELECT oi.*, p.name as product_name
+    SELECT oi.*, p.name as product_name, p.image
     FROM order_items oi
     LEFT JOIN products p ON oi.product_id = p.id
     WHERE oi.order_id = ?
@@ -206,14 +206,21 @@ $grand_total = (float)($order['grand_total'] ?? $order['total_amount'] ?? 0);
                 </div>
             </div>
 
-            <div class="fw-bold mb-2">Items (<?= count($items) ?>)</div>
-            <?php foreach ($items as $item): ?>
-                <div class="d-flex justify-content-between text-muted small mb-2">
-                    <div><i class="fa-solid fa-square me-2" style="color:#cbd5e1; font-size:10px;"></i><?= e($item['product_name']) ?></div>
-                    <div style="width:20px; text-align:center;"><?= (int)$item['quantity'] ?></div>
-                    <div style="width:50px; text-align:right;">₹<?= number_format((float)$item['price'], 0) ?></div>
+            <div class="fw-bold mb-3 mt-2">Items (<?= count($items) ?>)</div>
+            <div class="items-list" style="padding-right: 5px;">
+            <?php foreach ($items as $item): 
+                $img = !empty($item['image']) ? '../admin/uploads/products/'.e($item['image']) : 'https://via.placeholder.com/50?text=Item';
+            ?>
+                <div class="d-flex align-items-center mb-3">
+                    <img src="<?= $img ?>" alt="Product" style="width: 45px; height: 45px; border-radius: 10px; object-fit: cover; border: 1px solid #e2e8f0; margin-right: 12px;">
+                    <div class="flex-grow-1">
+                        <div class="fw-bold text-dark fs-6" style="line-height: 1.2;"><?= e($item['product_name']) ?></div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Qty: <?= (int)$item['quantity'] ?></div>
+                    </div>
+                    <div class="fw-bold text-dark">₹<?= number_format((float)$item['price'] * (int)$item['quantity'], 0) ?></div>
                 </div>
             <?php endforeach; ?>
+            </div>
 
             <div style="background:#f8fafc; border-radius:12px; padding:15px; margin-top:20px;">
                 <div class="d-flex justify-content-between text-muted small mb-2"><span>Subtotal</span><span>₹<?= number_format($grand_total, 0) ?></span></div>
@@ -328,9 +335,46 @@ $grand_total = (float)($order['grand_total'] ?? $order['total_amount'] ?? 0);
             <a href="index.php" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
             <h4 class="page-title">Customer OTP</h4>
         </div>
-        <div class="text-center mt-5">
-            <div style="width:80px; height:80px; background:#f1f5f9; border-radius:20px; display:flex; align-items:center; justify-content:center; color:var(--mandal-green); font-size:2rem; margin:0 auto 20px;"><i class="fa-solid fa-shield-halved"></i></div>
-            <div class="state-title">Enter Customer OTP</div>
+        <div class="order-card" style="padding: 15px; margin-bottom: 20px;">
+            <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:10px;">Drop Details</div>
+            
+            <div class="d-flex align-items-center mb-3">
+                <div class="customer-avatar me-3" style="width: 50px; height: 50px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #94a3b8;"><i class="fa-solid fa-user"></i></div>
+                <div class="flex-grow-1">
+                    <div class="fw-bold text-dark fs-6"><?= e($customer_name) ?></div>
+                    <div style="font-size:0.85rem; color:var(--text-muted);"><?= e($customer_phone) ?></div>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="tel:<?= e($customer_phone) ?>" style="width: 45px; height: 45px; border-radius: 50%; background: #eff6ff; color: #3b82f6; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 1.2rem;"><i class="fa-solid fa-phone"></i></a>
+                    <a href="https://www.google.com/maps/dir/?api=1&destination=<?= urlencode($address . ' ' . $pincode) ?>&travelmode=driving" target="_blank" style="width: 45px; height: 45px; border-radius: 50%; background: #e8f7f0; color: var(--mandal-green); display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 1.2rem;"><i class="fa-solid fa-location-arrow"></i></a>
+                </div>
+            </div>
+            
+            <div class="fw-bold text-dark small mb-3" style="line-height:1.4; background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                <i class="fa-solid fa-location-dot text-danger me-2"></i>
+                <?= nl2br(e($address)) ?>
+                <?php if ($pincode): ?> - <?= e($pincode) ?><?php endif; ?>
+            </div>
+
+            <div class="fw-bold mb-3 mt-2" style="font-size:0.85rem;">Items to Deliver (<?= count($items) ?>)</div>
+            <div class="items-list" style="padding-right: 5px;">
+            <?php foreach ($items as $item): 
+                $img = !empty($item['image']) ? '../admin/uploads/products/'.e($item['image']) : 'https://via.placeholder.com/50?text=Item';
+            ?>
+                <div class="d-flex align-items-center mb-2">
+                    <img src="<?= $img ?>" alt="Product" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid #e2e8f0; margin-right: 10px;">
+                    <div class="flex-grow-1">
+                        <div class="fw-bold text-dark" style="font-size: 0.85rem; line-height: 1.2;"><?= e($item['product_name']) ?></div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Qty: <?= (int)$item['quantity'] ?></div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <div style="width:70px; height:70px; background:#f1f5f9; border-radius:18px; display:flex; align-items:center; justify-content:center; color:var(--mandal-green); font-size:1.8rem; margin:0 auto 15px;"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="state-title" style="font-size:1.3rem;">Enter Customer OTP</div>
             
             <button type="button" class="btn btn-outline-success fw-bold rounded-pill px-4 py-2 mt-3" id="btnSendOtp">
                 Send OTP to Customer
