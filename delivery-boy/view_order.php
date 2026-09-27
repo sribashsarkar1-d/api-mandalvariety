@@ -10,9 +10,65 @@ if ($order_id <= 0) {
     exit;
 }
 
-// Fetch order
+$error = '';
+$success = '';
+
+// Auto-add delivery_otp column if it doesn't exist
+try {
+    $conn->query("SELECT delivery_otp FROM orders LIMIT 1");
+} catch (\PDOException $e) {
+    try {
+        $conn->exec("ALTER TABLE orders ADD COLUMN delivery_otp VARCHAR(10) NULL DEFAULT NULL");
+    } catch (\PDOException $e2) {
+        // Ignore
+    }
+}
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    
+    if ($action === 'update_status') {
+        $new_status = $_POST['status'] ?? '';
+        $entered_otp = $_POST['otp'] ?? '';
+        
+        // Fetch order to verify
+        $stmt = $conn->prepare("SELECT status, delivery_otp FROM orders WHERE id = ? AND assigned_delivery_id = ?");
+        $stmt->execute([$order_id, $delivery_id]);
+        $order_verify = $stmt->fetch();
+        
+        if ($order_verify) {
+            if ($new_status === 'delivered') {
+                // Verify OTP
+                if (empty($order_verify['delivery_otp'])) {
+                    $error = "Please send the OTP to the customer first.";
+                } elseif ($entered_otp !== $order_verify['delivery_otp']) {
+                    $error = "Invalid OTP entered. Please try again.";
+                } else {
+                    // OTP is valid! Mark as delivered
+                    $stmt = $conn->prepare("
+                        UPDATE orders 
+                        SET status = 'delivered', tracking_status = 'delivered', payment_status = 'paid' 
+                        WHERE id = ?
+                    ");
+                    $stmt->execute([$order_id]);
+                    $success = "Order successfully delivered!";
+                }
+            } else {
+                // Just update status (e.g. out_for_delivery)
+                $stmt = $conn->prepare("UPDATE orders SET status = ? WHERE id = ?");
+                $stmt->execute([$new_status, $order_id]);
+                $success = "Status updated successfully.";
+            }
+        } else {
+            $error = "Order not found or not assigned to you.";
+        }
+    }
+}
+
+// Fetch order details
 $stmt = $conn->prepare("
-    SELECT o.*, u.name as user_name, u.phone as user_phone
+    SELECT o.*, u.name as user_name, u.email as user_email, u.phone as user_phone 
     FROM orders o
     LEFT JOIN users u ON o.user_id = u.id
     WHERE o.id = ? AND o.assigned_delivery_id = ?
@@ -25,28 +81,9 @@ if (!$order) {
     exit;
 }
 
-// Handle Status Updates
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
-    if ($action === 'update_status') {
-        $new_status = $_POST['status'] ?? '';
-        if ($new_status) {
-            $stmt = $conn->prepare("UPDATE orders SET status = ? WHERE id = ?");
-            $stmt->execute([$new_status, $order_id]);
-            // Refresh order
-            $order['status'] = $new_status;
-        }
-        $next_step = $_POST['next_step'] ?? '';
-        if ($next_step) {
-            header("Location: view_order.php?id=$order_id&step=$next_step");
-            exit;
-        }
-    }
-}
-
-// Items
+// Fetch items
 $stmtItems = $conn->prepare("
-    SELECT oi.*, p.name as product_name
+    SELECT oi.*, p.name as product_name, p.images
     FROM order_items oi
     LEFT JOIN products p ON oi.product_id = p.id
     WHERE oi.order_id = ?
@@ -54,530 +91,485 @@ $stmtItems = $conn->prepare("
 $stmtItems->execute([$order_id]);
 $items = $stmtItems->fetchAll();
 
-$customer_name = $order['user_name'] ?? $order['customer_name'] ?? 'Customer';
-$customer_phone = $order['user_phone'] ?? $order['phone'] ?? '';
-$order_no = $order['order_number'] ?? $order['order_no'] ?? $order['id'];
-$amount = (float)($order['grand_total'] ?? $order['total_amount'] ?? 0);
-$pm = strtoupper($order['payment_method'] ?? 'COD');
-$is_cod = ($pm === 'COD' || strpos(strtolower($pm), 'cash') !== false);
+// Handle data fields
+$order_no = $order['order_number'] ?? $order['order_no'] ?? 'N/A';
+$customer_name = $order['user_name'] ?? $order['customer_name'] ?? $order['name'] ?? 'Customer';
+$customer_phone = $order['user_phone'] ?? $order['customer_phone'] ?? $order['phone'] ?? 'No phone';
+$address = $order['shipping_address'] ?? $order['delivery_address'] ?? $order['address'] ?? 'No address provided';
+$landmark = $order['shipping_landmark'] ?? $order['delivery_landmark'] ?? '';
+$pincode = $order['shipping_pincode'] ?? $order['delivery_pincode'] ?? $order['pincode'] ?? '';
 
-$step = isset($_GET['step']) ? $_GET['step'] : 'details';
-if ($order['status'] === 'assigned' && $step === 'details') {
-    $step = 'accept_reject';
+$grand_total = (float)($order['grand_total'] ?? $order['total_amount'] ?? 0);
+$payment_method = $order['payment_method'] ?? $order['payment_type'] ?? 'N/A';
+$payment_status = $order['payment_status'] ?? 'pending';
+$status = $order['status'] ?? 'unknown';
+
+function getThumb($imagesJson) {
+    if (!$imagesJson) return '../assets/images/placeholder.png';
+    $images = json_decode($imagesJson, true);
+    if (is_array($images) && !empty($images[0])) {
+        return 'https://mandal-variety.com/admin/uploads/' . $images[0];
+    }
+    return '../assets/images/placeholder.png';
 }
 
-// Helper to render layout
 ?>
+
 <?php include 'includes/header.php'; ?>
 
 <style>
-    body { background-color: #f8fafc; }
+    body {
+        background-color: #f8fafc;
+    }
+    .order-details-container {
+        padding: 24px 20px;
+        padding-bottom: 100px;
+    }
+    
     .page-header {
         display: flex;
         align-items: center;
-        padding: 20px;
-        background: #fff;
-        border-bottom: 1px solid #f1f5f9;
-        position: sticky;
-        top: 0;
-        z-index: 10;
-    }
-    .back-btn { color: var(--text-dark); font-size: 1.2rem; margin-right: 15px; text-decoration: none; }
-    .page-title { font-size: 18px; font-weight: 700; margin: 0; flex: 1; }
-    
-    .screen-container {
-        padding: 20px;
-        padding-bottom: 100px;
-        min-height: calc(100vh - 70px);
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .bottom-action-bar {
-        position: fixed;
-        bottom: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 100%;
-        max-width: 480px;
-        background: #fff;
-        padding: 15px 20px;
-        box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
-        display: flex;
         gap: 15px;
-        z-index: 100;
+        margin-bottom: 24px;
     }
     
-    .btn-green-full {
-        background: var(--mandal-green);
-        color: white;
-        border: none;
-        border-radius: 12px;
-        padding: 16px;
-        font-size: 16px;
-        font-weight: 700;
-        width: 100%;
-        text-align: center;
-        text-decoration: none;
-        display: block;
-    }
-    .btn-green-full:active { background: #058547; color: white; }
-    
-    .btn-red-full {
-        background: #ef4444;
-        color: white;
-        border: none;
-        border-radius: 12px;
-        padding: 16px;
-        font-size: 16px;
-        font-weight: 700;
-        width: 100%;
-        text-align: center;
-        text-decoration: none;
-        display: block;
-    }
-
-    .btn-outline-green {
-        background: transparent;
-        color: var(--mandal-green);
-        border: 2px solid var(--mandal-green);
-        border-radius: 12px;
-        padding: 14px;
-        font-size: 16px;
-        font-weight: 700;
-        width: 100%;
-        text-align: center;
-        text-decoration: none;
-        display: block;
-    }
-
-    /* Screen Specific Styles */
-    .illustration-box {
-        text-align: center;
-        margin: 40px 0;
-    }
-    .illustration-box img {
-        width: 200px;
-        height: auto;
-    }
-    .illustration-text {
-        font-size: 18px;
-        font-weight: 700;
+    .back-btn {
         color: var(--text-dark);
-        margin-top: 20px;
+        text-decoration: none;
+        font-size: 1.2rem;
     }
-    .illustration-sub {
-        font-size: 14px;
-        color: #64748b;
-        margin-top: 8px;
+    
+    .page-title {
+        font-weight: 800;
+        font-size: 1.25rem;
+        margin: 0;
+        color: var(--text-dark);
+    }
+    
+    .order-card {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        margin-bottom: 24px;
+        border: 1px solid rgba(0,0,0,0.02);
     }
 
-    .order-info-card {
-        background: #fff;
-        border-radius: 16px;
-        padding: 16px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.02);
-        margin-bottom: 20px;
-    }
-    .order-info-card .row-flex {
+    .order-header-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 12px;
+        margin-bottom: 20px;
     }
-    .order-info-card .row-flex:last-child {
-        margin-bottom: 0;
+
+    .order-number {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--text-dark);
     }
-    
+
     .cod-badge {
         background: #f59e0b;
         color: white;
-        padding: 3px 8px;
+        padding: 4px 10px;
         border-radius: 6px;
-        font-size: 12px;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+    .paid-badge {
+        background: #10b981;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.8rem;
         font-weight: 700;
     }
 
-    /* Map Box */
-    .map-box {
-        background: #e2e8f0;
-        border-radius: 16px;
-        height: 400px;
-        width: 100%;
-        position: relative;
-        overflow: hidden;
+    .customer-info {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         margin-bottom: 20px;
     }
-    .map-img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    .map-overlay-card {
-        position: absolute;
-        bottom: 20px;
-        right: 20px;
-        background: #fff;
-        padding: 10px 15px;
-        border-radius: 12px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        text-align: center;
-        font-weight: 700;
-    }
-    
-    /* OTP inputs */
-    .otp-grid {
+
+    .customer-left {
         display: flex;
-        justify-content: center;
-        gap: 15px;
-        margin: 30px 0;
+        align-items: center;
+        gap: 12px;
     }
-    .otp-input {
-        width: 50px;
-        height: 60px;
-        border: 1px solid #cbd5e1;
-        border-radius: 12px;
-        font-size: 24px;
+
+    .customer-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        font-size: 1.2rem;
+    }
+
+    .customer-details {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .customer-name {
+        font-size: 0.95rem;
         font-weight: 700;
-        text-align: center;
         color: var(--text-dark);
     }
-    .otp-input:focus {
+
+    .customer-phone {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .call-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #eff6ff;
+        color: #3b82f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 1.1rem;
+    }
+
+    .items-section {
+        margin-bottom: 20px;
+    }
+
+    .items-header {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 12px;
+    }
+
+    .item-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+    }
+    .item-row.total-row {
+        color: var(--text-dark);
+        font-weight: 800;
+        font-size: 1rem;
+        border-top: 1px dashed #e2e8f0;
+        padding-top: 12px;
+        margin-top: 12px;
+    }
+
+    .item-name {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .item-icon {
+        color: #cbd5e1;
+        font-size: 0.7rem;
+    }
+
+    .item-qty {
+        width: 30px;
+        text-align: right;
+    }
+
+    .item-price {
+        width: 60px;
+        text-align: right;
+    }
+
+    .totals-section {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 24px;
+    }
+
+    .total-line {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+    }
+    .total-line:last-child {
+        margin-bottom: 0;
+    }
+
+    .btn-bottom {
+        background: var(--mandal-green);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 16px;
+        width: 100%;
+        font-size: 1rem;
+        font-weight: 700;
+        text-align: center;
+        display: block;
+        text-decoration: none;
+        transition: transform 0.2s;
+        cursor: pointer;
+    }
+    .btn-bottom:active {
+        transform: scale(0.98);
+    }
+
+    .status-form {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        border: 1px solid rgba(0,0,0,0.02);
+    }
+
+    .otp-section {
+        display: none;
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 16px;
+        margin-top: 16px;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .address-box {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px dashed #e2e8f0;
+    }
+    
+    .otp-inputs {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin-bottom: 12px;
+    }
+    
+    .otp-box {
+        width: 40px;
+        height: 50px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        text-align: center;
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+    .otp-box:focus {
         border-color: var(--mandal-green);
         outline: none;
     }
-
-    /* Success Screen */
-    .success-bg {
-        background: var(--mandal-green);
-        color: white;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        padding: 20px;
-    }
-    .check-circle {
-        width: 100px;
-        height: 100px;
-        background: #ffffff;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--mandal-green);
-        font-size: 50px;
-        margin-bottom: 30px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    }
-    
-    .stars {
-        color: #fcd34d;
-        font-size: 30px;
-        margin: 20px 0 40px 0;
-        letter-spacing: 5px;
-    }
-
 </style>
 
-<?php
-// Function to render forms easily
-function renderStepForm($actionStatus, $nextStep, $btnText, $btnClass = 'btn-green-full', $isForm = true) {
-    global $order_id;
-    if (!$isForm) return "<a href='view_order.php?id=$order_id&step=$nextStep' class='$btnClass'>$btnText</a>";
-    return "
-    <form method='POST' style='width:100%;'>
-        <input type='hidden' name='action' value='update_status'>
-        <input type='hidden' name='status' value='$actionStatus'>
-        <input type='hidden' name='next_step' value='$nextStep'>
-        <button type='submit' class='$btnClass'>$btnText</button>
-    </form>";
-}
-?>
-
-<?php if ($step === 'accept_reject'): ?>
+<div class="order-details-container">
+    
     <div class="page-header">
         <a href="index.php" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
-        <h1 class="page-title">New Delivery Request</h1>
-    </div>
-    <div class="screen-container">
-        <div class="order-info-card">
-            <div class="row-flex mb-3">
-                <div>
-                    <div style="font-size:14px; color:#64748b; margin-bottom:4px;">Order #<?= $order_no ?></div>
-                    <div style="font-size:24px; font-weight:800;">₹<?= number_format($amount, 0) ?> <span class="cod-badge" style="vertical-align: middle;"><?= $pm ?></span></div>
-                </div>
-            </div>
-            
-            <div class="row-flex" style="justify-content: flex-start; gap: 15px; margin-bottom: 20px;">
-                <div style="width: 40px; height: 40px; background: #e2e8f0; border-radius: 50%; display: flex; align-items:center; justify-content:center;">
-                    <i class="fa-solid fa-user text-muted"></i>
-                </div>
-                <div>
-                    <div style="font-weight:700; color:var(--text-dark);"><?= e($customer_name) ?></div>
-                    <div style="font-size:13px; color:#64748b;"><?= e($customer_phone) ?></div>
-                </div>
-            </div>
-            
-            <div class="row-flex" style="justify-content: flex-start; gap: 15px; align-items: flex-start;">
-                <div style="color:var(--mandal-green); font-size:18px; margin-top:2px;"><i class="fa-solid fa-location-dot"></i></div>
-                <div>
-                    <div style="font-weight:600; font-size:14px; color:var(--text-dark);">Delivery Address</div>
-                    <div style="font-size:13px; color:#64748b; margin-top:4px; line-height:1.4;">
-                        <?= e($order['shipping_address'] ?? 'No Address') ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bottom-action-bar">
-            <form method="POST" style="flex:1;">
-                <input type="hidden" name="action" value="update_status">
-                <input type="hidden" name="status" value="cancelled">
-                <input type="hidden" name="next_step" value="details">
-                <button type="submit" class="btn-red-full">Reject</button>
-            </form>
-            <form method="POST" style="flex:1;">
-                <input type="hidden" name="action" value="update_status">
-                <input type="hidden" name="status" value="accepted">
-                <input type="hidden" name="next_step" value="details">
-                <button type="submit" class="btn-green-full">Accept</button>
-            </form>
-        </div>
+        <h4 class="page-title">Order Details</h4>
     </div>
 
-<?php elseif ($step === 'details'): ?>
-    <div class="page-header">
-        <a href="index.php" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
-        <h1 class="page-title">Order Details</h1>
-        <?php if ($pm === 'COD'): ?><span class="cod-badge">COD</span><?php endif; ?>
-    </div>
-    <div class="screen-container">
-        <div class="order-info-card">
-            <div style="font-size:14px; font-weight:700; margin-bottom:4px;">#<?= $order_no ?></div>
-            <div class="row-flex" style="justify-content:flex-start; gap:10px; margin-bottom:15px;">
-                <i class="fa-solid fa-user text-muted"></i>
-                <span style="font-weight:600;"><?= e($customer_name) ?></span>
-                <a href="tel:<?= e($customer_phone) ?>" style="margin-left:auto; color:#3b82f6;"><i class="fa-solid fa-phone"></i></a>
-            </div>
+    <?php if ($success): ?>
+        <div class="alert alert-success border-0 rounded-3 shadow-sm mb-4"><i class="fa-solid fa-check-circle me-2"></i><?= e($success) ?></div>
+    <?php endif; ?>
+    <?php if ($error): ?>
+        <div class="alert alert-danger border-0 rounded-3 shadow-sm mb-4"><i class="fa-solid fa-circle-exclamation me-2"></i><?= e($error) ?></div>
+    <?php endif; ?>
+
+    <div class="order-card">
+        <div class="order-header-row">
+            <div class="order-number">#<?= e($order_no) ?></div>
+            <?php if (strpos(strtolower($payment_method), 'cash') !== false || strpos(strtolower($payment_method), 'cod') !== false): ?>
+                <div class="cod-badge">COD</div>
+            <?php else: ?>
+                <div class="paid-badge">PAID</div>
+            <?php endif; ?>
         </div>
-        
-        <div class="order-info-card">
-            <h3 style="font-size:15px; font-weight:700; margin-bottom:15px;">Items (<?= count($items) ?>)</h3>
+
+        <div class="customer-info">
+            <div class="customer-left">
+                <div class="customer-avatar">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div class="customer-details">
+                    <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Customer</div>
+                    <div class="customer-name"><?= e($customer_name) ?></div>
+                    <div class="customer-phone"><?= e($customer_phone) ?></div>
+                </div>
+            </div>
+            <a href="tel:<?= e($customer_phone) ?>" class="call-btn">
+                <i class="fa-solid fa-comment-dots"></i>
+            </a>
+        </div>
+
+        <div class="items-section">
+            <div class="items-header">Items (<?= count($items) ?>)</div>
             <?php foreach ($items as $item): ?>
-                <div class="row-flex" style="margin-bottom:10px; font-size:14px;">
-                    <div style="flex:2; font-weight:500; color:var(--text-dark);"><i class="fa-solid fa-square-xs text-muted me-2"></i><?= e($item['product_name']) ?></div>
-                    <div style="flex:1; text-align:center; color:#64748b;"><?= $item['quantity'] ?></div>
-                    <div style="flex:1; text-align:right; font-weight:600;">₹<?= number_format($item['price'], 0) ?></div>
+                <div class="item-row">
+                    <div class="item-name">
+                        <i class="fa-solid fa-square item-icon"></i>
+                        <?= e($item['product_name'] ?? 'Product') ?>
+                    </div>
+                    <div class="item-qty"><?= (int)($item['quantity'] ?? 1) ?></div>
+                    <div class="item-price">₹<?= number_format((float)($item['price'] ?? 0), 0) ?></div>
                 </div>
             <?php endforeach; ?>
-            <hr style="border-color:#f1f5f9; margin:15px 0;">
-            <div class="row-flex" style="font-size:14px; margin-bottom:8px;">
-                <span style="color:#64748b;">Subtotal</span>
-                <span style="font-weight:600;">₹<?= number_format($amount, 0) ?></span>
+        </div>
+
+        <div class="totals-section">
+            <div class="total-line">
+                <span>Subtotal</span>
+                <span>₹<?= number_format($grand_total, 0) ?></span>
             </div>
-            <div class="row-flex" style="font-size:14px; margin-bottom:15px;">
-                <span style="color:#64748b;">Delivery Charge</span>
-                <span style="font-weight:600;">₹0</span>
+            <div class="total-line">
+                <span>Delivery Charge</span>
+                <span>₹0</span>
             </div>
-            <div class="row-flex" style="font-size:16px; font-weight:800;">
+            <div class="item-row total-row" style="margin-bottom:0;">
                 <span>Total Amount</span>
-                <span>₹<?= number_format($amount, 0) ?></span>
+                <span>₹<?= number_format($grand_total, 0) ?></span>
             </div>
         </div>
         
-        <div class="bottom-action-bar">
-            <?= renderStepForm('', 'nav', 'Start Delivery', 'btn-green-full', false) ?>
-        </div>
-    </div>
-
-<?php elseif ($step === 'nav'): ?>
-    <div class="page-header">
-        <a href="view_order.php?id=<?= $order_id ?>&step=details" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
-        <h1 class="page-title">Navigate to Customer</h1>
-    </div>
-    <div class="screen-container" style="padding:0;">
-        <div class="map-box" style="height: 100%; border-radius:0; margin:0; flex:1;">
-            <!-- Simulating map with a static background pattern -->
-            <div style="width:100%; height:100%; background: #e2e8f0; background-image: radial-gradient(#cbd5e1 2px, transparent 2px); background-size: 20px 20px; position:relative;">
-                
-                <svg width="100%" height="100%" style="position:absolute; top:0; left:0;">
-                    <path d="M 100 300 Q 150 200 200 150 T 300 100" fill="none" stroke="#3b82f6" stroke-width="6" stroke-dasharray="8 8"/>
-                </svg>
-                <div style="position:absolute; top:280px; left:80px; font-size:30px; color:#3b82f6;"><i class="fa-solid fa-circle-dot"></i></div>
-                <div style="position:absolute; top:70px; left:280px; font-size:36px; color:#ef4444;"><i class="fa-solid fa-location-dot"></i></div>
-
-                <div class="map-overlay-card">
-                    <div style="font-size:18px;">2.4 km</div>
-                    <div style="font-size:13px; color:#64748b;">8 mins</div>
+        <div class="address-box">
+            <div class="customer-details mb-2">
+                <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Delivery Address</div>
+                <div class="customer-name mt-1" style="font-weight: 500; font-size: 0.85rem; line-height: 1.4;">
+                    <?= nl2br(e($address)) ?>
+                    <?php if ($landmark): ?><br><?= e($landmark) ?><?php endif; ?>
+                    <?php if ($pincode): ?> - <?= e($pincode) ?><?php endif; ?>
                 </div>
             </div>
-        </div>
-        
-        <div class="bottom-action-bar" style="flex-direction:column; padding-bottom: 20px;">
-            <a href="https://maps.google.com/?q=<?= urlencode($order['shipping_address'] ?? '') ?>" target="_blank" class="btn-outline-green" style="margin-bottom:10px;">
-                <i class="fa-solid fa-location-arrow me-2"></i> Open in Google Maps
+            <a href="https://maps.google.com/?q=<?= urlencode($address . ' ' . $pincode) ?>" target="_blank" class="btn btn-outline-primary w-100 rounded-3 mt-3 fw-bold" style="font-size: 0.9rem;">
+                <i class="fa-solid fa-map-location-dot me-2"></i> Open in Google Maps
             </a>
-            <?= renderStepForm('', 'pickup', 'Arrived at Store', 'btn-green-full', false) ?>
         </div>
     </div>
 
-<?php elseif ($step === 'pickup'): ?>
-    <div class="page-header">
-        <a href="view_order.php?id=<?= $order_id ?>&step=nav" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
-        <h1 class="page-title">Picking Up Order</h1>
-    </div>
-    <div class="screen-container">
-        <div class="illustration-box">
-            <i class="fa-solid fa-boxes-packing" style="font-size:100px; color:var(--mandal-green);"></i>
-            <div class="illustration-text">Mark Order as Picked Up?</div>
-            <div class="illustration-sub">Order #<?= $order_no ?></div>
-        </div>
-        
-        <div class="bottom-action-bar">
-            <?= renderStepForm('out_for_delivery', 'out_for_delivery', 'Confirm Pickup') ?>
-        </div>
-    </div>
-
-<?php elseif ($step === 'out_for_delivery'): ?>
-    <div class="page-header">
-        <a href="view_order.php?id=<?= $order_id ?>&step=pickup" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
-        <h1 class="page-title">Out for Delivery</h1>
-    </div>
-    <div class="screen-container">
-        <div class="illustration-box">
-            <i class="fa-solid fa-motorcycle" style="font-size:100px; color:var(--mandal-green);"></i>
-            <div class="illustration-text">Order is Out for Delivery</div>
-            <div class="illustration-sub">#<?= $order_no ?></div>
-        </div>
-        
-        <div class="bottom-action-bar">
-            <?= renderStepForm('', 'arrived', 'Update Status (Arrived)', 'btn-green-full', false) ?>
-        </div>
-    </div>
-
-<?php elseif ($step === 'arrived'): ?>
-    <div class="page-header">
-        <a href="view_order.php?id=<?= $order_id ?>&step=out_for_delivery" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
-        <h1 class="page-title">Arrived at Location</h1>
-    </div>
-    <div class="screen-container">
-        <div class="illustration-box">
-            <div style="width:120px; height:120px; background:#e8f7f0; border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center;">
-                <i class="fa-solid fa-location-dot" style="font-size:50px; color:var(--mandal-green);"></i>
-            </div>
-            <div class="illustration-text">You have arrived<br>at the customer location</div>
-        </div>
-        
-        <div class="bottom-action-bar">
-            <?= renderStepForm('', 'otp', 'Confirm Arrival', 'btn-green-full', false) ?>
-        </div>
-    </div>
-
-<?php elseif ($step === 'otp'): ?>
-    <div class="page-header">
-        <a href="view_order.php?id=<?= $order_id ?>&step=arrived" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
-        <h1 class="page-title">Complete Delivery</h1>
-    </div>
-    <div class="screen-container">
-        <div class="illustration-box" style="margin-bottom:10px;">
-            <i class="fa-solid fa-mobile-screen-button" style="font-size:60px; color:var(--mandal-green);"></i>
-            <div class="illustration-text">Enter Customer OTP</div>
-        </div>
-        
-        <div class="otp-grid">
-            <input type="text" class="otp-input" maxlength="1" value="2" readonly>
-            <input type="text" class="otp-input" maxlength="1" value="4" readonly>
-            <input type="text" class="otp-input" maxlength="1" value="7" readonly>
-            <input type="text" class="otp-input" maxlength="1" value="1" readonly>
-        </div>
-        
-        <div style="text-align:center; margin-top:10px;">
-            <a href="#" style="color:#3b82f6; text-decoration:underline; font-size:14px; font-weight:600;">Customer didn't get OTP?</a>
-        </div>
-        
-        <div class="bottom-action-bar">
-            <?php $next = $is_cod ? 'cod' : 'proof'; ?>
-            <?= renderStepForm('', $next, 'Verify OTP', 'btn-green-full', false) ?>
-        </div>
-    </div>
-
-<?php elseif ($step === 'cod'): ?>
-    <div class="page-header">
-        <a href="view_order.php?id=<?= $order_id ?>&step=otp" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
-        <h1 class="page-title">Collect Payment</h1>
-    </div>
-    <div class="screen-container">
-        <div style="font-size:14px; color:#64748b; margin-bottom:5px;">Order Amount</div>
-        <div style="font-size:32px; font-weight:800; color:var(--text-dark); margin-bottom:30px;">₹<?= number_format($amount, 0) ?></div>
-        
-        <div class="order-info-card" style="display:flex; align-items:center; gap:15px; margin-bottom:30px;">
-            <i class="fa-solid fa-money-bill-wave text-success" style="font-size:24px;"></i>
-            <div>
-                <div style="font-size:12px; color:#64748b;">Payment Type</div>
-                <div style="font-size:16px; font-weight:700;">Cash on Delivery (COD)</div>
-            </div>
-        </div>
-        
-        <div style="font-size:14px; color:#64748b; margin-bottom:10px; font-weight:600;">Amount Received</div>
-        <input type="text" value="₹<?= number_format($amount, 0) ?>" readonly style="width:100%; padding:15px; border-radius:12px; border:1px solid #cbd5e1; font-size:18px; font-weight:700; background:#f1f5f9;">
-        
-        <div class="bottom-action-bar">
-            <?= renderStepForm('', 'proof', 'Confirm Payment', 'btn-green-full', false) ?>
-        </div>
-    </div>
-
-<?php elseif ($step === 'proof'): ?>
-    <div class="page-header">
-        <a href="view_order.php?id=<?= $order_id ?>&step=<?= $is_cod ? 'cod' : 'otp' ?>" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
-        <h1 class="page-title">Proof of Delivery</h1>
-    </div>
-    <div class="screen-container">
-        <div style="display:flex; background:#e2e8f0; border-radius:30px; padding:4px; margin-bottom:20px;">
-            <div style="flex:1; background:var(--mandal-green); color:white; text-align:center; padding:10px; border-radius:30px; font-weight:600; font-size:14px;">Take Photo</div>
-            <div style="flex:1; color:#64748b; text-align:center; padding:10px; font-weight:600; font-size:14px;">Customer Signature</div>
-        </div>
-        
-        <div style="background:#e2e8f0; border-radius:16px; height:300px; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative;">
-            <!-- Simulating photo view -->
-            <div style="font-size:50px; color:#cbd5e1;"><i class="fa-solid fa-camera"></i></div>
+    <?php if ($status !== 'delivered'): ?>
+        <form method="POST" id="statusForm" class="status-form">
+            <input type="hidden" name="action" value="update_status">
             
-            <div style="position:absolute; bottom:15px; left:15px; width:60px; height:60px; background:#fff; border-radius:8px; border:2px solid white; overflow:hidden;">
-                <div style="width:100%; height:100%; background:#cbd5e1;"></div>
+            <div class="fw-bold mb-2 text-dark">Update Status</div>
+            <select name="status" class="form-select mb-3 rounded-3" id="statusSelect" style="border-color: #cbd5e1; height: 50px;">
+                <option value="out_for_delivery" <?= $status === 'out_for_delivery' ? 'selected' : '' ?>>Out for Delivery</option>
+                <option value="delivered">Delivered (OTP Required)</option>
+            </select>
+
+            <div id="otpSection" class="otp-section">
+                <div class="fw-bold mb-3 text-center text-dark" style="font-size: 1rem;">Enter Customer OTP</div>
+                
+                <button type="button" class="btn btn-outline-success w-100 mb-3 fw-bold rounded-3" id="btnSendOtp" style="height: 48px;">
+                    Send OTP to Customer
+                </button>
+                
+                <div class="text-center text-success fw-bold small mb-2 d-none" id="otpSentMsg">
+                    OTP Sent! Enter code below.
+                </div>
+                
+                <div class="otp-inputs">
+                    <input type="text" class="otp-box" maxlength="1" pattern="\d">
+                    <input type="text" class="otp-box" maxlength="1" pattern="\d">
+                    <input type="text" class="otp-box" maxlength="1" pattern="\d">
+                    <input type="text" class="otp-box" maxlength="1" pattern="\d">
+                    <input type="text" class="otp-box" maxlength="1" pattern="\d">
+                    <input type="text" class="otp-box" maxlength="1" pattern="\d">
+                    <input type="hidden" name="otp" id="hiddenOtp">
+                </div>
             </div>
-        </div>
-        
-        <div class="bottom-action-bar">
-            <?= renderStepForm('delivered', 'success', 'Use Photo') ?>
-        </div>
-    </div>
 
-<?php elseif ($step === 'success'): ?>
-    <!-- No header, full screen green -->
-    <div class="success-bg">
-        <div class="check-circle">
-            <i class="fa-solid fa-check"></i>
-        </div>
-        
-        <h1 style="font-size:28px; font-weight:800; margin-bottom:10px;">Delivery Successful!</h1>
-        <div style="font-size:16px; opacity:0.9; margin-bottom:15px;">Order #<?= $order_no ?></div>
-        
-        <?php if ($is_cod): ?>
-            <div style="font-size:24px; font-weight:800; margin-bottom:40px;">₹<?= number_format($amount, 0) ?> Collected</div>
-        <?php else: ?>
-            <div style="margin-bottom:40px;"></div>
-        <?php endif; ?>
-        
-        <div style="font-size:14px; font-weight:600; opacity:0.9;">Rate Customer (Optional)</div>
-        <div class="stars">
-            ★★★★★
-        </div>
-        
-        <a href="index.php" style="background:#ffffff; color:var(--mandal-green); border-radius:12px; padding:16px; font-size:18px; font-weight:800; width:100%; max-width:300px; text-decoration:none; display:block; margin:0 auto;">Done</a>
-    </div>
+            <button type="submit" class="btn-bottom mt-3">
+                Update Status
+            </button>
+        </form>
+    <?php endif; ?>
 
-<?php endif; ?>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#statusSelect').change(function() {
+            if ($(this).val() === 'delivered') {
+                $('#otpSection').slideDown();
+            } else {
+                $('#otpSection').slideUp();
+            }
+        });
+        
+        if ($('#statusSelect').val() === 'delivered') {
+            $('#otpSection').show();
+        }
+
+        $('#btnSendOtp').click(function() {
+            let btn = $(this);
+            btn.prop('disabled', true).text('Sending...');
+            
+            $.ajax({
+                url: 'ajax_send_otp.php',
+                type: 'POST',
+                data: { order_id: <?= $order_id ?> },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        btn.hide();
+                        $('#otpSentMsg').removeClass('d-none');
+                    } else {
+                        alert("Error: " + response.message);
+                        btn.prop('disabled', false).text('Send OTP to Customer');
+                    }
+                },
+                error: function() {
+                    alert("Network error occurred.");
+                    btn.prop('disabled', false).text('Send OTP to Customer');
+                }
+            });
+        });
+        
+        // OTP Inputs logic
+        const inputs = $('.otp-box');
+        inputs.on('keyup', function(e) {
+            const val = $(this).val();
+            const index = inputs.index(this);
+            
+            if (val.length === 1 && index < inputs.length - 1) {
+                inputs.eq(index + 1).focus();
+            }
+            if (e.key === 'Backspace' && index > 0 && val.length === 0) {
+                inputs.eq(index - 1).focus();
+            }
+            updateHiddenOtp();
+        });
+        
+        inputs.on('paste', function(e) {
+            e.preventDefault();
+            const text = (e.originalEvent || e).clipboardData.getData('text').slice(0, 6);
+            if (/^\d+$/.test(text)) {
+                text.split('').forEach((char, i) => {
+                    if (inputs[i]) {
+                        inputs.eq(i).val(char);
+                    }
+                });
+                inputs.eq(Math.min(text.length, inputs.length - 1)).focus();
+                updateHiddenOtp();
+            }
+        });
+        
+        function updateHiddenOtp() {
+            let fullOtp = '';
+            inputs.each(function() { fullOtp += $(this).val(); });
+            $('#hiddenOtp').val(fullOtp);
+        }
+    });
+</script>
 
 <?php include 'includes/footer.php'; ?>
