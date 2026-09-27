@@ -1,5 +1,12 @@
 <?php
 require_once 'includes/config.php';
+
+// Redirect to splash screen on first visit
+if (!isset($_SESSION['splash_seen'])) {
+    header('Location: splash.php');
+    exit;
+}
+
 checkDeliveryLogin();
 
 $delivery_id = $_SESSION['delivery_id'];

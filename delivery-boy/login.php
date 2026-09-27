@@ -10,6 +10,12 @@ if (isset($_SESSION['delivery_id'])) {
     exit;
 }
 
+// Redirect to splash screen on first visit
+if (!isset($_SESSION['splash_seen'])) {
+    header('Location: splash.php');
+    exit;
+}
+
 $error = '';
 $step = isset($_SESSION['login_step']) ? (int)$_SESSION['login_step'] : 1;
 
