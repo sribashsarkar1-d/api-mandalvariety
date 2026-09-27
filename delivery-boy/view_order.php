@@ -184,11 +184,11 @@ $grand_total = (float)($order['grand_total'] ?? $order['total_amount'] ?? 0);
         <div class="alert alert-danger border-0 rounded-3 shadow-sm mb-4"><i class="fa-solid fa-circle-exclamation me-2"></i><?= e($error) ?></div>
     <?php endif; ?>
 
-    <!-- STATE: ASSIGNED or ACCEPTED (Order Details) -->
-    <?php if ($state === 'assigned' || $state === 'accepted'): ?>
+    <!-- STATE: ASSIGNED (New Request) -->
+    <?php if ($state === 'assigned'): ?>
         <div class="page-header">
             <a href="index.php" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
-            <h4 class="page-title"><?= $state === 'assigned' ? 'New Delivery Request' : 'Order Details' ?></h4>
+            <h4 class="page-title">New Delivery Request</h4>
         </div>
         
         <div class="order-card">
@@ -204,7 +204,6 @@ $grand_total = (float)($order['grand_total'] ?? $order['total_amount'] ?? 0);
                     <div class="fw-bold text-dark"><?= e($customer_name) ?></div>
                     <div style="font-size:0.85rem; color:var(--text-muted);"><?= e($customer_phone) ?></div>
                 </div>
-                <a href="tel:<?= e($customer_phone) ?>" style="width: 40px; height: 40px; border-radius: 50%; background: #eff6ff; color: #3b82f6; display: flex; align-items: center; justify-content: center; text-decoration: none;"><i class="fa-solid fa-phone"></i></a>
             </div>
 
             <div class="fw-bold mb-2">Items (<?= count($items) ?>)</div>
@@ -232,12 +231,65 @@ $grand_total = (float)($order['grand_total'] ?? $order['total_amount'] ?? 0);
         </div>
 
         <form method="POST" class="mt-auto d-flex gap-3">
-            <?php if ($state === 'assigned'): ?>
-                <button type="submit" name="action" value="reject" class="btn-bottom btn-reject w-50">Reject</button>
-                <button type="submit" name="action" value="accept" class="btn-bottom w-50">Accept</button>
-            <?php else: ?>
-                <button type="submit" name="action" value="confirm_pickup" class="btn-bottom">Confirm Pickup</button>
-            <?php endif; ?>
+            <button type="submit" name="action" value="reject" class="btn-bottom btn-reject w-50">Reject</button>
+            <button type="submit" name="action" value="accept" class="btn-bottom w-50">Accept</button>
+        </form>
+
+    <!-- STATE: ACCEPTED (Navigation/Map View) -->
+    <?php elseif ($state === 'accepted'): ?>
+        <div class="page-header" style="margin-bottom: 15px;">
+            <a href="index.php" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
+            <h4 class="page-title">Live Navigation</h4>
+        </div>
+        
+        <!-- Map Placeholder styling -->
+        <div style="background: #e2e8f0; height: 250px; border-radius: 20px; position: relative; overflow: hidden; margin-bottom: 20px; box-shadow: inset 0 0 10px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center;">
+            <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; background-image: radial-gradient(#94a3b8 1px, transparent 1px); background-size: 20px 20px;"></div>
+            
+            <!-- Route Line -->
+            <svg style="position: absolute; width: 100%; height: 100%; z-index: 1;" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <path d="M 30 70 Q 50 30 80 40" fill="none" stroke="#3b82f6" stroke-width="3" stroke-dasharray="5,5" stroke-linecap="round"/>
+            </svg>
+            
+            <!-- Bike Icon (Origin) -->
+            <div style="position: absolute; bottom: 20%; left: 25%; z-index: 2; width: 40px; height: 40px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 2px solid var(--mandal-green);">
+                <i class="fa-solid fa-motorcycle" style="color: var(--mandal-green); font-size: 1.2rem;"></i>
+            </div>
+            
+            <!-- Destination Pin -->
+            <div style="position: absolute; top: 30%; right: 15%; z-index: 2; width: 40px; height: 40px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 2px solid #ef4444;">
+                <i class="fa-solid fa-location-dot" style="color: #ef4444; font-size: 1.2rem;"></i>
+            </div>
+            
+            <a href="https://www.google.com/maps/dir/?api=1&destination=<?= urlencode($address . ' ' . $pincode) ?>&travelmode=driving" target="_blank" class="btn btn-primary shadow-sm" style="position: absolute; z-index: 3; bottom: 15px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; padding: 8px 16px; background: #3b82f6; border: none;">
+                <i class="fa-solid fa-location-arrow me-2"></i>Open in Maps
+            </a>
+        </div>
+
+        <div class="order-card" style="padding: 15px;">
+            <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:10px;">Drop Details</div>
+            
+            <div class="d-flex align-items-center mb-3">
+                <div class="customer-avatar me-3" style="width: 50px; height: 50px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #94a3b8;"><i class="fa-solid fa-user"></i></div>
+                <div class="flex-grow-1">
+                    <div class="fw-bold text-dark fs-6"><?= e($customer_name) ?></div>
+                    <div style="font-size:0.85rem; color:var(--text-muted);"><?= e($customer_phone) ?></div>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="tel:<?= e($customer_phone) ?>" style="width: 45px; height: 45px; border-radius: 50%; background: #eff6ff; color: #3b82f6; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 1.2rem;"><i class="fa-solid fa-phone"></i></a>
+                    <a href="https://www.google.com/maps/dir/?api=1&destination=<?= urlencode($address . ' ' . $pincode) ?>&travelmode=driving" target="_blank" style="width: 45px; height: 45px; border-radius: 50%; background: #e8f7f0; color: var(--mandal-green); display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 1.2rem;"><i class="fa-solid fa-location-arrow"></i></a>
+                </div>
+            </div>
+            
+            <div class="fw-bold text-dark small" style="line-height:1.4; background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                <i class="fa-solid fa-location-dot text-danger me-2"></i>
+                <?= nl2br(e($address)) ?>
+                <?php if ($pincode): ?> - <?= e($pincode) ?><?php endif; ?>
+            </div>
+        </div>
+
+        <form method="POST" class="mt-auto">
+            <button type="submit" name="action" value="confirm_pickup" class="btn-bottom">Confirm Pickup</button>
         </form>
 
     <!-- STATE: PICKED UP (En route) -->
