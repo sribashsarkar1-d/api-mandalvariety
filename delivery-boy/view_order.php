@@ -15,12 +15,15 @@ $success = '';
 
 // Auto-add delivery_otp and delivery_boy_status columns
 try {
-    $conn->query("SELECT delivery_otp, delivery_boy_status FROM orders LIMIT 1");
+    $conn->query("SELECT delivery_otp FROM orders LIMIT 1");
 } catch (\PDOException $e) {
-    try {
-        $conn->exec("ALTER TABLE orders ADD COLUMN delivery_otp VARCHAR(10) NULL DEFAULT NULL");
-        $conn->exec("ALTER TABLE orders ADD COLUMN delivery_boy_status VARCHAR(50) DEFAULT 'assigned'");
-    } catch (\PDOException $e2) {}
+    try { $conn->exec("ALTER TABLE orders ADD COLUMN delivery_otp VARCHAR(10) NULL DEFAULT NULL"); } catch (\PDOException $e2) {}
+}
+
+try {
+    $conn->query("SELECT delivery_boy_status FROM orders LIMIT 1");
+} catch (\PDOException $e) {
+    try { $conn->exec("ALTER TABLE orders ADD COLUMN delivery_boy_status VARCHAR(50) DEFAULT 'assigned'"); } catch (\PDOException $e2) {}
 }
 
 // Fetch order
