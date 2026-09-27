@@ -10,6 +10,12 @@ if (isset($_SESSION['delivery_id'])) {
     exit;
 }
 
+if (!isset($_SESSION['splash_shown'])) {
+    $_SESSION['splash_shown'] = true;
+    header("Location: splash.php");
+    exit;
+}
+
 $error = '';
 $step = isset($_SESSION['login_step']) ? (int)$_SESSION['login_step'] : 1;
 

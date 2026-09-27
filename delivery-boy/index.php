@@ -2,6 +2,12 @@
 require_once 'includes/config.php';
 checkDeliveryLogin();
 
+if (!isset($_SESSION['splash_shown'])) {
+    $_SESSION['splash_shown'] = true;
+    header("Location: splash.php");
+    exit;
+}
+
 $delivery_id = $_SESSION['delivery_id'];
 $delivery_name = $_SESSION['delivery_name'];
 
