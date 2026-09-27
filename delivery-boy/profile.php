@@ -2,209 +2,206 @@
 require_once 'includes/config.php';
 checkDeliveryLogin();
 
+$delivery_name = $_SESSION['delivery_name'];
 $delivery_id = $_SESSION['delivery_id'];
-
-// Fetch profile data
-$stmt = $conn->prepare("SELECT * FROM delivery_boys WHERE id = ?");
-$stmt->execute([$delivery_id]);
-$profile = $stmt->fetch();
-
-if (!$profile) {
-    header("Location: index.php");
-    exit;
-}
-
-$name = $profile['name'] ?? 'Partner';
-$email = $profile['email'] ?? 'Not provided';
-// Using isset because phone might not exist in the DB schema, though usually it does for delivery boys.
-$phone = $profile['phone'] ?? 'Not provided';
-$joined = !empty($profile['created_at']) ? date('M Y', strtotime($profile['created_at'])) : 'Unknown';
-
+$driver_id_formatted = "DB" . str_pad($delivery_id, 4, '0', STR_PAD_LEFT);
 ?>
-
 <?php include 'includes/header.php'; ?>
 
 <style>
-    .profile-container {
-        padding: 24px 20px;
+    body {
+        background-color: #f8fafc;
     }
     
     .page-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 24px;
+        padding: 20px 20px 10px 20px;
+        background: #fff;
+    }
+    
+    .back-btn, .header-action {
+        color: var(--text-dark);
+        font-size: 1.2rem;
+        text-decoration: none;
     }
     
     .page-title {
+        font-size: 18px;
         font-weight: 700;
-        font-size: 1.25rem;
         margin: 0;
-        color: var(--text-dark);
     }
 
     .profile-header {
+        background: #ffffff;
+        padding: 30px 20px;
         text-align: center;
-        margin-bottom: 30px;
+        border-bottom: 1px solid #f1f5f9;
+        margin-bottom: 10px;
     }
-    
-    .avatar-large {
-        width: 100px;
-        height: 100px;
+
+    .avatar-wrapper {
+        position: relative;
+        display: inline-block;
+        margin-bottom: 15px;
+    }
+
+    .avatar-circle {
+        width: 90px;
+        height: 90px;
         border-radius: 50%;
-        background: var(--mandal-green-gradient);
+        background: #a7f3d0;
+        border: 4px solid #ffffff;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+
+    .edit-avatar {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background: var(--mandal-green);
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
-        font-size: 2.5rem;
-        margin: 0 auto 15px;
-        box-shadow: 0 10px 20px rgba(7, 161, 88, 0.2);
-        border: 4px solid white;
+        border: 3px solid #ffffff;
+        font-size: 12px;
+        cursor: pointer;
     }
 
     .profile-name {
-        font-size: 1.5rem;
-        font-weight: 700;
+        font-size: 22px;
+        font-weight: 800;
         color: var(--text-dark);
-        margin-bottom: 4px;
-    }
-    
-    .profile-badge {
-        display: inline-block;
-        background: #e0f2fe;
-        color: #0369a1;
-        font-size: 0.75rem;
-        font-weight: 700;
-        padding: 4px 12px;
-        border-radius: 99px;
-        margin-bottom: 8px;
+        margin: 0 0 4px 0;
     }
 
-    .info-card {
-        background: white;
-        border-radius: 20px;
-        padding: 20px;
-        box-shadow: var(--card-shadow);
-        border: 1px solid rgba(0,0,0,0.02);
-        margin-bottom: 24px;
-    }
-    
-    .info-row {
-        display: flex;
-        align-items: center;
-        padding: 15px 0;
-        border-bottom: 1px solid #f1f5f9;
-    }
-    .info-row:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-    }
-    
-    .info-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
-        background: #f8fafc;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--text-muted);
-        font-size: 1.1rem;
-        margin-right: 15px;
-    }
-    
-    .info-content {
-        flex: 1;
-    }
-    .info-label {
-        font-size: 0.75rem;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        font-weight: 700;
+    .profile-role {
+        font-size: 14px;
+        color: var(--text-dark);
+        font-weight: 600;
         margin-bottom: 2px;
     }
-    .info-value {
-        font-weight: 600;
-        color: var(--text-dark);
-        font-size: 1rem;
+
+    .profile-id {
+        font-size: 13px;
+        color: #94a3b8;
     }
 
-    .btn-logout {
-        background: #fef2f2;
-        color: #ef4444;
-        border: 1px solid #fee2e2;
-        border-radius: 16px;
-        padding: 16px;
-        font-weight: 700;
-        width: 100%;
+    .menu-list {
+        background: #ffffff;
+        padding: 0 20px;
+        margin-bottom: 20px;
+    }
+
+    .menu-item {
         display: flex;
         align-items: center;
-        justify-content: center;
-        gap: 10px;
-        transition: transform 0.2s;
+        padding: 18px 0;
+        border-bottom: 1px solid #f1f5f9;
         text-decoration: none;
+        color: var(--text-dark);
     }
-    .btn-logout:hover {
-        transform: scale(0.98);
+    .menu-item:last-child {
+        border-bottom: none;
+    }
+
+    .menu-icon {
+        width: 24px;
+        font-size: 18px;
+        color: #64748b;
+        margin-right: 15px;
+        text-align: center;
+    }
+
+    .menu-text {
+        flex: 1;
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    .menu-arrow {
+        color: #cbd5e1;
+        font-size: 14px;
+    }
+
+    .logout-btn {
+        display: flex;
+        align-items: center;
+        padding: 20px;
+        text-decoration: none;
         color: #ef4444;
+        font-weight: 700;
+        font-size: 16px;
+        background: #ffffff;
+    }
+    .logout-btn i {
+        margin-right: 15px;
+        font-size: 18px;
     }
 </style>
 
-<div class="profile-container">
-    <div class="page-header">
-        <h4 class="page-title">Profile</h4>
-    </div>
-
-    <div class="profile-header">
-        <div class="avatar-large">
-            <i class="fa-solid fa-user-astronaut"></i>
-        </div>
-        <div class="profile-badge"><i class="fa-solid fa-star me-1"></i> Delivery Partner</div>
-        <h1 class="profile-name"><?= e($name) ?></h1>
-        <div class="text-muted small">Joined <?= e($joined) ?></div>
-    </div>
-
-    <div class="info-card">
-        <div class="info-row">
-            <div class="info-icon"><i class="fa-solid fa-envelope"></i></div>
-            <div class="info-content">
-                <div class="info-label">Email Address</div>
-                <div class="info-value"><?= e($email) ?></div>
-            </div>
-        </div>
-        <?php if ($phone !== 'Not provided'): ?>
-        <div class="info-row">
-            <div class="info-icon"><i class="fa-solid fa-phone"></i></div>
-            <div class="info-content">
-                <div class="info-label">Phone Number</div>
-                <div class="info-value"><?= e($phone) ?></div>
-            </div>
-        </div>
-        <?php endif; ?>
-    </div>
-
-    <div class="info-card p-0 overflow-hidden">
-        <a href="javascript:void(0)" class="info-row px-4 text-decoration-none">
-            <div class="info-icon" style="background: #eef2ff; color: #6366f1;"><i class="fa-solid fa-circle-question"></i></div>
-            <div class="info-content">
-                <div class="info-value text-dark">Help & Support</div>
-            </div>
-            <i class="fa-solid fa-chevron-right text-muted small"></i>
-        </a>
-        <a href="javascript:void(0)" class="info-row px-4 text-decoration-none">
-            <div class="info-icon" style="background: #fdf4ff; color: #d946ef;"><i class="fa-solid fa-shield-halved"></i></div>
-            <div class="info-content">
-                <div class="info-value text-dark">Privacy Policy</div>
-            </div>
-            <i class="fa-solid fa-chevron-right text-muted small"></i>
-        </a>
-    </div>
-
-    <a href="logout.php" class="btn-logout mt-4">
-        <i class="fa-solid fa-right-from-bracket"></i> Logout
-    </a>
-
+<div class="page-header">
+    <a href="index.php" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
+    <h1 class="page-title">My Profile</h1>
+    <a href="#" class="header-action"><i class="fa-solid fa-ellipsis-vertical"></i></a>
 </div>
+
+<div class="profile-header">
+    <div class="avatar-wrapper">
+        <div class="avatar-circle">
+            <svg width="100%" height="100%" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="50" fill="#a7f3d0"/>
+                <circle cx="50" cy="40" r="20" fill="#fcd34d"/>
+                <path d="M 25 90 Q 50 60 75 90 Z" fill="#059669"/>
+                <path d="M 35 25 Q 50 10 65 25 Z" fill="#064e3b"/>
+            </svg>
+        </div>
+        <div class="edit-avatar">
+            <i class="fa-solid fa-camera"></i>
+        </div>
+    </div>
+    <h2 class="profile-name"><?= e($delivery_name) ?></h2>
+    <div class="profile-role">Delivery Partner</div>
+    <div class="profile-id">ID: <?= $driver_id_formatted ?></div>
+</div>
+
+<div class="menu-list">
+    <a href="#" class="menu-item">
+        <i class="fa-regular fa-user menu-icon"></i>
+        <span class="menu-text">Personal Information</span>
+        <i class="fa-solid fa-chevron-right menu-arrow"></i>
+    </a>
+    <a href="#" class="menu-item">
+        <i class="fa-regular fa-file-lines menu-icon"></i>
+        <span class="menu-text">Documents</span>
+        <i class="fa-solid fa-chevron-right menu-arrow"></i>
+    </a>
+    <a href="#" class="menu-item">
+        <i class="fa-solid fa-building-columns menu-icon"></i>
+        <span class="menu-text">Bank Details</span>
+        <i class="fa-solid fa-chevron-right menu-arrow"></i>
+    </a>
+    <a href="#" class="menu-item">
+        <i class="fa-solid fa-gear menu-icon"></i>
+        <span class="menu-text">App Settings</span>
+        <i class="fa-solid fa-chevron-right menu-arrow"></i>
+    </a>
+    <a href="#" class="menu-item">
+        <i class="fa-regular fa-circle-question menu-icon"></i>
+        <span class="menu-text">Help & Support</span>
+        <i class="fa-solid fa-chevron-right menu-arrow"></i>
+    </a>
+</div>
+
+<a href="logout.php" class="logout-btn">
+    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+    <span>Logout</span>
+</a>
 
 <?php include 'includes/footer.php'; ?>

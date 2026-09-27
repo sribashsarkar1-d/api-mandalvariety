@@ -389,18 +389,15 @@ $delivered_count = $status_counts['delivered'] ?? 0;
         </div>
     </div>
 
-    <!-- Green Toggle Card -->
-    <div class="toggle-card <?= $is_available ? '' : 'offline' ?>">
+    <!-- Green Toggle Card linking to Availability Page (Screen 5) -->
+    <a href="availability.php" class="toggle-card <?= $is_available ? '' : 'offline' ?>" style="text-decoration:none;">
         <div class="toggle-text"><?= $is_available ? 'Online' : 'Offline' ?></div>
         
-        <form method="POST" id="availabilityForm" class="m-0">
-            <input type="hidden" name="toggle_availability" value="1">
-            <label class="switch">
-                <input type="checkbox" name="is_available" value="1" id="availabilitySwitch" <?= $is_available ? 'checked' : '' ?> onchange="document.getElementById('availabilityForm').submit()">
-                <span class="slider"></span>
-            </label>
-        </form>
-    </div>
+        <label class="switch" style="pointer-events:none;">
+            <input type="checkbox" <?= $is_available ? 'checked' : '' ?>>
+            <span class="slider"></span>
+        </label>
+    </a>
 
     <!-- Stats Row -->
     <div class="stats-row">
@@ -472,18 +469,6 @@ $delivered_count = $status_counts['delivered'] ?? 0;
 </div>
 
 <script>
-    // Submit form correctly when unchecked
-    document.getElementById('availabilityForm').addEventListener('submit', function(e) {
-        let cb = document.getElementById('availabilitySwitch');
-        if(!cb.checked) {
-            let hidden = document.createElement('input');
-            hidden.type = 'hidden';
-            hidden.name = 'is_available';
-            hidden.value = '0';
-            this.appendChild(hidden);
-        }
-    });
-
     // Handle pull to refresh
     let touchstartY = 0;
     let touchendY = 0;
