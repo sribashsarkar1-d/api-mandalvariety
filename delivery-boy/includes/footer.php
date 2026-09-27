@@ -14,14 +14,14 @@ $current_page = basename($_SERVER['PHP_SELF']);
         width: 100%;
         max-width: 480px;
         background: #ffffff;
-        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+        border-top: 1px solid #f1f5f9;
         display: flex;
         justify-content: space-around;
         align-items: center;
-        padding: 10px 15px 25px 15px;
+        padding: 12px 10px 20px 10px;
         z-index: 1000;
-        border-top-left-radius: 24px;
-        border-top-right-radius: 24px;
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
     }
     
     .nav-item {
@@ -29,44 +29,20 @@ $current_page = basename($_SERVER['PHP_SELF']);
         flex-direction: column;
         align-items: center;
         text-decoration: none;
-        color: #94a3b8;
-        font-size: 0.75rem;
-        font-weight: 600;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 500;
         transition: all 0.2s;
-        gap: 4px;
+        gap: 6px;
     }
     
     .nav-item i {
-        font-size: 1.25rem;
-        margin-bottom: 2px;
+        font-size: 22px;
     }
     
     .nav-item.active {
         color: var(--mandal-green);
-    }
-    
-    .nav-item-center {
-        position: relative;
-        top: -15px;
-    }
-    
-    .nav-item-center .power-btn {
-        width: 56px;
-        height: 56px;
-        background: var(--mandal-green);
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        box-shadow: 0 4px 15px rgba(7, 161, 88, 0.3);
-        margin-bottom: 4px;
-    }
-
-    .nav-item.disabled {
-        opacity: 0.5;
-        pointer-events: none;
+        font-weight: 700;
     }
 </style>
 
@@ -76,19 +52,15 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <span>Home</span>
     </a>
     <a href="index.php#tasks" class="nav-item">
-        <i class="fa-solid fa-clipboard-list"></i>
+        <i class="fa-regular fa-clipboard"></i>
         <span>Orders</span>
     </a>
-    
-    <a href="javascript:void(0)" onclick="document.getElementById('availabilityForm').submit();" class="nav-item nav-item-center">
-        <div class="power-btn">
-            <i class="fa-solid fa-power-off"></i>
-        </div>
-        <span style="color: var(--text-dark);">Go Online</span>
+    <a href="#" class="nav-item">
+        <i class="fa-regular fa-map"></i>
+        <span>Map</span>
     </a>
-    
     <a href="earnings.php" class="nav-item <?= $current_page == 'earnings.php' ? 'active' : '' ?>">
-        <i class="fa-solid fa-wallet"></i>
+        <i class="fa-solid fa-sack-dollar"></i>
         <span>Earnings</span>
     </a>
     <a href="profile.php" class="nav-item <?= $current_page == 'profile.php' ? 'active' : '' ?>">

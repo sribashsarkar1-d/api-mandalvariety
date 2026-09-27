@@ -21,135 +21,161 @@ $boy = $stmt->fetch();
 $is_available = (int)$boy['is_available'] === 1;
 
 // Fetch assigned active orders
-// Active orders: not delivered, not cancelled, not returned
 $stmt = $conn->prepare("
-    SELECT *
-    FROM orders 
-    WHERE assigned_delivery_id = ? AND status NOT IN ('delivered', 'cancelled', 'returned')
-    ORDER BY created_at DESC
+    SELECT o.*, u.name as user_name
+    FROM orders o
+    LEFT JOIN users u ON o.user_id = u.id
+    WHERE o.assigned_delivery_id = ? AND o.status NOT IN ('delivered', 'cancelled', 'returned')
+    ORDER BY o.created_at DESC
 ");
 $stmt->execute([$delivery_id]);
 $active_orders = $stmt->fetchAll();
 
-// Fetch completed orders count for stats
-$stmt = $conn->prepare("SELECT COUNT(*) FROM orders WHERE assigned_delivery_id = ? AND status = 'delivered'");
+// Fetch status counts
+$stmt = $conn->prepare("SELECT status, COUNT(*) as count FROM orders WHERE assigned_delivery_id = ? GROUP BY status");
 $stmt->execute([$delivery_id]);
-$delivered_count = $stmt->fetchColumn();
+$status_counts = [];
+while($row = $stmt->fetch()) {
+    $status_counts[$row['status']] = $row['count'];
+}
+
+// Define the stats
+$assigned_count = ($status_counts['assigned'] ?? 0) + ($status_counts['pending'] ?? 0);
+$picked_count = ($status_counts['out_for_delivery'] ?? 0) + ($status_counts['shipped'] ?? 0) + ($status_counts['processing'] ?? 0);
+$delivered_count = $status_counts['delivered'] ?? 0;
+
 ?>
 
 <?php include 'includes/header.php'; ?>
 
 <style>
-    .dashboard-container {
-        padding: 24px 20px;
+    body {
+        background-color: #f6fbfa; /* Match the faint greenish background from mockup */
     }
 
-    /* Native Header */
-    .mobile-header {
+    /* Abstract cloud background */
+    .dashboard-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 250px;
+        background-image: url('data:image/svg+xml;utf8,<svg width="400" height="200" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg"><path d="M 50 150 Q 80 100 120 130 Q 170 80 230 110 Q 280 60 340 100 Q 380 70 420 120 L 420 200 L 0 200 L 0 150" fill="%23e8f7f0" opacity="0.7"/></svg>');
+        background-size: cover;
+        background-position: center top;
+        z-index: 0;
+    }
+
+    .dashboard-container {
+        padding: 24px 20px;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Top Header */
+    .header-row {
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
+        align-items: center;
         margin-bottom: 24px;
     }
-    
+
     .header-left {
         display: flex;
-        flex-direction: column;
-    }
-    
-    .greeting-sub {
-        font-size: 0.85rem;
-        color: var(--text-muted);
-        margin-bottom: 2px;
-    }
-    
-    .driver-name {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--text-dark);
-        margin-bottom: 4px;
-        line-height: 1.2;
-    }
-    
-    .driver-msg {
-        font-size: 0.8rem;
-        color: var(--text-muted);
-    }
-    
-    .header-right {
-        display: flex;
         align-items: center;
-        gap: 15px;
+        gap: 12px;
     }
-    
-    .header-icon {
-        color: var(--text-dark);
-        font-size: 1.25rem;
-        text-decoration: none;
-        position: relative;
-    }
-    
-    .notification-badge {
-        position: absolute;
-        top: -4px;
-        right: -4px;
-        width: 10px;
-        height: 10px;
-        background: #ef4444;
+
+    .avatar-circle {
+        width: 56px;
+        height: 56px;
         border-radius: 50%;
-        border: 2px solid white;
-    }
-    
-    .avatar-img {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: var(--mandal-green-light);
+        background: #cfebe0;
+        border: 2px solid #ffffff;
+        overflow: hidden;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--mandal-green);
-        font-size: 1.5rem;
-        border: 2px solid #fff;
         box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
+    .avatar-circle img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 
-    /* Availability Card */
-    .availability-card {
-        background: var(--mandal-green-gradient);
-        border-radius: 20px;
-        padding: 24px;
+    .greeting-text {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .driver-name {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--text-dark);
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .driver-role {
+        font-size: 14px;
+        color: #4b5563;
+        font-weight: 500;
+    }
+
+    .header-right {
+        position: relative;
+    }
+
+    .bell-icon {
+        font-size: 24px;
+        color: #4b5563;
+        position: relative;
+    }
+
+    .notification-badge {
+        position: absolute;
+        top: -4px;
+        right: -6px;
+        background: #ef4444;
         color: white;
+        font-size: 10px;
+        font-weight: 700;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #ffffff;
+    }
+
+    /* Green Toggle Card */
+    .toggle-card {
+        background: var(--mandal-green);
+        border-radius: 20px;
+        padding: 20px 24px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 24px;
-        box-shadow: 0 10px 25px rgba(7, 161, 88, 0.25);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .availability-card::after {
-        content: '\f21c'; /* motorcycle icon */
-        font-family: 'Font Awesome 6 Free';
-        font-weight: 900;
-        position: absolute;
-        right: -20px;
-        bottom: -30px;
-        font-size: 8rem;
-        opacity: 0.05;
-        transform: rotate(-15deg);
-        pointer-events: none;
+        box-shadow: 0 10px 25px rgba(7, 161, 88, 0.2);
     }
 
-    /* Custom Toggle Switch */
-    .custom-switch {
+    .toggle-text {
+        color: white;
+        font-size: 24px;
+        font-weight: 800;
+    }
+
+    /* Switch */
+    .switch {
         position: relative;
         display: inline-block;
-        width: 60px;
-        height: 32px;
+        width: 64px;
+        height: 36px;
     }
-    .custom-switch input {
+    .switch input {
         opacity: 0;
         width: 0;
         height: 0;
@@ -163,13 +189,13 @@ $delivered_count = $stmt->fetchColumn();
         bottom: 0;
         background-color: rgba(255, 255, 255, 0.3);
         transition: .4s;
-        border-radius: 34px;
+        border-radius: 36px;
     }
     .slider:before {
         position: absolute;
         content: "";
-        height: 24px;
-        width: 24px;
+        height: 28px;
+        width: 28px;
         left: 4px;
         bottom: 4px;
         background-color: white;
@@ -178,338 +204,275 @@ $delivered_count = $stmt->fetchColumn();
         box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
     input:checked + .slider {
-        background-color: #ffffff;
+        background-color: rgba(255,255,255,0.4);
     }
     input:checked + .slider:before {
         transform: translateX(28px);
-        background-color: var(--mandal-green);
     }
 
-    /* Stats Grid */
+    /* Offline state handling */
+    .toggle-card.offline {
+        background: #64748b;
+        box-shadow: 0 10px 25px rgba(100, 116, 139, 0.2);
+    }
+    .toggle-card.offline .slider:before {
+        box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+    }
+
+    /* Stats Row */
     .stats-row {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-        margin-bottom: 24px;
-    }
-    
-    .stats-card {
-        text-align: center;
-        padding: 20px 15px;
         display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .stats-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.2rem;
-        margin-bottom: 12px;
-    }
-    .stats-icon.orders { background: #e0f2fe; color: #0ea5e9; }
-    .stats-icon.delivered { background: #dbeafe; color: #3b82f6; }
-    
-    /* Quick Actions */
-    .section-title {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: var(--text-dark);
-        margin-bottom: 16px;
-    }
-    
-    .quick-actions {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        justify-content: space-between;
         gap: 12px;
         margin-bottom: 24px;
     }
-    
-    .action-btn {
+
+    .stat-card {
         background: #ffffff;
         border-radius: 16px;
-        padding: 16px 8px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-decoration: none;
-        color: var(--text-dark);
-        border: 1px solid rgba(0,0,0,0.03);
-        box-shadow: 0 4px 10px rgba(0,0,0,0.02);
-        transition: transform 0.2s;
+        padding: 16px 10px;
+        flex: 1;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        border: 1px solid rgba(0,0,0,0.02);
     }
-    .action-btn.disabled { opacity: 0.5; pointer-events: none; }
-    .action-btn i { font-size: 1.4rem; margin-bottom: 8px; color: var(--text-dark); }
-    .action-btn span { font-size: 0.75rem; font-weight: 500; text-align: center; }
 
-    /* Safety Card */
-    .safety-card {
-        background: var(--mandal-green-light);
+    .stat-number {
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--text-dark);
+        line-height: 1;
+        margin-bottom: 8px;
+    }
+
+    .stat-label {
+        font-size: 13px;
+        color: var(--text-dark);
+        font-weight: 500;
+    }
+
+    /* Request Card */
+    .request-card {
+        background: #ffffff;
         border-radius: 20px;
         padding: 20px;
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 30px;
-    }
-    .safety-icon-wrapper {
-        background: var(--mandal-green);
-        color: white;
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.2rem;
-        flex-shrink: 0;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 24px;
+        border: 1px solid rgba(0,0,0,0.02);
     }
 
-    /* Modern Order Card */
-    .order-card {
-        padding: 20px;
-        position: relative;
+    .city-bg {
+        position: absolute;
+        bottom: 0;
+        right: -20px;
+        height: 100%;
+        width: 60%;
+        background-image: url('data:image/svg+xml;utf8,<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><rect x="150" y="80" width="30" height="120" fill="%23dcfce7" rx="4"/><rect x="120" y="110" width="25" height="90" fill="%23bbf7d0" rx="4"/><rect x="80" y="140" width="35" height="60" fill="%23dcfce7" rx="4"/><circle cx="160" cy="180" r="20" fill="%2386efac" opacity="0.5"/><circle cx="100" cy="190" r="30" fill="%2386efac" opacity="0.4"/></svg>');
+        background-size: cover;
+        background-position: right bottom;
+        background-repeat: no-repeat;
+        z-index: 0;
+        opacity: 0.8;
     }
-    
-    .order-header {
+
+    .request-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .request-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 8px;
+        margin-bottom: 15px;
     }
-    
+
+    .request-title {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+
+    .close-icon {
+        color: #94a3b8;
+        font-size: 18px;
+        cursor: pointer;
+    }
+
     .order-id {
-        background: var(--mandal-green-light);
-        color: var(--mandal-green);
-        font-weight: 700;
-        font-size: 0.85rem;
-        padding: 4px 10px;
-        border-radius: 6px;
-    }
-    
-    .status-badge {
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        padding: 4px 10px;
-        border-radius: 6px;
-    }
-    .status-confirmed { background: #e0e7ff; color: #4338ca; }
-    .status-preparing { background: #fef3c7; color: #b45309; }
-    .status-out_for_delivery { background: #ffedd5; color: #c2410c; }
-    
-    .order-time {
-        font-size: 0.8rem;
-        color: var(--text-muted);
-        margin-bottom: 20px;
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--text-dark);
+        margin-bottom: 15px;
         display: block;
     }
 
-    .timeline {
-        position: relative;
-        padding-left: 24px;
-        margin-bottom: 20px;
-    }
-    .timeline::before {
-        content: '';
-        position: absolute;
-        left: 5px;
-        top: 8px;
-        bottom: 8px;
-        width: 2px;
-        background: #e2e8f0;
-    }
-    .timeline-item {
-        position: relative;
-        margin-bottom: 16px;
-    }
-    .timeline-item:last-child {
-        margin-bottom: 0;
-    }
-    .timeline-icon {
-        position: absolute;
-        left: -24px;
-        top: 2px;
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background: white;
-        border: 3px solid;
-    }
-    .icon-pickup { border-color: var(--mandal-green); }
-    .icon-drop { border-color: #ef4444; }
-    
-    .timeline-title {
-        font-weight: 700;
-        font-size: 0.85rem;
-        margin-bottom: 2px;
-    }
-    .timeline-desc {
-        font-size: 0.8rem;
-        color: var(--text-muted);
-        line-height: 1.4;
+    .info-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--text-dark);
     }
 
-    .order-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-top: 1px dashed #e2e8f0;
-        padding-top: 16px;
-        margin-bottom: 16px;
+    .info-icon {
+        color: var(--mandal-green);
+        width: 20px;
+        text-align: center;
+        font-size: 18px;
     }
+
+    .cod-badge {
+        background: #f59e0b;
+        color: white;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-left: 8px;
+    }
+
+    .amount-text {
+        color: #ef4444;
+        font-weight: 800;
+    }
+
+    .btn-details {
+        background: var(--mandal-green);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 15px;
+        width: 100%;
+        font-size: 16px;
+        font-weight: 700;
+        margin-top: 15px;
+        text-decoration: none;
+        display: block;
+        text-align: center;
+        transition: transform 0.2s;
+    }
+    .btn-details:active {
+        transform: scale(0.98);
+    }
+
 </style>
+
+<div class="dashboard-bg"></div>
 
 <div class="dashboard-container">
     
-    <!-- Mobile Header -->
-    <div class="mobile-header">
-        <a href="javascript:void(0)" class="header-icon mt-2"><i class="fa-solid fa-bars"></i></a>
-        
-        <div class="header-left align-items-center text-center mx-auto">
-            <span class="greeting-sub">Good Morning,</span>
-            <h1 class="driver-name"><?= e($delivery_name) ?></h1>
-            <span class="driver-msg">Stay safe and deliver on time!</span>
-        </div>
-        
-        <div class="header-right">
-            <a href="index.php" class="header-icon mt-2 me-2" onclick="this.querySelector('i').classList.add('fa-spin')">
-                <i class="fa-solid fa-rotate-right"></i>
-            </a>
-            <a href="javascript:void(0)" class="header-icon mt-2">
-                <i class="fa-regular fa-bell"></i>
-                <span class="notification-badge"></span>
-            </a>
-            <div class="avatar-img ms-2">
-                <i class="fa-solid fa-user-astronaut"></i>
+    <!-- Top Header -->
+    <div class="header-row">
+        <div class="header-left">
+            <div class="avatar-circle">
+                <!-- Using an SVG avatar to mimic the 3D boy in the screenshot -->
+                <svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="50" r="50" fill="#a7f3d0"/>
+                    <circle cx="50" cy="40" r="20" fill="#fcd34d"/>
+                    <path d="M 25 90 Q 50 60 75 90 Z" fill="#059669"/>
+                    <path d="M 35 25 Q 50 10 65 25 Z" fill="#064e3b"/> <!-- Hat -->
+                </svg>
             </div>
+            <div class="greeting-text">
+                <h1 class="driver-name">Hello, <?= e($delivery_name) ?></h1>
+                <span class="driver-role">Delivery Partner</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <i class="fa-solid fa-bell bell-icon"></i>
+            <span class="notification-badge">3</span>
         </div>
     </div>
 
-    <!-- Availability Card -->
-    <div class="availability-card">
-        <div>
-            <div style="font-size: 0.9rem; margin-bottom: 2px;">You are</div>
-            <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 8px;"><?= $is_available ? 'Available' : 'Offline' ?></h2>
-            <div style="font-size: 0.8rem; opacity: 0.9;"><?= $is_available ? 'Ready to receive orders' : 'Go online to start receiving orders' ?></div>
-        </div>
+    <!-- Green Toggle Card -->
+    <div class="toggle-card <?= $is_available ? '' : 'offline' ?>">
+        <div class="toggle-text"><?= $is_available ? 'Online' : 'Offline' ?></div>
+        
         <form method="POST" id="availabilityForm" class="m-0">
             <input type="hidden" name="toggle_availability" value="1">
-            <label class="custom-switch">
+            <label class="switch">
                 <input type="checkbox" name="is_available" value="1" id="availabilitySwitch" <?= $is_available ? 'checked' : '' ?> onchange="document.getElementById('availabilityForm').submit()">
                 <span class="slider"></span>
             </label>
         </form>
     </div>
 
-    <!-- Quick Stats -->
+    <!-- Stats Row -->
     <div class="stats-row">
-        <div class="premium-card stats-card">
-            <div class="stats-icon orders"><i class="fa-solid fa-box-open"></i></div>
-            <h3 class="fw-bold mb-1 fs-4"><?= count($active_orders) ?></h3>
-            <div class="text-muted small">Active Orders</div>
+        <div class="stat-card">
+            <div class="stat-number"><?= $assigned_count ?></div>
+            <div class="stat-label">Assigned</div>
         </div>
-        <div class="premium-card stats-card">
-            <div class="stats-icon delivered"><i class="fa-regular fa-circle-check"></i></div>
-            <h3 class="fw-bold mb-1 fs-4"><?= $delivered_count ?></h3>
-            <div class="text-muted small">Completed</div>
+        <div class="stat-card">
+            <div class="stat-number"><?= $picked_count ?></div>
+            <div class="stat-label">Picked</div>
         </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <h5 class="section-title">Quick Actions</h5>
-    <div class="quick-actions">
-        <a href="#tasks" class="action-btn">
-            <i class="fa-solid fa-clipboard-list" style="color: #6366f1;"></i>
-            <span>My Tasks</span>
-        </a>
-        <a href="javascript:void(0)" class="action-btn disabled">
-            <i class="fa-solid fa-map-location-dot" style="color: #3b82f6;"></i>
-            <span>Map</span>
-        </a>
-        <a href="earnings.php" class="action-btn">
-            <i class="fa-solid fa-wallet" style="color: #f59e0b;"></i>
-            <span>Earnings</span>
-        </a>
-        <a href="profile.php" class="action-btn">
-            <i class="fa-regular fa-user" style="color: #8b5cf6;"></i>
-            <span>Profile</span>
-        </a>
-    </div>
-
-    <!-- Safety Card -->
-    <div class="safety-card">
-        <div class="safety-icon-wrapper">
-            <i class="fa-solid fa-shield-halved"></i>
-        </div>
-        <div>
-            <h6 class="fw-bold mb-1" style="color: var(--text-dark);">Safety First!</h6>
-            <div style="font-size: 0.8rem; color: var(--text-muted);">Follow traffic rules and wear your helmet.</div>
+        <div class="stat-card">
+            <div class="stat-number"><?= $delivered_count ?></div>
+            <div class="stat-label">Delivered</div>
         </div>
     </div>
 
-    <h5 class="section-title" id="tasks">My Tasks</h5>
-
-    <?php if (empty($active_orders)): ?>
-        <div class="premium-card p-4 text-center text-muted">
-            <div style="width: 80px; height: 80px; background: var(--secondary-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
-                <i class="fa-solid fa-mug-hot fa-2x" style="color: #cbd5e1;"></i>
-            </div>
-            <p class="mb-0 fw-500">No active orders right now.</p>
-        </div>
-    <?php else: ?>
-        <?php foreach ($active_orders as $order): ?>
-            <div class="premium-card order-card">
-                <div class="order-header">
-                    <span class="order-id">#<?= e($order['order_number'] ?? $order['order_no'] ?? 'N/A') ?></span>
-                    <span class="status-badge status-<?= e($order['status'] ?? 'unknown') ?>">
-                        <?= str_replace('_', ' ', e($order['status'] ?? 'unknown')) ?>
-                    </span>
-                </div>
-                
-                <span class="order-time"><?= !empty($order['created_at']) ? date('h:i A, M d', strtotime($order['created_at'])) : 'Unknown time' ?></span>
-                
-                <div class="timeline">
-                    <div class="timeline-item">
-                        <div class="timeline-icon icon-pickup"></div>
-                        <div class="timeline-title text-success">Pickup</div>
-                        <div class="timeline-desc fw-500 text-dark">Mandal Variety Store</div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-icon icon-drop"></div>
-                        <div class="timeline-title text-danger">Drop</div>
-                        <div class="timeline-desc">
-                            <?= e($order['shipping_address'] ?? $order['delivery_address'] ?? $order['address'] ?? 'No address provided') ?>
+    <!-- Active Orders as Delivery Requests -->
+    <div id="tasks">
+        <?php if (!empty($active_orders)): ?>
+            <?php foreach ($active_orders as $order): ?>
+                <div class="request-card">
+                    <div class="city-bg"></div>
+                    <div class="request-content">
+                        <div class="request-header">
+                            <div class="request-title">New Delivery Request</div>
+                            <i class="fa-solid fa-xmark close-icon"></i>
                         </div>
+                        
+                        <span class="order-id">#<?= e($order['order_number'] ?? $order['order_no'] ?? $order['id']) ?></span>
+                        
+                        <div class="info-row">
+                            <i class="fa-solid fa-user info-icon"></i>
+                            <span><?= e($order['user_name'] ?? $order['customer_name'] ?? 'Customer') ?></span>
+                        </div>
+                        
+                        <div class="info-row">
+                            <i class="fa-solid fa-indian-rupee-sign info-icon"></i>
+                            <span class="amount-text">₹<?= number_format((float)($order['grand_total'] ?? $order['total_amount'] ?? 0), 0) ?></span>
+                            <?php if (strpos(strtolower($order['payment_method'] ?? ''), 'cash') !== false || strpos(strtolower($order['payment_method'] ?? ''), 'cod') !== false): ?>
+                                <span class="cod-badge">COD</span>
+                            <?php else: ?>
+                                <span class="cod-badge" style="background:#10b981;">PAID</span>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <div class="info-row">
+                            <i class="fa-solid fa-location-dot info-icon"></i>
+                            <!-- Simulating distance and location as per mockup -->
+                            <span>2.4 km • Delivery Location</span>
+                        </div>
+                        
+                        <a href="view_order.php?id=<?= (int)$order['id'] ?>" class="btn-details">View Details</a>
                     </div>
                 </div>
-
-                <div class="order-footer">
-                    <div>
-                        <div class="small text-muted mb-1"><i class="fa-solid fa-money-bill-wave me-1"></i> Amount</div>
-                        <div class="fw-bold fs-5 text-dark">₹<?= number_format((float)($order['grand_total'] ?? $order['total_amount'] ?? 0), 2) ?></div>
-                    </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <div class="request-card" style="text-align: center; padding: 40px 20px;">
+                <div class="city-bg" style="opacity:0.3"></div>
+                <div class="request-content">
+                    <i class="fa-solid fa-mug-hot" style="font-size:40px; color:#cbd5e1; margin-bottom:15px;"></i>
+                    <h3 style="font-size:18px; font-weight:700; color:var(--text-dark);">No Active Orders</h3>
+                    <p style="color:var(--text-muted); font-size:14px;">You will see new delivery requests here once they are assigned to you.</p>
                 </div>
-                
-                <a href="view_order.php?id=<?= (int)$order['id'] ?>" class="btn-premium d-flex justify-content-between align-items-center">
-                    <span>View Details</span>
-                    <i class="fa-solid fa-chevron-right"></i>
-                </a>
             </div>
-        <?php endforeach; ?>
-    <?php endif; ?>
+        <?php endif; ?>
+    </div>
 
 </div>
 
 <script>
-    // Ensure unchecked checkbox sends a 0 if the form is submitted via some other means
-    // Since we now use onchange on the checkbox itself to submit the form, it sends the value if checked.
-    // However, if unchecked, standard HTML behavior omits it.
-    // The previous script added a hidden input when unchecked. Let's adapt it for the new DOM.
+    // Submit form correctly when unchecked
     document.getElementById('availabilityForm').addEventListener('submit', function(e) {
         let cb = document.getElementById('availabilitySwitch');
         if(!cb.checked) {
@@ -520,15 +483,8 @@ $delivered_count = $stmt->fetchColumn();
             this.appendChild(hidden);
         }
     });
-</script>
 
-<!-- Pull to Refresh Logic -->
-<style>
-    body {
-        overscroll-behavior-y: contain; /* Prevents default browser pull-to-refresh to use our custom one if needed, but actually native is fine. We will just let native do its thing and add a fallback refresh button. */
-    }
-</style>
-<script>
+    // Handle pull to refresh
     let touchstartY = 0;
     let touchendY = 0;
     
@@ -538,21 +494,12 @@ $delivered_count = $stmt->fetchColumn();
 
     document.addEventListener('touchend', e => {
         touchendY = e.changedTouches[0].screenY;
-        handleSwipe();
-    });
-
-    function handleSwipe() {
-        // If swiped down significantly and at the very top of the page
         if (window.scrollY === 0 && (touchendY - touchstartY) > 100) {
-            // Optional: Show a loading indicator here
-            const refreshIcon = document.querySelector('.fa-rotate-right');
-            if (refreshIcon) refreshIcon.classList.add('fa-spin');
-            
             setTimeout(() => {
                 window.location.reload();
             }, 300);
         }
-    }
+    });
 </script>
 
 <?php include 'includes/footer.php'; ?>
