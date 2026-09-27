@@ -114,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 // Fetch items with fallback for missing image column on live DB
 try {
     $stmtItems = $conn->prepare("
-        SELECT oi.*, p.name as product_name, p.image
+        SELECT oi.*, p.name as product_name, p.images
         FROM order_items oi
         LEFT JOIN products p ON oi.product_id = p.id
         WHERE oi.order_id = ?
@@ -220,7 +220,17 @@ $grand_total = (float)($order['grand_total'] ?? $order['total_amount'] ?? 0);
             <div class="fw-bold mb-3 mt-2">Items (<?= count($items) ?>)</div>
             <div class="items-list" style="padding-right: 5px;">
             <?php foreach ($items as $item): 
-                $img = !empty($item['image']) ? '../uploads/'.e($item['image']) : 'https://via.placeholder.com/50?text=Item';
+                $imgName = '';
+                if (!empty($item['images'])) {
+                    $decoded = @json_decode($item['images'], true);
+                    if (is_array($decoded) && count($decoded) > 0) {
+                        $imgName = $decoded[0];
+                    } else {
+                        $parts = explode(',', $item['images']);
+                        $imgName = trim($parts[0]);
+                    }
+                }
+                $img = !empty($imgName) ? '../admin/uploads/'.e($imgName) : 'https://via.placeholder.com/50?text=Item';
             ?>
                 <div class="d-flex align-items-center mb-3">
                     <img src="<?= $img ?>" alt="Product" style="width: 45px; height: 45px; border-radius: 10px; object-fit: cover; border: 1px solid #e2e8f0; margin-right: 12px;">
@@ -367,10 +377,30 @@ $grand_total = (float)($order['grand_total'] ?? $order['total_amount'] ?? 0);
                 <?php if ($pincode): ?> - <?= e($pincode) ?><?php endif; ?>
             </div>
 
+            <div class="d-flex justify-content-between align-items-center mb-3" style="background: #f1f5f9; padding: 12px; border-radius: 12px;">
+                <div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Payment</div>
+                    <div class="fw-bold text-dark" style="font-size: 1.1rem;">₹<?= number_format($grand_total, 0) ?></div>
+                </div>
+                <div style="background: <?= $is_cod ? '#f59e0b' : '#058547' ?>; color: white; padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 700;">
+                    <?= $is_cod ? 'TO COLLECT (COD)' : 'PAID' ?>
+                </div>
+            </div>
+
             <div class="fw-bold mb-3 mt-2" style="font-size:0.85rem;">Items to Deliver (<?= count($items) ?>)</div>
             <div class="items-list" style="padding-right: 5px;">
             <?php foreach ($items as $item): 
-                $img = !empty($item['image']) ? '../uploads/'.e($item['image']) : 'https://via.placeholder.com/50?text=Item';
+                $imgName = '';
+                if (!empty($item['images'])) {
+                    $decoded = @json_decode($item['images'], true);
+                    if (is_array($decoded) && count($decoded) > 0) {
+                        $imgName = $decoded[0];
+                    } else {
+                        $parts = explode(',', $item['images']);
+                        $imgName = trim($parts[0]);
+                    }
+                }
+                $img = !empty($imgName) ? '../admin/uploads/'.e($imgName) : 'https://via.placeholder.com/50?text=Item';
             ?>
                 <div class="d-flex align-items-center mb-2">
                     <img src="<?= $img ?>" alt="Product" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid #e2e8f0; margin-right: 10px;">
