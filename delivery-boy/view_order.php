@@ -422,18 +422,18 @@ $grand_total = (float)($order['grand_total'] ?? $order['total_amount'] ?? 0);
             </button>
             <div class="text-success fw-bold small mt-2 d-none" id="otpSentMsg">OTP Sent Successfully!</div>
 
-            <form method="POST" class="mt-4" id="otpForm">
+            <form method="POST" class="mt-4" id="customerOtpForm" onsubmit="return handleCustomerOtpSubmit(event)">
                 <input type="hidden" name="action" value="verify_otp">
-                <div class="otp-inputs">
-                    <input type="text" class="otp-box" maxlength="1" pattern="\d">
-                    <input type="text" class="otp-box" maxlength="1" pattern="\d">
-                    <input type="text" class="otp-box" maxlength="1" pattern="\d">
-                    <input type="text" class="otp-box" maxlength="1" pattern="\d">
-                    <input type="text" class="otp-box" maxlength="1" pattern="\d">
-                    <input type="text" class="otp-box" maxlength="1" pattern="\d">
+                <div class="otp-inputs" id="customerOtpContainer">
+                    <input type="tel" class="otp-box customer-otp-box" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="one-time-code" required autofocus>
+                    <input type="tel" class="otp-box customer-otp-box" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" required>
+                    <input type="tel" class="otp-box customer-otp-box" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" required>
+                    <input type="tel" class="otp-box customer-otp-box" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" required>
+                    <input type="tel" class="otp-box customer-otp-box" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" required>
+                    <input type="tel" class="otp-box customer-otp-box" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" required>
                     <input type="hidden" name="otp" id="hiddenOtp">
                 </div>
-                <button type="submit" class="btn-bottom" style="margin-top:40px;">Verify OTP</button>
+                <button type="submit" id="btnVerifyCustomerOtp" class="btn-bottom" style="margin-top:35px;">Verify OTP</button>
             </form>
         </div>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -442,18 +442,117 @@ $grand_total = (float)($order['grand_total'] ?? $order['total_amount'] ?? 0);
                 let btn = $(this); btn.prop('disabled', true).text('Sending...');
                 $.ajax({
                     url: 'ajax_send_otp.php', type: 'POST', data: { order_id: <?= $order_id ?> }, dataType: 'json',
-                    success: function(r) { if(r.success) { btn.hide(); $('#otpSentMsg').removeClass('d-none'); } else { alert(r.message); btn.prop('disabled', false).text('Send OTP'); } },
-                    error: function() { alert("Error"); btn.prop('disabled', false).text('Send OTP'); }
+                    success: function(r) { 
+                        if(r.success) { 
+                            btn.hide(); 
+                            $('#otpSentMsg').removeClass('d-none'); 
+                            cInputs[0].focus();
+                        } else { 
+                            alert(r.message); 
+                            btn.prop('disabled', false).text('Send OTP to Customer'); 
+                        } 
+                    },
+                    error: function() { 
+                        alert("Network error sending OTP. Please try again."); 
+                        btn.prop('disabled', false).text('Send OTP to Customer'); 
+                    }
                 });
             });
-            const inputs = $('.otp-box');
-            inputs.on('keyup', function(e) {
-                const val = $(this).val(); const index = inputs.index(this);
-                if (val.length === 1 && index < inputs.length - 1) inputs.eq(index + 1).focus();
-                if (e.key === 'Backspace' && index > 0 && val.length === 0) inputs.eq(index - 1).focus();
-                let fullOtp = ''; inputs.each(function() { fullOtp += $(this).val(); }); $('#hiddenOtp').val(fullOtp);
+
+            const cInputs = Array.from(document.querySelectorAll('.customer-otp-box'));
+            const hiddenOtp = document.getElementById('hiddenOtp');
+            let isCustomerSubmitting = false;
+
+            function syncCustomerOtp() {
+                const otpVal = cInputs.map(i => i.value.trim()).join('');
+                if (hiddenOtp) hiddenOtp.value = otpVal;
+                return otpVal;
+            }
+
+            function distributeCustomerDigits(str, startIndex = 0) {
+                const digits = str.replace(/\D/g, '');
+                if (!digits) return;
+                let idx = startIndex;
+                for (let i = 0; i < digits.length && idx < cInputs.length; i++) {
+                    cInputs[idx].value = digits[i];
+                    idx++;
+                }
+                syncCustomerOtp();
+                const nextEmpty = cInputs.findIndex(i => !i.value.trim());
+                if (nextEmpty !== -1) {
+                    cInputs[nextEmpty].focus();
+                    cInputs[nextEmpty].select();
+                } else {
+                    cInputs[cInputs.length - 1].focus();
+                    if (syncCustomerOtp().length === 6 && !isCustomerSubmitting) {
+                        document.getElementById('customerOtpForm').requestSubmit();
+                    }
+                }
+            }
+
+            cInputs.forEach((input, index) => {
+                input.addEventListener('focus', () => input.select());
+                input.addEventListener('input', () => {
+                    const val = input.value;
+                    if (val.length > 1) {
+                        distributeCustomerDigits(val, index);
+                        return;
+                    }
+                    const cleanVal = val.replace(/\D/g, '');
+                    input.value = cleanVal;
+                    syncCustomerOtp();
+                    if (cleanVal) {
+                        if (index < cInputs.length - 1) {
+                            cInputs[index + 1].focus();
+                            cInputs[index + 1].select();
+                        } else {
+                            if (syncCustomerOtp().length === 6 && !isCustomerSubmitting) {
+                                input.blur();
+                                document.getElementById('customerOtpForm').requestSubmit();
+                            }
+                        }
+                    }
+                });
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' || e.keyCode === 8) {
+                        if (!input.value && index > 0) {
+                            e.preventDefault();
+                            cInputs[index - 1].value = '';
+                            syncCustomerOtp();
+                            cInputs[index - 1].focus();
+                        }
+                    } else if (e.key === 'ArrowLeft' && index > 0) {
+                        e.preventDefault();
+                        cInputs[index - 1].focus();
+                    } else if (e.key === 'ArrowRight' && index < cInputs.length - 1) {
+                        e.preventDefault();
+                        cInputs[index + 1].focus();
+                    }
+                });
+                input.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    const text = (e.clipboardData || window.clipboardData).getData('text');
+                    distributeCustomerDigits(text, index);
+                });
             });
-        </script>
+
+            function handleCustomerOtpSubmit(e) {
+                const otp = syncCustomerOtp();
+                if (otp.length !== 6 || !/^\d{6}$/.test(otp)) {
+                    e.preventDefault();
+                    alert('Please enter a complete 6-digit OTP.');
+                    return false;
+                }
+                if (isCustomerSubmitting) {
+                    e.preventDefault();
+                    return false;
+                }
+                isCustomerSubmitting = true;
+                const btn = document.getElementById('btnVerifyCustomerOtp');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Verifying...';
+                return true;
+            }
 
     <!-- STATE: PAYMENT COLLECTED (COD ONLY) -->
     <?php elseif ($state === 'payment_pending'): ?>
