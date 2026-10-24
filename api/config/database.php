@@ -9,6 +9,13 @@ try {
     $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
-    die(json_encode(['success'=>false,'message'=>'DB error']));
+    try {
+        $pdo = new PDO("mysql:host=localhost;dbname=mondal-vr;charset=utf8mb4", "root", "");
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    } catch (PDOException $e2) {
+        die(json_encode(['success'=>false,'message'=>'DB error']));
+    }
 }
+
+require_once __DIR__ . '/category_helper.php';
 ?>

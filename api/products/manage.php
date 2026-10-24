@@ -9,8 +9,7 @@ $id = $_GET['id'] ?? null;
 
 $data = json_decode(file_get_contents("php://input"), true);
 
-    $parentToLegacy = [1 => 52, 2 => 53, 3 => 54, 4 => 55];
-    $legacyToParent = [52 => 1, 53 => 2, 54 => 3, 55 => 4];
+    list($parentToLegacy, $legacyToParent) = getCategoryMappings($pdo);
 
     function validateSubcategory($pdo, $subcategory_id, $parent_id) {
         if (!$subcategory_id) return true;
@@ -34,15 +33,14 @@ if ($method === 'POST') {
     
     if (isset($data['parent_category_id'])) {
         $parent_id = (int)$data['parent_category_id'];
-        if (isset($parentToLegacy[$parent_id])) {
-            $category_id = $parentToLegacy[$parent_id];
-        } else {
+        $category_id = getOrCreateLegacyCategoryId($pdo, $parent_id);
+        if ($category_id <= 0) {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Invalid parent_category_id']);
             exit;
         }
     } else {
-        $parent_id = $legacyToParent[$category_id] ?? null;
+        $parent_id = getParentCategoryFromLegacy($pdo, (int)$category_id);
     }
 
     $subcategory_id = !empty($data['subcategory_id']) ? (int)$data['subcategory_id'] : null;
@@ -101,8 +99,8 @@ if ($method === 'POST') {
     if (array_key_exists('parent_category_id', $data)) {
         if ($data['parent_category_id'] !== null) {
             $parent_id = (int)$data['parent_category_id'];
-            if (isset($parentToLegacy[$parent_id])) {
-                $category_id = $parentToLegacy[$parent_id];
+            $category_id = getOrCreateLegacyCategoryId($pdo, $parent_id);
+            if ($category_id > 0) {
                 $updateFields[] = "category_id = ?";
                 $params[] = $category_id;
                 $hasCatUpdate = true;
@@ -114,7 +112,7 @@ if ($method === 'POST') {
         }
     } elseif (array_key_exists('category_id', $data)) {
         $category_id = (int)$data['category_id'];
-        $parent_id = $legacyToParent[$category_id] ?? null;
+        $parent_id = getParentCategoryFromLegacy($pdo, $category_id);
         $updateFields[] = "category_id = ?";
         $params[] = $category_id;
         $hasCatUpdate = true;
@@ -132,7 +130,7 @@ if ($method === 'POST') {
                 $fetchStmt->execute([$id]);
                 $existingProd = $fetchStmt->fetch(PDO::FETCH_ASSOC);
                 if ($existingProd) {
-                    $validateParentId = $legacyToParent[$existingProd['category_id']] ?? null;
+                    $validateParentId = getParentCategoryFromLegacy($pdo, (int)$existingProd['category_id']);
                 }
             }
             

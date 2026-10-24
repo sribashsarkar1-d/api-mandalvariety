@@ -26,8 +26,7 @@ try {
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($product) {
-        $legacyToParent = [52 => 1, 53 => 2, 54 => 3, 55 => 4];
-        $product['parent_category_id'] = isset($product['category_id']) && isset($legacyToParent[$product['category_id']]) ? $legacyToParent[$product['category_id']] : null;
+        $product['parent_category_id'] = isset($product['category_id']) ? getParentCategoryFromLegacy($pdo, (int)$product['category_id']) : null;
         $product['parent_category_name'] = $product['category_name'] ?? null;
         $product['subcategory_id'] = $product['subcategory_id'] ? (int)$product['subcategory_id'] : null;
         $product['child_category_name'] = $product['child_category_name'] ?? null;

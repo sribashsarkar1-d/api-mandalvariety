@@ -137,6 +137,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':sort_order' => $data['sort_order'],
                     ':id' => $id
                 ]);
+
+                // Sync update to categories table
+                try {
+                    $legacyId = getOrCreateLegacyCategoryId($conn, (int)$id);
+                    if ($legacyId > 0) {
+                        $stmtCat = $conn->prepare("UPDATE categories SET name = :name, description = :description, image = :image, is_active = :is_active WHERE id = :id");
+                        $stmtCat->execute([
+                            ':name' => $data['name'],
+                            ':description' => $data['description'] !== '' ? $data['description'] : null,
+                            ':image' => $uploadedImage,
+                            ':is_active' => (int)$data['is_active'],
+                            ':id' => $legacyId
+                        ]);
+                    }
+                } catch (Exception $syncEx) {}
             }
 
             $success = ucfirst($type) . ' category updated successfully';

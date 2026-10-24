@@ -110,12 +110,7 @@ try {
     // If tables don't exist yet
 }
 
-$parentToLegacy = [
-    1 => 52,
-    2 => 53,
-    3 => 54,
-    4 => 55
-];
+list($parentToLegacy, $legacyToParent) = getCategoryMappings($conn);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data['name'] = trim($_POST['name'] ?? '');
@@ -127,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data['stock'] = (int)($_POST['stock'] ?? 0);
     $data['parent_category_id'] = (int)($_POST['parent_category_id'] ?? 0);
     $data['subcategory_id'] = (int)($_POST['subcategory_id'] ?? 0);
-    $data['category_id'] = $parentToLegacy[$data['parent_category_id']] ?? 0;
+    $data['category_id'] = getOrCreateLegacyCategoryId($conn, $data['parent_category_id']);
     $data['weight'] = ($_POST['weight'] ?? '') !== '' ? (float)$_POST['weight'] : '';
     $data['is_active'] = (string)($_POST['is_active'] ?? '1');
 

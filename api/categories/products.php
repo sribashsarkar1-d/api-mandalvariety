@@ -20,13 +20,24 @@ try {
         exit;
     }
 
-    $sql = "SELECT p.*, c.name as category_name 
-            FROM products p 
-            LEFT JOIN categories c ON p.category_id = c.id 
-            WHERE p.category_id = ? AND p.is_active = 1";
-    
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$category_id]);
+    $legacy_id = getLegacyCategoryId($pdo, (int)$category_id);
+    if ($legacy_id > 0 && $legacy_id != (int)$category_id) {
+        $sql = "SELECT p.*, c.name as category_name, cc.name as child_category_name 
+                FROM products p 
+                LEFT JOIN categories c ON p.category_id = c.id 
+                LEFT JOIN child_categories cc ON p.subcategory_id = cc.id 
+                WHERE (p.category_id = ? OR p.category_id = ?) AND p.is_active = 1";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([(int)$category_id, $legacy_id]);
+    } else {
+        $sql = "SELECT p.*, c.name as category_name, cc.name as child_category_name 
+                FROM products p 
+                LEFT JOIN categories c ON p.category_id = c.id 
+                LEFT JOIN child_categories cc ON p.subcategory_id = cc.id 
+                WHERE p.category_id = ? AND p.is_active = 1";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([(int)$category_id]);
+    }
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";

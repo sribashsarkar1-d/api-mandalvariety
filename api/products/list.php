@@ -11,19 +11,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 require_once __DIR__ . '/../config/database.php'; 
 
 try {
-    $parentToLegacy = [1 => 52, 2 => 53, 3 => 54, 4 => 55];
-    $legacyToParent = [52 => 1, 53 => 2, 54 => 3, 55 => 4];
+    list($parentToLegacy, $legacyToParent) = getCategoryMappings($pdo);
 
     $legacy_category_id = $_GET['category_id'] ?? null;
     $parent_category_id = $_GET['parent_category_id'] ?? null;
+    $subcategory_id = $_GET['subcategory_id'] ?? $_GET['child_category_id'] ?? null;
 
-    if ($parent_category_id !== null && isset($parentToLegacy[$parent_category_id])) {
-        $search_category_id = $parentToLegacy[$parent_category_id];
+    if ($parent_category_id !== null) {
+        $search_category_id = getLegacyCategoryId($pdo, (int)$parent_category_id) ?: (int)$parent_category_id;
     } else {
-        $search_category_id = $legacy_category_id;
+        $search_category_id = $legacy_category_id ? (int)$legacy_category_id : null;
     }
 
-    $where = $search_category_id ? "WHERE p.category_id = ? AND p.is_active = 1" : "WHERE p.is_active = 1";
+    $whereClauses = ["p.is_active = 1"];
+    $whereParams = [];
+
+    if ($search_category_id) {
+        $whereClauses[] = "p.category_id = ?";
+        $whereParams[] = $search_category_id;
+    }
+    if ($subcategory_id !== null && is_numeric($subcategory_id) && (int)$subcategory_id > 0) {
+        $whereClauses[] = "p.subcategory_id = ?";
+        $whereParams[] = (int)$subcategory_id;
+    }
+
+    $where = "WHERE " . implode(" AND ", $whereClauses);
     
     // Select all fields (p.*) to ensure frontend models map correctly just like in detail.php
     $sql = "SELECT p.*, c.name as category_name, cc.name as child_category_name,
@@ -35,8 +47,7 @@ try {
             $where";
     
     $stmt = $pdo->prepare($sql);
-    if ($search_category_id) $stmt->execute([$search_category_id]);
-    else $stmt->execute();
+    $stmt->execute($whereParams);
     
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -53,7 +64,7 @@ try {
     }
 
     foreach ($products as &$product) {
-        $product['parent_category_id'] = isset($product['category_id']) && isset($legacyToParent[$product['category_id']]) ? $legacyToParent[$product['category_id']] : null;
+        $product['parent_category_id'] = isset($product['category_id']) ? getParentCategoryFromLegacy($pdo, (int)$product['category_id']) : null;
         $product['parent_category_name'] = $product['category_name'] ?? null;
         $product['subcategory_id'] = $product['subcategory_id'] ? (int)$product['subcategory_id'] : null;
         $product['child_category_name'] = $product['child_category_name'] ?? null;

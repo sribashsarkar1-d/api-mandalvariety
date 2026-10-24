@@ -30,14 +30,8 @@ $offset = ($page - 1) * $limit;
 $search   = trim($_GET['search'] ?? '');
 $category = isset($_GET['category']) ? (int)$_GET['category'] : 0;
 
-$parentToLegacy = [
-    1 => 52,
-    2 => 53,
-    3 => 54,
-    4 => 55
-];
-
-$legacyFilterId = $category > 0 ? ($parentToLegacy[$category] ?? 0) : 0;
+list($parentToLegacy, $legacyToParent) = getCategoryMappings($conn);
+$legacyFilterId = $category > 0 ? getLegacyCategoryId($conn, $category) : 0;
 $status   = trim($_GET['status'] ?? '');
 $sort     = trim($_GET['sort'] ?? 'latest');
 $lowStockLimit = 5;

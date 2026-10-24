@@ -80,18 +80,7 @@ try {
     $childCategories = $conn->query("SELECT id, parent_category_id, name FROM child_categories WHERE is_active = 1 ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {}
 
-$parentToLegacy = [
-    1 => 52,
-    2 => 53,
-    3 => 54,
-    4 => 55
-];
-$legacyToParent = [
-    52 => 1,
-    53 => 2,
-    54 => 3,
-    55 => 4
-];
+list($parentToLegacy, $legacyToParent) = getCategoryMappings($conn);
 
 $stmt = $conn->prepare("
     SELECT p.*, c.name AS category_name
@@ -129,7 +118,7 @@ $data = [
     'stock_quantity' => $product['stock_quantity'] ?? 0,
     'stock' => $product['stock'] ?? 0,
     'category_id' => $product['category_id'] ?? '',
-    'parent_category_id' => $legacyToParent[$product['category_id']] ?? '',
+    'parent_category_id' => getParentCategoryFromLegacy($conn, (int)($product['category_id'] ?? 0)) ?? '',
     'subcategory_id' => $product['subcategory_id'] ?? '',
     'weight' => $product['weight'] ?? '',
     'is_active' => (string)($product['is_active'] ?? '1'),
@@ -157,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data['stock'] = (int)($_POST['stock'] ?? 0);
     $data['parent_category_id'] = (int)($_POST['parent_category_id'] ?? 0);
     $data['subcategory_id'] = (int)($_POST['subcategory_id'] ?? 0);
-    $data['category_id'] = $parentToLegacy[$data['parent_category_id']] ?? 0;
+    $data['category_id'] = getOrCreateLegacyCategoryId($conn, $data['parent_category_id']);
     $data['weight'] = ($_POST['weight'] ?? '') !== '' ? (float)$_POST['weight'] : '';
     $data['is_active'] = (string)($_POST['is_active'] ?? '1');
 
@@ -612,7 +601,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <label class="form-label">Parent Category *</label>
                                     <select name="parent_category_id" id="parent_category_id" class="form-select-premium" required>
                                         <option value="">Select Parent Category</option>
-                                        <?php if (!isset($legacyToParent[$product['category_id']])): ?>
+                                        <?php 
+                                        $resolvedParentId = getParentCategoryFromLegacy($conn, (int)($product['category_id'] ?? 0));
+                                        if (!$resolvedParentId): 
+                                        ?>
                                             <option value="<?= (int)$product['category_id'] ?>" selected>
                                                 <?= e($product['category_name'] ?? 'Unknown Category') ?> (Legacy)
                                             </option>

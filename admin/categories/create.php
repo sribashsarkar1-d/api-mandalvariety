@@ -115,6 +115,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':is_active' => (int)$data['is_active'],
                     ':sort_order' => $data['sort_order']
                 ]);
+                $newParentId = (int)$conn->lastInsertId();
+
+                // Automatically sync to categories table
+                try {
+                    getOrCreateLegacyCategoryId($conn, $newParentId);
+                } catch (Exception $syncEx) {}
             }
 
             $success = ucfirst($data['type']) . ' category created successfully';
