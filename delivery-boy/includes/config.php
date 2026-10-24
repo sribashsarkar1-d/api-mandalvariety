@@ -54,4 +54,42 @@ if (!function_exists('checkDeliveryLogin')) {
         }
     }
 }
+
+// Helper to get product image URL
+if (!function_exists('getDeliveryProductImageUrl')) {
+    function getDeliveryProductImageUrl($imagesRaw) {
+        if (empty($imagesRaw)) {
+            return '';
+        }
+        $imgName = '';
+        if (is_string($imagesRaw)) {
+            $decoded = @json_decode($imagesRaw, true);
+            if (is_array($decoded) && !empty($decoded)) {
+                $imgName = trim((string)$decoded[0]);
+            } else {
+                $parts = explode(',', $imagesRaw);
+                $imgName = trim((string)$parts[0]);
+            }
+        } elseif (is_array($imagesRaw) && !empty($imagesRaw)) {
+            $imgName = trim((string)$imagesRaw[0]);
+        }
+
+        $imgName = trim($imgName, "[]\"' ");
+        if (empty($imgName)) {
+            return '';
+        }
+
+        if (filter_var($imgName, FILTER_VALIDATE_URL) || strpos($imgName, 'http://') === 0 || strpos($imgName, 'https://') === 0) {
+            return $imgName;
+        }
+
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+        if (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false) {
+            return '/auth-api/admin/uploads/' . ltrim($imgName, '/');
+        }
+
+        // Live production URL
+        return 'https://mandal-variety.com/admin/uploads/' . ltrim($imgName, '/');
+    }
+}
 ?>

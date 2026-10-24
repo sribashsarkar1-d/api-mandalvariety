@@ -220,20 +220,20 @@ $grand_total = (float)($order['grand_total'] ?? $order['total_amount'] ?? 0);
             <div class="fw-bold mb-3 mt-2">Items (<?= count($items) ?>)</div>
             <div class="items-list" style="padding-right: 5px;">
             <?php foreach ($items as $item): 
-                $imgName = '';
-                if (!empty($item['images'])) {
-                    $decoded = @json_decode($item['images'], true);
-                    if (is_array($decoded) && count($decoded) > 0) {
-                        $imgName = $decoded[0];
-                    } else {
-                        $parts = explode(',', $item['images']);
-                        $imgName = trim($parts[0]);
-                    }
-                }
-                $img = !empty($imgName) ? '../admin/uploads/'.e($imgName) : 'https://via.placeholder.com/50?text=Item';
+                $imgUrl = getDeliveryProductImageUrl($item['images'] ?? '');
+                $fallbackUrl = !empty($imgUrl) && strpos($imgUrl, 'http') === 0 ? 'https://admin.mandal-variety.com/uploads/' . rawurlencode(basename($imgUrl)) : 'https://via.placeholder.com/50?text=Item';
             ?>
                 <div class="d-flex align-items-center mb-3">
-                    <img src="<?= $img ?>" alt="Product" style="width: 45px; height: 45px; border-radius: 10px; object-fit: cover; border: 1px solid #e2e8f0; margin-right: 12px;">
+                    <?php if (!empty($imgUrl)): ?>
+                        <img src="<?= e($imgUrl) ?>" 
+                             alt="Product" 
+                             onerror="if (this.src.indexOf('admin.mandal-variety.com') === -1) { this.src='<?= e($fallbackUrl) ?>'; } else { this.onerror=null; this.src='https://via.placeholder.com/50?text=Item'; }" 
+                             style="width: 45px; height: 45px; border-radius: 10px; object-fit: cover; border: 1px solid #e2e8f0; margin-right: 12px; background: #f8fafc;">
+                    <?php else: ?>
+                        <div style="width: 45px; height: 45px; border-radius: 10px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 1.2rem; margin-right: 12px; flex-shrink: 0; border: 1px solid #e2e8f0;">
+                            <i class="fa-solid fa-box-open"></i>
+                        </div>
+                    <?php endif; ?>
                     <div class="flex-grow-1">
                         <div class="fw-bold text-dark fs-6" style="line-height: 1.2;"><?= e($item['product_name']) ?></div>
                         <div style="font-size: 0.8rem; color: var(--text-muted);">Qty: <?= (int)$item['quantity'] ?></div>
@@ -390,20 +390,20 @@ $grand_total = (float)($order['grand_total'] ?? $order['total_amount'] ?? 0);
             <div class="fw-bold mb-3 mt-2" style="font-size:0.85rem;">Items to Deliver (<?= count($items) ?>)</div>
             <div class="items-list" style="padding-right: 5px;">
             <?php foreach ($items as $item): 
-                $imgName = '';
-                if (!empty($item['images'])) {
-                    $decoded = @json_decode($item['images'], true);
-                    if (is_array($decoded) && count($decoded) > 0) {
-                        $imgName = $decoded[0];
-                    } else {
-                        $parts = explode(',', $item['images']);
-                        $imgName = trim($parts[0]);
-                    }
-                }
-                $img = !empty($imgName) ? '../admin/uploads/'.e($imgName) : 'https://via.placeholder.com/50?text=Item';
+                $imgUrl = getDeliveryProductImageUrl($item['images'] ?? '');
+                $fallbackUrl = !empty($imgUrl) && strpos($imgUrl, 'http') === 0 ? 'https://admin.mandal-variety.com/uploads/' . rawurlencode(basename($imgUrl)) : 'https://via.placeholder.com/50?text=Item';
             ?>
                 <div class="d-flex align-items-center mb-2">
-                    <img src="<?= $img ?>" alt="Product" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid #e2e8f0; margin-right: 10px;">
+                    <?php if (!empty($imgUrl)): ?>
+                        <img src="<?= e($imgUrl) ?>" 
+                             alt="Product" 
+                             onerror="if (this.src.indexOf('admin.mandal-variety.com') === -1) { this.src='<?= e($fallbackUrl) ?>'; } else { this.onerror=null; this.src='https://via.placeholder.com/50?text=Item'; }" 
+                             style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid #e2e8f0; margin-right: 10px; background: #f8fafc;">
+                    <?php else: ?>
+                        <div style="width: 40px; height: 40px; border-radius: 8px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 1.1rem; margin-right: 10px; flex-shrink: 0; border: 1px solid #e2e8f0;">
+                            <i class="fa-solid fa-box-open"></i>
+                        </div>
+                    <?php endif; ?>
                     <div class="flex-grow-1">
                         <div class="fw-bold text-dark" style="font-size: 0.85rem; line-height: 1.2;"><?= e($item['product_name']) ?></div>
                         <div style="font-size: 0.75rem; color: var(--text-muted);">Qty: <?= (int)$item['quantity'] ?></div>
