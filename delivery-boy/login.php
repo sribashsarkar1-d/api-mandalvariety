@@ -1,6 +1,17 @@
 <?php
 require_once 'includes/config.php';
-require_once '../admin/vendor/autoload.php';
+
+// Resilient vendor autoload path resolution
+$autoload = __DIR__ . '/../admin/vendor/autoload.php';
+if (!file_exists($autoload)) {
+    $autoload = __DIR__ . '/../vendor/autoload.php';
+}
+if (!file_exists($autoload)) {
+    $autoload = dirname(__DIR__) . '/vendor/autoload.php';
+}
+if (file_exists($autoload)) {
+    require_once $autoload;
+}
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -21,9 +32,9 @@ $success = '';
 $step = isset($_SESSION['login_step']) ? (int)$_SESSION['login_step'] : 1;
 
 /**
- * Helper to send OTP email
+ * Helper to send OTP email with detailed error reporting
  */
-function sendDeliveryBoyOtpEmail($email, $name, $otp) {
+function sendDeliveryBoyOtpEmail($email, $name, $otp, &$errMessage = '') {
     $mailBody = "
     <div style='font-family:Arial,sans-serif;padding:24px;border:1px solid #e2e8f0;border-radius:12px;max-width:500px;margin:0 auto;background:#ffffff;'>
         <div style='text-align:center;margin-bottom:20px;'>
@@ -47,7 +58,7 @@ function sendDeliveryBoyOtpEmail($email, $name, $otp) {
         $mail->SMTPAuth   = true;
         $mail->Username   = 'sribashsarkarblp@gmail.com';
         $mail->Password   = 'mjkl wzow ycsq jnps';
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->SMTPSecure = 'tls';
         $mail->Port       = 587;
 
         $mail->setFrom('sribashsarkarblp@gmail.com', 'Mandal Variety Delivery');
@@ -61,6 +72,7 @@ function sendDeliveryBoyOtpEmail($email, $name, $otp) {
         $mail->send();
         return true;
     } catch (Exception $ex) {
+        $errMessage = $mail->ErrorInfo ?: $ex->getMessage();
         return false;
     }
 }
@@ -75,18 +87,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_resend_otp'])) {
     
     $otp = sprintf("%06d", mt_rand(1, 999999));
     $_SESSION['login_otp'] = $otp;
-    $sent = sendDeliveryBoyOtpEmail($_SESSION['login_email'], $_SESSION['login_delivery_boy_name'], $otp);
+    $mailError = '';
+    $sent = sendDeliveryBoyOtpEmail($_SESSION['login_email'], $_SESSION['login_delivery_boy_name'], $otp, $mailError);
     
     if ($sent) {
         echo json_encode(['success' => true, 'message' => 'A new 6-digit OTP has been sent to your email.']);
     } else {
-        echo json_encode(['success' => false, 'message' => 'Failed to send email. Please check your connection.']);
+        echo json_encode(['success' => false, 'message' => 'Failed to send email: ' . $mailError]);
     }
     exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['send_otp'])) {
+    if (isset($_POST['send_otp']) || isset($_POST['email'])) {
         $email = trim($_POST['email'] ?? '');
         if ($email === '') {
             $error = 'Please enter your email address.';
@@ -96,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $delivery_boy = $stmt->fetch();
 
             if (!$delivery_boy) {
-                $error = 'No delivery partner found with this email.';
+                $error = 'No delivery partner found with email: ' . htmlspecialchars($email, ENT_QUOTES, 'UTF-8');
             } elseif ((int)$delivery_boy['is_active'] !== 1) {
                 $error = 'Your account is inactive. Please contact the administrator.';
             } else {
@@ -106,12 +119,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['login_delivery_boy_id'] = $delivery_boy['id'];
                 $_SESSION['login_delivery_boy_name'] = $delivery_boy['name'];
 
-                $sent = sendDeliveryBoyOtpEmail($email, $delivery_boy['name'], $otp);
+                $mailError = '';
+                $sent = sendDeliveryBoyOtpEmail($email, $delivery_boy['name'], $otp, $mailError);
                 if ($sent) {
                     $_SESSION['login_step'] = 2;
                     $step = 2;
                 } else {
-                    $error = 'Failed to send OTP email. Please try again.';
+                    $error = 'Failed to send OTP email: ' . $mailError;
                 }
             }
         }
@@ -121,16 +135,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $otp = sprintf("%06d", mt_rand(1, 999999));
             $_SESSION['login_otp'] = $otp;
-            $sent = sendDeliveryBoyOtpEmail($_SESSION['login_email'], $_SESSION['login_delivery_boy_name'], $otp);
+            $mailError = '';
+            $sent = sendDeliveryBoyOtpEmail($_SESSION['login_email'], $_SESSION['login_delivery_boy_name'], $otp, $mailError);
             if ($sent) {
                 $success = 'A new 6-digit OTP has been sent to your email.';
             } else {
-                $error = 'Failed to resend OTP. Please try again later.';
+                $error = 'Failed to resend OTP: ' . $mailError;
             }
             $step = 2;
         }
-    } elseif (isset($_POST['verify_otp'])) {
-        // Collect OTP either from individual otp1..otp6 or combined otp
+    } elseif (isset($_POST['verify_otp']) || isset($_POST['full_otp'])) {
+        // Collect OTP either from full_otp or individual otp1..otp6
         $otp_entered = '';
         if (!empty($_POST['full_otp'])) {
             $otp_entered = trim($_POST['full_otp']);
@@ -192,7 +207,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             justify-content: center;
             position: relative;
         }
-        /* Faint subtle background pattern */
         body::before {
             content: '';
             position: absolute;
@@ -402,7 +416,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: var(--text-dark);
         }
         .alert-custom {
-            font-size: 13px;
+            font-size: 13.5px;
             border-radius: 12px;
             padding: 12px 14px;
             margin-bottom: 20px;
@@ -410,6 +424,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             align-items: center;
             gap: 10px;
             text-align: left;
+            line-height: 1.4;
         }
     </style>
 </head>
@@ -434,9 +449,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         <?php endif; ?>
 
-        <form method="POST" id="emailForm" onsubmit="handleEmailSubmit(this)">
+        <form method="POST" id="emailForm" onsubmit="handleEmailSubmit(event, this)">
+            <input type="hidden" name="send_otp" value="1">
             <input type="email" name="email" class="form-control-custom" placeholder="name@mandal-variety.com" value="<?= htmlspecialchars($_POST['email'] ?? '', ENT_QUOTES, 'UTF-8') ?>" required autofocus autocomplete="email">
-            <button type="submit" name="send_otp" id="sendOtpBtn" class="btn-green">
+            <button type="submit" id="sendOtpBtn" class="btn-green">
                 <span>Send OTP Code</span>
                 <i class="fa-solid fa-arrow-right ms-2"></i>
             </button>
@@ -447,10 +463,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <a href="#">Partner Terms of Service</a> &bull; <a href="#">Privacy Policy</a>
         </div>
         <script>
-            function handleEmailSubmit(form) {
+            function handleEmailSubmit(e, form) {
                 const btn = document.getElementById('sendOtpBtn');
-                btn.disabled = true;
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Sending OTP...';
+                // Do not disable synchronously to allow form payload fields to submit properly
+                setTimeout(() => {
+                    btn.disabled = true;
+                }, 40);
+                return true;
             }
         </script>
     <?php else: ?>
@@ -487,7 +507,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
 
         <form method="POST" id="otpForm" onsubmit="return handleOtpSubmit(event)">
-            <!-- Hidden field for combined OTP if needed -->
+            <!-- Hidden fields ensuring submit action is always captured -->
+            <input type="hidden" name="verify_otp" value="1">
             <input type="hidden" name="full_otp" id="fullOtpInput">
 
             <div class="otp-container" id="otpContainer">
@@ -506,7 +527,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </button>
             </div>
 
-            <button type="submit" name="verify_otp" id="verifyBtn" class="btn-green">
+            <button type="submit" id="verifyBtn" class="btn-green">
                 <i class="fa-solid fa-circle-check me-2"></i>
                 <span id="btnVerifyText">Verify & Continue</span>
             </button>
@@ -588,12 +609,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Input handlers for each box
             inputs.forEach((input, index) => {
-                // When focused, auto-select text so typing overwrites
                 input.addEventListener('focus', () => {
                     input.select();
                 });
 
-                // Listen to 'input' event (handles mobile virtual keyboard & SMS autofill reliably)
                 input.addEventListener('input', (e) => {
                     const rawVal = input.value;
 
@@ -609,12 +628,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     syncBoxesState();
 
                     if (cleanVal) {
-                        // Move to next field
                         if (index < inputs.length - 1) {
                             inputs[index + 1].focus();
                             inputs[index + 1].select();
                         } else {
-                            // Last field filled
                             checkAndSubmitIfComplete();
                         }
                     }
@@ -624,16 +641,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 input.addEventListener('keydown', (e) => {
                     if (e.key === 'Backspace' || e.keyCode === 8) {
                         if (!input.value) {
-                            // If current box is already empty, move to previous box and clear it
                             if (index > 0) {
                                 e.preventDefault();
                                 inputs[index - 1].value = '';
                                 syncBoxesState();
                                 inputs[index - 1].focus();
                             }
-                        } else {
-                            // Current box has a digit, let native backspace clear it
-                            // After clearing, keep focus on this box
                         }
                     } else if (e.key === 'ArrowLeft' && index > 0) {
                         e.preventDefault();
@@ -646,7 +659,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 });
 
-                // Clipboard paste handling on individual box
                 input.addEventListener('paste', (e) => {
                     e.preventDefault();
                     const pasteText = (e.clipboardData || window.clipboardData).getData('text');
@@ -674,9 +686,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 isSubmitting = true;
                 if (fullOtpInput) fullOtpInput.value = otp;
-                verifyBtn.disabled = true;
                 btnVerifyText.innerText = 'Verifying...';
                 verifyBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Verifying...';
+                setTimeout(() => {
+                    verifyBtn.disabled = true;
+                }, 40);
                 return true;
             }
 
@@ -726,17 +740,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 .then(r => r.json())
                 .then(data => {
                     if (data.success) {
-                        // Clear inputs
                         inputs.forEach(i => { i.value = ''; i.classList.remove('filled'); });
                         inputs[0].focus();
                         syncBoxesState();
 
-                        // Show success alert
                         if (errorAlert) errorAlert.remove();
                         successMsg.innerText = data.message || 'A new 6-digit OTP has been sent.';
                         successAlert.classList.remove('d-none');
 
-                        // Restart timer
                         startTimer();
                     } else {
                         alert(data.message || 'Failed to resend OTP. Please try again.');
