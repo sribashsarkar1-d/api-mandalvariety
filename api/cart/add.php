@@ -1,11 +1,18 @@
 <?php
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=UTF-8');
 require_once __DIR__ . '/../config/database.php';
 
 try {
-    $user_id = (int)($_GET['user_id'] ?? 0);
-    $input = json_decode(file_get_contents('php://input'), true);
+    $rawInput = file_get_contents('php://input');
+    if (empty($rawInput) && php_sapi_name() === 'cli') {
+        $rawInput = file_get_contents('php://stdin');
+    }
+    $input = json_decode($rawInput, true);
+    if (!is_array($input)) {
+        $input = !empty($_POST) ? $_POST : [];
+    }
 
+    $user_id = (int)($input['user_id'] ?? $_GET['user_id'] ?? 0);
     $product_id = (int)($input['product_id'] ?? 0);
     $quantity = (int)($input['quantity'] ?? 1);
 
@@ -14,12 +21,12 @@ try {
         echo json_encode([
             'success' => false, 
             'message' => 'Invalid product_id or quantity. Use: {"product_id":1,"quantity":2}'
-        ]);
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
     // QUERY 1: PRODUCTS - check existence, active status and stock
-    $stmt = $pdo->prepare("SELECT id, name, price, discount_price, stock_quantity, stock, is_active, status FROM products WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT id, name, price, discount_price, stock_quantity, stock, is_active FROM products WHERE id = ?");
     $stmt->execute([$product_id]);
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -28,29 +35,32 @@ try {
         echo json_encode([
             'success' => false,
             'message' => 'Product not found.'
-        ]);
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
-    $isActive = ((int)($product['is_active'] ?? 1) === 1) && (($product['status'] ?? 'published') !== 'inactive');
+    $isActive = ((int)($product['is_active'] ?? 1) === 1);
+    if (isset($product['status'])) {
+        $isActive = $isActive && ($product['status'] !== 'inactive');
+    }
     if (!$isActive) {
         http_response_code(400);
         echo json_encode([
             'success' => false,
             'message' => "{$product['name']} is currently unavailable for purchase.",
             'available_stock' => 0
-        ]);
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
-    $available_stock = max(0, (int)($product['stock_quantity'] ?? 0));
+    $available_stock = max(0, max((int)($product['stock_quantity'] ?? 0), (int)($product['stock'] ?? 0)));
     if ($available_stock <= 0) {
         http_response_code(400);
         echo json_encode([
             'success' => false,
             'message' => "{$product['name']} is out of stock.",
             'available_stock' => 0
-        ]);
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
@@ -85,7 +95,7 @@ try {
             'success' => false,
             'message' => $message,
             'available_stock' => $available_stock
-        ]);
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
@@ -119,13 +129,13 @@ try {
             'quantity' => $new_qty,
             'available_stock' => $available_stock
         ]
-    ], JSON_PRETTY_PRINT);
+    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode([
         'success' => false,
         'message' => 'Server Error: ' . $e->getMessage()
-    ]);
+    ], JSON_UNESCAPED_UNICODE);
 }
 ?>

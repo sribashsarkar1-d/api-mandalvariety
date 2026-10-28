@@ -45,8 +45,7 @@ try {
             p.images, 
             p.stock_quantity,
             p.stock,
-            p.is_active,
-            p.status
+            p.is_active
         FROM cart_items ci
         JOIN products p ON ci.product_id = p.id
         WHERE ci.cart_id = ?
@@ -64,12 +63,16 @@ try {
         $item['cart_item_id'] = (int)$item['cart_item_id'];
         $item['product_id'] = (int)$item['product_id'];
         
-        $stockQty = max(0, (int)($item['stock_quantity'] ?? 0));
+        $stockQty = max(0, max((int)($item['stock_quantity'] ?? 0), (int)($item['stock'] ?? 0)));
         $item['stock_quantity'] = $stockQty;
         $item['stock'] = $stockQty;
         $item['available_stock'] = $stockQty;
 
-        $isActive = ((int)($item['is_active'] ?? 1) === 1) && (($item['status'] ?? 'published') !== 'inactive');
+        $isActive = ((int)($item['is_active'] ?? 1) === 1);
+        if (isset($item['status'])) {
+            $isActive = $isActive && ($item['status'] !== 'inactive');
+        }
+        $item['status'] = $item['status'] ?? 'published';
         $item['is_active'] = $isActive ? 1 : 0;
         $item['isInStock'] = $isActive && ($stockQty > 0);
         $item['is_in_stock'] = $item['isInStock'];

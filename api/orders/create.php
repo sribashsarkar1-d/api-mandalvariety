@@ -111,7 +111,7 @@ try {
 
     $placeholders = implode(',', array_fill(0, count($product_ids), '?'));
     $stmtProducts = $pdo->prepare("
-        SELECT id, name, price, discount_price, stock_quantity, stock, is_active, status, images
+        SELECT id, name, price, discount_price, stock_quantity, stock, is_active, images
         FROM products
         WHERE id IN ($placeholders)
         FOR UPDATE
@@ -141,7 +141,10 @@ try {
             continue;
         }
 
-        $isActive = ((int)($p['is_active'] ?? 1) === 1) && (($p['status'] ?? 'published') !== 'inactive');
+        $isActive = ((int)($p['is_active'] ?? 1) === 1);
+        if (isset($p['status'])) {
+            $isActive = $isActive && ($p['status'] !== 'inactive');
+        }
         $current_stock = max(0, max((int)($p['stock_quantity'] ?? 0), (int)($p['stock'] ?? 0)));
 
         if (!$isActive) {

@@ -3,9 +3,16 @@ header('Content-Type: application/json');
 require_once __DIR__ . '/../config/database.php';
 
 try {
-    $user_id = (int)($_GET['user_id'] ?? 0);
-    $input = json_decode(file_get_contents('php://input'), true);
+    $rawInput = file_get_contents('php://input');
+    if (empty($rawInput) && php_sapi_name() === 'cli') {
+        $rawInput = file_get_contents('php://stdin');
+    }
+    $input = json_decode($rawInput, true);
+    if (!is_array($input)) {
+        $input = !empty($_POST) ? $_POST : [];
+    }
     
+    $user_id = (int)($input['user_id'] ?? $_GET['user_id'] ?? 0);
     $cart_item_id = (int)($input['cart_item_id'] ?? 0);
     $product_id = (int)($input['product_id'] ?? 0);
     $quantity = (int)($input['quantity'] ?? 0);
@@ -19,7 +26,7 @@ try {
     // 1. Verify user owns this cart item (search by cart_item_id or product_id)
     if ($cart_item_id > 0) {
         $stmt = $pdo->prepare("
-            SELECT ci.id, ci.product_id, ci.quantity as current_quantity, p.name, p.stock_quantity, p.stock, p.is_active, p.status 
+            SELECT ci.id, ci.product_id, ci.quantity as current_quantity, p.name, p.stock_quantity, p.stock, p.is_active 
             FROM cart_items ci
             JOIN carts c ON ci.cart_id = c.id
             JOIN products p ON ci.product_id = p.id
@@ -28,7 +35,7 @@ try {
         $stmt->execute([$cart_item_id, $user_id]);
     } else {
         $stmt = $pdo->prepare("
-            SELECT ci.id, ci.product_id, ci.quantity as current_quantity, p.name, p.stock_quantity, p.stock, p.is_active, p.status 
+            SELECT ci.id, ci.product_id, ci.quantity as current_quantity, p.name, p.stock_quantity, p.stock, p.is_active 
             FROM cart_items ci
             JOIN carts c ON ci.cart_id = c.id
             JOIN products p ON ci.product_id = p.id
@@ -45,8 +52,11 @@ try {
     }
 
     $actualCartItemId = (int)$item['id'];
-    $available_stock = max(0, (int)($item['stock_quantity'] ?? 0));
-    $isActive = ((int)($item['is_active'] ?? 1) === 1) && (($item['status'] ?? 'published') !== 'inactive');
+    $available_stock = max(0, max((int)($item['stock_quantity'] ?? 0), (int)($item['stock'] ?? 0)));
+    $isActive = ((int)($item['is_active'] ?? 1) === 1);
+    if (isset($item['status'])) {
+        $isActive = $isActive && ($item['status'] !== 'inactive');
+    }
 
     // 2. Check active and stock status
     if (!$isActive || $available_stock <= 0) {
