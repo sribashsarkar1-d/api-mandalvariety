@@ -63,7 +63,6 @@ try {
             if (is_array($decodedAttrs)) {
                 $attributes = $decodedAttrs;
             }
-            // Optional: return parsed attributes instead of string
             $product['attributes'] = $attributes; 
         }
 
@@ -94,9 +93,14 @@ try {
         }
         $product['discountPercentage'] = isset($product['discount_percentage']) ? (int)$product['discount_percentage'] : $discountPercentage;
         
-        // 6. isInStock
-        $stock = (int)($product['stock_quantity'] ?? 0);
-        $product['isInStock'] = isset($product['is_in_stock']) ? (bool)$product['is_in_stock'] : ($stock > 0);
+        // 6. isInStock & available stock
+        $stock = max(0, (int)($product['stock_quantity'] ?? 0));
+        $product['stock_quantity'] = $stock;
+        $product['stock'] = $stock;
+        $product['available_stock'] = $stock;
+        $isActive = ((int)($product['is_active'] ?? 1) === 1) && (($product['status'] ?? 'published') !== 'inactive');
+        $product['isInStock'] = $isActive && ($stock > 0);
+        $product['is_in_stock'] = $product['isInStock'];
         
         // 7. maxOrderQuantity
         $product['maxOrderQuantity'] = isset($product['max_order_quantity']) ? (int)$product['max_order_quantity'] : 10;

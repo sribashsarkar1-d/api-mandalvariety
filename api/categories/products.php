@@ -70,23 +70,28 @@ try {
         $product['id'] = (int)$product['id'];
         $product['price'] = number_format((float)($product['price'] ?? 0), 2, '.', '');
         $product['discount_price'] = isset($product['discount_price']) ? number_format((float)$product['discount_price'], 2, '.', '') : null;
-        $product['stock_quantity'] = (int)($product['stock_quantity'] ?? 0);
+        
+        $stockQty = max(0, (int)($product['stock_quantity'] ?? 0));
+        $product['stock_quantity'] = $stockQty;
+        $product['stock'] = $stockQty;
+        $product['available_stock'] = $stockQty;
         
         $product['shortDescription'] = $product['short_description'] ?? 'High quality product available at best price.';
         $product['brand'] = $product['brand'] ?? 'Mandal Variety';
         $product['unitLabel'] = $product['unit_label'] ?? $product['unit'] ?? 'pcs';
         $product['couponApplicable'] = isset($product['coupon_applicable']) ? (bool)$product['coupon_applicable'] : true;
         
-        $price = $product['price'];
-        $discountPrice = $product['discount_price'] ?? 0;
+        $price = (float)$product['price'];
+        $discountPrice = (float)($product['discount_price'] ?? 0);
         $discountPercentage = 0;
         if ($price > 0 && $discountPrice > 0 && $discountPrice < $price) {
             $discountPercentage = round((($price - $discountPrice) / $price) * 100);
         }
         $product['discountPercentage'] = isset($product['discount_percentage']) ? (int)$product['discount_percentage'] : $discountPercentage;
         
-        $stock = $product['stock_quantity'];
-        $product['isInStock'] = isset($product['is_in_stock']) ? (bool)$product['is_in_stock'] : ($stock > 0);
+        $isActive = ((int)($product['is_active'] ?? 1) === 1) && (($product['status'] ?? 'published') !== 'inactive');
+        $product['isInStock'] = $isActive && ($stockQty > 0);
+        $product['is_in_stock'] = $product['isInStock'];
         
         $product['maxOrderQuantity'] = isset($product['max_order_quantity']) ? (int)$product['max_order_quantity'] : 10;
         $product['minOrderQuantity'] = isset($product['min_order_quantity']) ? (int)$product['min_order_quantity'] : 1;

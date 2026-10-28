@@ -25,7 +25,8 @@ try {
                     'total_items' => 0,
                     'subtotal' => 0,
                     'total' => 0
-                ]
+                ],
+                'has_stock_issues' => false
             ]
         ]);
         exit;
@@ -40,8 +41,12 @@ try {
             p.id as product_id, 
             p.name, 
             p.price as current_price, 
+            p.discount_price,
             p.images, 
-            p.stock_quantity
+            p.stock_quantity,
+            p.stock,
+            p.is_active,
+            p.status
         FROM cart_items ci
         JOIN products p ON ci.product_id = p.id
         WHERE ci.cart_id = ?
@@ -51,10 +56,38 @@ try {
 
     $subtotal = 0;
     $total_items = 0;
+    $has_stock_issues = false;
 
     $baseUrl = 'https://mandal-variety.com/admin/uploads/';
     foreach ($items as &$item) {
-        $item['subtotal'] = $item['quantity'] * $item['current_price'];
+        $item['quantity'] = (int)$item['quantity'];
+        $item['cart_item_id'] = (int)$item['cart_item_id'];
+        $item['product_id'] = (int)$item['product_id'];
+        
+        $stockQty = max(0, (int)($item['stock_quantity'] ?? 0));
+        $item['stock_quantity'] = $stockQty;
+        $item['stock'] = $stockQty;
+        $item['available_stock'] = $stockQty;
+
+        $isActive = ((int)($item['is_active'] ?? 1) === 1) && (($item['status'] ?? 'published') !== 'inactive');
+        $item['is_active'] = $isActive ? 1 : 0;
+        $item['isInStock'] = $isActive && ($stockQty > 0);
+        $item['is_in_stock'] = $item['isInStock'];
+        
+        $item['has_insufficient_stock'] = $item['isInStock'] && ($item['quantity'] > $stockQty);
+        $item['is_available'] = $item['isInStock'] && ($item['quantity'] <= $stockQty);
+
+        if (!$item['is_available']) {
+            $has_stock_issues = true;
+        }
+
+        $effectivePrice = (float)$item['current_price'];
+        if (isset($item['discount_price']) && (float)$item['discount_price'] > 0 && (float)$item['discount_price'] < $effectivePrice) {
+            $effectivePrice = (float)$item['discount_price'];
+        }
+        $item['current_price'] = number_format($effectivePrice, 2, '.', '');
+
+        $item['subtotal'] = $item['quantity'] * $effectivePrice;
         $subtotal += $item['subtotal'];
         $total_items += $item['quantity'];
 
@@ -68,7 +101,10 @@ try {
             }
         }
         $item['images'] = array_map(function($img) use ($baseUrl) {
-            return $baseUrl . $img;
+            if (filter_var($img, FILTER_VALIDATE_URL) || strpos($img, 'http') === 0) {
+                return $img;
+            }
+            return $baseUrl . ltrim($img, '/');
         }, $parsedImages);
     }
     unset($item);
@@ -76,13 +112,14 @@ try {
     echo json_encode([
         'success' => true,
         'data' => [
-            'cart_id' => $cart['id'],
+            'cart_id' => (int)$cart['id'],
             'items' => $items,
             'summary' => [
                 'total_items' => $total_items,
-                'subtotal' => $subtotal,
-                'total' => $subtotal // can add tax/shipping here later
-            ]
+                'subtotal' => round($subtotal, 2),
+                'total' => round($subtotal, 2)
+            ],
+            'has_stock_issues' => $has_stock_issues
         ]
     ], JSON_PRETTY_PRINT);
 

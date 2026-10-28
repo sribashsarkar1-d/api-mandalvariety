@@ -85,47 +85,51 @@ try {
         }
         $product['images'] = $full_images;
             
-            // Ensure proper types and add camelCase fallback fields to match detail.php
-            $product['id'] = (int)$product['id'];
-            $product['price'] = number_format((float)($product['price'] ?? 0), 2, '.', '');
-            $product['discount_price'] = isset($product['discount_price']) ? number_format((float)$product['discount_price'], 2, '.', '') : null;
-            $product['stock_quantity'] = (int)($product['stock_quantity'] ?? 0);
-            
-            $product['shortDescription'] = $product['short_description'] ?? 'High quality product available at best price.';
-            $product['brand'] = $product['brand'] ?? 'Mandal Variety';
-            $product['unitLabel'] = $product['unit_label'] ?? $product['unit'] ?? 'pcs';
-            $product['couponApplicable'] = isset($product['coupon_applicable']) ? (bool)$product['coupon_applicable'] : true;
-            
-            $price = $product['price'];
-            $discountPrice = $product['discount_price'] ?? 0;
-            $discountPercentage = 0;
-            if ($price > 0 && $discountPrice > 0 && $discountPrice < $price) {
-                $discountPercentage = round((($price - $discountPrice) / $price) * 100);
-            }
-            $product['discountPercentage'] = isset($product['discount_percentage']) ? (int)$product['discount_percentage'] : $discountPercentage;
-            
-            $stock = $product['stock_quantity'];
-            $product['isInStock'] = isset($product['is_in_stock']) ? (bool)$product['is_in_stock'] : ($stock > 0);
-            
-            $product['maxOrderQuantity'] = isset($product['max_order_quantity']) ? (int)$product['max_order_quantity'] : 10;
-            $product['minOrderQuantity'] = isset($product['min_order_quantity']) ? (int)$product['min_order_quantity'] : 1;
-            $product['estimatedDeliveryTime'] = $product['estimated_delivery_time'] ?? '30-45 minutes';
-            $product['expiryDate'] = $product['expiry_date'] ?? null;
-            $product['manufacturingDate'] = $product['manufacturing_date'] ?? null;
-            $product['countryOfOrigin'] = $product['country_of_origin'] ?? 'India';
-            $product['deliveryType'] = $product['delivery_type'] ?? 'instant';
-            
-            $deliveryCharge = isset($product['delivery_charge']) ? (float)$product['delivery_charge'] : 10.00;
-            $product['deliveryCharge'] = $deliveryCharge;
-            $product['freeDelivery'] = isset($product['free_delivery']) ? (bool)$product['free_delivery'] : ($deliveryCharge == 0);
-            
-            $product['rating'] = isset($product['rating']) ? round((float)$product['rating'], 1) : 0;
-            $product['reviewCount'] = isset($product['reviewCount']) ? (int)$product['reviewCount'] : 0;
+        // Ensure proper types and add camelCase fallback fields to match detail.php
+        $product['id'] = (int)$product['id'];
+        $product['price'] = number_format((float)($product['price'] ?? 0), 2, '.', '');
+        $product['discount_price'] = isset($product['discount_price']) ? number_format((float)$product['discount_price'], 2, '.', '') : null;
+        
+        $stockQty = max(0, (int)($product['stock_quantity'] ?? 0));
+        $product['stock_quantity'] = $stockQty;
+        $product['stock'] = $stockQty;
+        $product['available_stock'] = $stockQty;
+        
+        $product['shortDescription'] = $product['short_description'] ?? 'High quality product available at best price.';
+        $product['brand'] = $product['brand'] ?? 'Mandal Variety';
+        $product['unitLabel'] = $product['unit_label'] ?? $product['unit'] ?? 'pcs';
+        $product['couponApplicable'] = isset($product['coupon_applicable']) ? (bool)$product['coupon_applicable'] : true;
+        
+        $price = (float)$product['price'];
+        $discountPrice = (float)($product['discount_price'] ?? 0);
+        $discountPercentage = 0;
+        if ($price > 0 && $discountPrice > 0 && $discountPrice < $price) {
+            $discountPercentage = round((($price - $discountPrice) / $price) * 100);
+        }
+        $product['discountPercentage'] = isset($product['discount_percentage']) ? (int)$product['discount_percentage'] : $discountPercentage;
+        
+        $isActive = ((int)($product['is_active'] ?? 1) === 1) && (($product['status'] ?? 'published') !== 'inactive');
+        $product['isInStock'] = $isActive && ($stockQty > 0);
+        $product['is_in_stock'] = $product['isInStock'];
+        
+        $product['maxOrderQuantity'] = isset($product['max_order_quantity']) ? (int)$product['max_order_quantity'] : 10;
+        $product['minOrderQuantity'] = isset($product['min_order_quantity']) ? (int)$product['min_order_quantity'] : 1;
+        $product['estimatedDeliveryTime'] = $product['estimated_delivery_time'] ?? '30-45 minutes';
+        $product['expiryDate'] = $product['expiry_date'] ?? null;
+        $product['manufacturingDate'] = $product['manufacturing_date'] ?? null;
+        $product['countryOfOrigin'] = $product['country_of_origin'] ?? 'India';
+        $product['deliveryType'] = $product['delivery_type'] ?? 'instant';
+        
+        $deliveryCharge = isset($product['delivery_charge']) ? (float)$product['delivery_charge'] : 10.00;
+        $product['deliveryCharge'] = $deliveryCharge;
+        $product['freeDelivery'] = isset($product['free_delivery']) ? (bool)$product['free_delivery'] : ($deliveryCharge == 0);
+        
+        $product['rating'] = isset($product['rating']) ? round((float)$product['rating'], 1) : 0;
+        $product['reviewCount'] = isset($product['reviewCount']) ? (int)$product['reviewCount'] : 0;
     }
 
     echo json_encode(['success' => true, 'data' => $products]);
 } catch (Exception $e) {
-    // It's better to return a proper error status code and a more descriptive message for debugging.
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }

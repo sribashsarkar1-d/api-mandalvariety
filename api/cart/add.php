@@ -18,79 +18,95 @@ try {
         exit;
     }
 
-    // QUERY 1: PRODUCTS
-    try {
-        $stmt = $pdo->prepare("SELECT id, name, price, stock_quantity FROM products WHERE id = ?");
-        $stmt->execute([$product_id]);
-        $product = $stmt->fetch(PDO::FETCH_ASSOC);
-    } catch (Exception $e) {
-        throw new Exception("Error in Query 1 (Products): " . $e->getMessage());
+    // QUERY 1: PRODUCTS - check existence, active status and stock
+    $stmt = $pdo->prepare("SELECT id, name, price, discount_price, stock_quantity, stock, is_active, status FROM products WHERE id = ?");
+    $stmt->execute([$product_id]);
+    $product = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$product) {
+        http_response_code(404);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Product not found.'
+        ]);
+        exit;
     }
 
+    $isActive = ((int)($product['is_active'] ?? 1) === 1) && (($product['status'] ?? 'published') !== 'inactive');
+    if (!$isActive) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => "{$product['name']} is currently unavailable for purchase.",
+            'available_stock' => 0
+        ]);
+        exit;
+    }
 
-
-    // Removed lock logic to prevent open_basedir warnings on Hostinger
+    $available_stock = max(0, (int)($product['stock_quantity'] ?? 0));
+    if ($available_stock <= 0) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => "{$product['name']} is out of stock.",
+            'available_stock' => 0
+        ]);
+        exit;
+    }
 
     // QUERY 2: CARTS
-    try {
-        $stmt = $pdo->prepare("SELECT id FROM carts WHERE user_id = ?");
-        $stmt->execute([$user_id]);
-        $cart = $stmt->fetch(PDO::FETCH_ASSOC);
-    } catch (Exception $e) {
-
-        throw new Exception("Error in Query 2 (Carts): " . $e->getMessage());
-    }
+    $stmt = $pdo->prepare("SELECT id FROM carts WHERE user_id = ?");
+    $stmt->execute([$user_id]);
+    $cart = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($cart) {
-        $cart_id = $cart['id'];
+        $cart_id = (int)$cart['id'];
     } else {
-        try {
-            $stmt = $pdo->prepare("INSERT INTO carts (user_id) VALUES (?)");
-            $stmt->execute([$user_id]);
-            $cart_id = $pdo->lastInsertId();
-        } catch (Exception $e) {
-    
-            throw new Exception("Error in Query 3 (Insert Carts): " . $e->getMessage());
-        }
+        $stmt = $pdo->prepare("INSERT INTO carts (user_id) VALUES (?)");
+        $stmt->execute([$user_id]);
+        $cart_id = (int)$pdo->lastInsertId();
     }
 
-    // QUERY 4: CART_ITEMS (Check Existing)
-    try {
-        $stmt = $pdo->prepare("SELECT id, quantity FROM cart_items WHERE cart_id = ? AND product_id = ?");
-        $stmt->execute([$cart_id, $product_id]);
-        $existing = $stmt->fetch(PDO::FETCH_ASSOC);
-    } catch (Exception $e) {
+    // QUERY 3: CART_ITEMS (Check Existing)
+    $stmt = $pdo->prepare("SELECT id, quantity FROM cart_items WHERE cart_id = ? AND product_id = ?");
+    $stmt->execute([$cart_id, $product_id]);
+    $existing = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        throw new Exception("Error in Query 4 (Select Cart Items): " . $e->getMessage());
+    $current_qty = $existing ? (int)$existing['quantity'] : 0;
+    $new_qty = $current_qty + $quantity;
+
+    // Validate total requested quantity against available stock
+    if ($new_qty > $available_stock) {
+        http_response_code(400);
+        $message = $current_qty > 0 
+            ? "Cannot add more. You have {$current_qty} in cart and only {$available_stock} available."
+            : "Cannot add {$quantity} units. Only {$available_stock} available in stock.";
+        echo json_encode([
+            'success' => false,
+            'message' => $message,
+            'available_stock' => $available_stock
+        ]);
+        exit;
+    }
+
+    // Effective unit price
+    $effectivePrice = (float)$product['price'];
+    if (isset($product['discount_price']) && (float)$product['discount_price'] > 0 && (float)$product['discount_price'] < $effectivePrice) {
+        $effectivePrice = (float)$product['discount_price'];
     }
 
     if ($existing) {
-        $new_qty = $existing['quantity'] + $quantity;
-        try {
-            $stmt = $pdo->prepare("UPDATE cart_items SET quantity = ? WHERE id = ?");
-            $stmt->execute([$new_qty, $existing['id']]);
-            $cart_item_id = $existing['id'];
-        } catch (Exception $e) {
-    
-            throw new Exception("Error in Query 5 (Update Cart Items): " . $e->getMessage());
-        }
+        $stmt = $pdo->prepare("UPDATE cart_items SET quantity = ?, price_at_purchase = ? WHERE id = ?");
+        $stmt->execute([$new_qty, $effectivePrice, $existing['id']]);
+        $cart_item_id = (int)$existing['id'];
     } else {
-        try {
-            // Check if there are any duplicate rows and delete them just in case
-            $stmt = $pdo->prepare("DELETE FROM cart_items WHERE cart_id = ? AND product_id = ?");
-            $stmt->execute([$cart_id, $product_id]);
+        $stmt = $pdo->prepare("DELETE FROM cart_items WHERE cart_id = ? AND product_id = ?");
+        $stmt->execute([$cart_id, $product_id]);
 
-            $price = $product ? $product['price'] : 0;
-            $stmt = $pdo->prepare("INSERT INTO cart_items (cart_id, product_id, quantity, price_at_purchase) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$cart_id, $product_id, $quantity, $price]);
-            $cart_item_id = $pdo->lastInsertId();
-        } catch (Exception $e) {
-
-            throw new Exception("Error in Query 6 (Insert Cart Items): " . $e->getMessage());
-        }
+        $stmt = $pdo->prepare("INSERT INTO cart_items (cart_id, product_id, quantity, price_at_purchase) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$cart_id, $product_id, $quantity, $effectivePrice]);
+        $cart_item_id = (int)$pdo->lastInsertId();
     }
-
-
 
     echo json_encode([
         'success' => true,
@@ -98,8 +114,10 @@ try {
         'data' => [
             'cart_item_id' => $cart_item_id,
             'cart_id' => $cart_id,
+            'product_id' => $product_id,
             'product' => $product,
-            'quantity' => isset($new_qty) ? $new_qty : $quantity // 🔥 RETURN THE ACTUAL TOTAL QUANTITY IN THE CART
+            'quantity' => $new_qty,
+            'available_stock' => $available_stock
         ]
     ], JSON_PRETTY_PRINT);
 

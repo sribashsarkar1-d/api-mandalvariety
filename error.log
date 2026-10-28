@@ -292,3 +292,4 @@ Stack trace:
 Stack trace:
 #0 {main}
   thrown in C:\xampp\htdocs\auth-api\employee\admin\settings.php on line 34
+[28-Oct-2026 19:35:56 Asia/Kolkata] Order FCM Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'fcm_token' in 'field list'
