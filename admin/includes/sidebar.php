@@ -422,6 +422,13 @@ $adminEmail = $_SESSION['admin_email'] ?? 'admin@example.com';
             </li>
 
             <li>
+                <a href="<?= $basePath ?>terms/list.php" class="<?= isMenuActive(['terms']) ? 'active' : '' ?>">
+                    <i class="fa-solid fa-file-contract" style="width:20px; text-align:center; flex-shrink:0;"></i>
+                    <span>Terms & Conditions</span>
+                </a>
+            </li>
+
+            <li>
                 <a href="<?= $basePath ?>age-verify/index.php" class="<?= isMenuActive(['age-verify', 'age_verify']) ? 'active' : '' ?>">
                     <svg class="icon"><use href="#icon-age-verify"></use></svg>
                     <span>Age Verify</span>

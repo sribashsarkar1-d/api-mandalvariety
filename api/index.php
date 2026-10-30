@@ -332,6 +332,10 @@ function sampleDocs(): array
             ['method' => 'GET', 'path' => 'policies/detail.php?slug=privacy-policy', 'title' => 'Policy Detail', 'description' => 'Get single policy', 'query' => ['slug' => 'privacy-policy'], 'body' => null, 'response' => ['success' => true, 'data' => []]],
             ['method' => 'POST|PUT|DELETE', 'path' => 'policies/manage.php', 'title' => 'Manage Policies', 'description' => 'Create/Update/Delete policies', 'query' => [], 'body' => ['title' => 'Privacy', 'content' => 'Data...'], 'response' => ['success' => true, 'message' => 'Policy created successfully']]
         ],
+        'Terms & Conditions' => [
+            ['method' => 'GET', 'path' => 'terms/list.php', 'title' => 'List Terms & Conditions', 'description' => 'Get all published terms & conditions', 'query' => [], 'body' => null, 'response' => ['success' => true, 'data' => []]],
+            ['method' => 'GET', 'path' => 'terms/detail.php?slug=general-terms-of-service', 'title' => 'Terms Detail', 'description' => 'Get single terms clause by id or slug', 'query' => ['slug' => 'general-terms-of-service'], 'body' => null, 'response' => ['success' => true, 'data' => []]]
+        ],
         'Age Verifications' => [
             ['method' => 'GET', 'path' => 'age_verifications/list.php', 'title' => 'List Verifications', 'description' => 'Get verifications', 'query' => [], 'body' => null, 'response' => ['success' => true, 'data' => []]],
             ['method' => 'POST|PUT', 'path' => 'age_verifications/manage', 'title' => 'Manage Verifications', 'description' => 'Submit/Review verifications', 'query' => [], 'body' => ['user_id' => 1, 'full_name' => 'John Doe'], 'response' => ['success' => true, 'message' => 'Verification submitted successfully']]
@@ -588,6 +592,9 @@ function routeTable(): array
         'policies/list' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/policies/list.php'],
         'policies/detail' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/policies/detail.php', 'before' => function(?string $id) { $_GET['id'] = $id ?: ($_GET['id'] ?? null); }],
         'policies/manage' => ['methods' => ['POST', 'PUT', 'DELETE'], 'type' => 'file', 'handler' => __DIR__ . '/policies/manage.php', 'before' => function(?string $id) { $_GET['id'] = $id ?: ($_GET['id'] ?? null); }],
+        
+        'terms/list' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/terms/list.php'],
+        'terms/detail' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/terms/detail.php', 'before' => function(?string $id) { $_GET['id'] = $id ?: ($_GET['id'] ?? null); }],
         
         'age_verifications/list' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/age_verifications/list.php'],
         'age_verifications/manage' => ['methods' => ['POST', 'PUT'], 'type' => 'file', 'handler' => __DIR__ . '/age_verifications/manage.php', 'before' => function(?string $id) { $_GET['id'] = $id ?: ($_GET['id'] ?? null); }],
