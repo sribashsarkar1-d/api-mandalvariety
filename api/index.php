@@ -596,6 +596,11 @@ function routeTable(): array
         'terms/list' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/terms/list.php'],
         'terms/detail' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/terms/detail.php', 'before' => function(?string $id) { $_GET['id'] = $id ?: ($_GET['id'] ?? null); }],
         
+        'tearms_and_condition' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/tearms_and_condition/index.php'],
+        'tearms_and_condition/list' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/tearms_and_condition/list.php'],
+        'tearms_and_condition/get' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/tearms_and_condition/get.php'],
+        'tearms_and_condition/detail' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/tearms_and_condition/detail.php', 'before' => function(?string $id) { $_GET['id'] = $id ?: ($_GET['id'] ?? null); }],
+        
         'age_verifications/list' => ['methods' => ['GET'], 'type' => 'file', 'handler' => __DIR__ . '/age_verifications/list.php'],
         'age_verifications/manage' => ['methods' => ['POST', 'PUT'], 'type' => 'file', 'handler' => __DIR__ . '/age_verifications/manage.php', 'before' => function(?string $id) { $_GET['id'] = $id ?: ($_GET['id'] ?? null); }],
         
