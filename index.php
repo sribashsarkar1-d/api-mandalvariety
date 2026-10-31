@@ -839,6 +839,24 @@
 
   </section>
 
+  <section class="local-seo-section">
+    <h2>Grocery Delivery in Balarampur, Cooch Behar</h2>
+
+    <p>
+        Mandal Variety is your local destination for
+        groceries, snacks, beverages, dairy products
+        and everyday household essentials.
+        We provide fast local delivery in Balarampur,
+        Cooch Behar, West Bengal.
+    </p>
+
+    <p>
+        Download the Mandal Variety mobile app
+        to explore products and place your order.
+    </p>
+</section>
+
+
   <!-- FOOTER -->
   <footer class="footer">
 
@@ -926,22 +944,7 @@
 
 
 
-<section class="local-seo-section">
-    <h2>Grocery Delivery in Balarampur, Cooch Behar</h2>
 
-    <p>
-        Mandal Variety is your local destination for
-        groceries, snacks, beverages, dairy products
-        and everyday household essentials.
-        We provide fast local delivery in Balarampur,
-        Cooch Behar, West Bengal.
-    </p>
-
-    <p>
-        Download the Mandal Variety mobile app
-        to explore products and place your order.
-    </p>
-</section>
 
 </body>
 </html>
