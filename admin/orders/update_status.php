@@ -1010,7 +1010,7 @@ $rawbt_text_json = json_encode($rawbt_html);
                             <h2>Mandal Variety</h2>
                             <p>6JJ5+6M3, Balarampur, Jalpaiguri Division</p>
                             <p>West Bengal, 736134</p>
-                            <p><strong>Contact: 8972541454</strong></p>
+                            <p><strong>Contact: +91 8967136033</strong></p>
                         </div>
                         
                         <div class="receipt-details">
