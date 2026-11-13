@@ -185,62 +185,10 @@ $notes = val($order, ['notes', 'order_note', 'customer_note'], 'N/A');
 $createdAt = !empty($order['created_at']) ? date('d M Y, h:i A', strtotime($order['created_at'])) : 'N/A';
 $updatedAt = !empty($order['updated_at']) ? date('d M Y, h:i A', strtotime($order['updated_at'])) : 'N/A';
 
-$offerName = val($order, ['offer_name'], '');
-$offerType = val($order, ['offer_type'], '');
-$offerValue = (float)($order['offer_value'] ?? 0);
-$offerDiscount = (float)($order['discount_amount'] ?? $order['discount'] ?? 0);
-
-if (($offerName === '' || $offerType === '' || $offerDiscount <= 0) && (!empty($productIds) || !empty($categoryIds))) {
-    $offerWhere = [];
-    $offerParams = [];
-
-    if (!empty($productIds)) {
-        $productPlaceholders = implode(',', array_fill(0, count($productIds), '?'));
-        $offerWhere[] = "product_id IN ($productPlaceholders)";
-        $offerParams = array_merge($offerParams, $productIds);
-    }
-
-    if (!empty($categoryIds)) {
-        $categoryPlaceholders = implode(',', array_fill(0, count($categoryIds), '?'));
-        $offerWhere[] = "category_id IN ($categoryPlaceholders)";
-        $offerParams = array_merge($offerParams, $categoryIds);
-    }
-
-    if (!empty($offerWhere)) {
-        $offerSql = "
-            SELECT *
-            FROM offers
-            WHERE (" . implode(' OR ', $offerWhere) . ")
-            AND (start_date IS NULL OR start_date <= CURDATE())
-            AND (end_date IS NULL OR end_date >= CURDATE())
-            ORDER BY priority DESC, id DESC
-            LIMIT 1
-        ";
-
-        $stmtOffer = $conn->prepare($offerSql);
-        $stmtOffer->execute($offerParams);
-        $offer = $stmtOffer->fetch(PDO::FETCH_ASSOC);
-
-        if ($offer) {
-            $offerName = $offer['offer_name'] ?? 'Offer';
-            $offerType = $offer['offer_type'] ?? '';
-            $offerValue = (float)($offer['offer_value'] ?? 0);
-
-            if ($offerType === 'percent') {
-                $offerDiscount = ($itemsSubtotal * $offerValue) / 100;
-            } elseif ($offerType === 'flat') {
-                $offerDiscount = $offerValue;
-            }
-        }
-    }
-}
-
-if ($offerDiscount > $itemsSubtotal) {
-    $offerDiscount = $itemsSubtotal;
-}
-
-$deliveryCharge = 10.00;
-$grandTotal = $itemsSubtotal - $offerDiscount + $deliveryCharge;
+$deliveryCharge = isset($order['delivery_charge']) ? (float)$order['delivery_charge'] : 10.00;
+$grandTotal = isset($order['grand_total']) && (float)$order['grand_total'] > 0 
+    ? (float)$order['grand_total'] 
+    : ($itemsSubtotal + $deliveryCharge);
 ?>
 
 <div class="w-100 orders-page">
@@ -739,36 +687,12 @@ $grandTotal = $itemsSubtotal - $offerDiscount + $deliveryCharge;
                                 <div class="summary-value">₹<?= number_format($itemsSubtotal, 2) ?></div>
                             </div>
                             <div class="summary-row">
-                                <div class="summary-key">Offer Discount</div>
-                                <div class="summary-value discount">- ₹<?= number_format($offerDiscount, 2) ?></div>
-                            </div>
-                            <div class="summary-row">
                                 <div class="summary-key">Delivery Charge</div>
                                 <div class="summary-value">₹<?= number_format($deliveryCharge, 2) ?></div>
                             </div>
                             <div class="summary-row">
                                 <div class="summary-key">Grand Total</div>
                                 <div class="summary-value total">₹<?= number_format($grandTotal, 2) ?></div>
-                            </div>
-                            <div class="summary-row">
-                                <div class="summary-key">Offer Name</div>
-                                <div class="summary-value"><?= e($offerName ?: 'No Offer') ?></div>
-                            </div>
-                            <div class="summary-row">
-                                <div class="summary-key">Offer Type</div>
-                                <div class="summary-value"><?= e($offerType ?: 'N/A') ?></div>
-                            </div>
-                            <div class="summary-row">
-                                <div class="summary-key">Offer Value</div>
-                                <div class="summary-value">
-                                    <?php if ($offerType === 'percent'): ?>
-                                        <?= number_format($offerValue, 2) ?>%
-                                    <?php elseif ($offerType === 'flat'): ?>
-                                        ₹<?= number_format($offerValue, 2) ?>
-                                    <?php else: ?>
-                                        N/A
-                                    <?php endif; ?>
-                                </div>
                             </div>
                         </div>
                     </div>

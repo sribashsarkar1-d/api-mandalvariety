@@ -303,10 +303,7 @@ function buildInvoiceHtml($data)
                         <td>Items Subtotal</td>
                         <td class="text-end">₹<?= number_format($summary['itemsSubtotal'], 2) ?></td>
                     </tr>
-                    <tr>
-                        <td>Offer Discount</td>
-                        <td class="text-end">- ₹<?= number_format($summary['offerDiscount'], 2) ?></td>
-                    </tr>
+
                     <tr>
                         <td>Delivery Charge</td>
                         <td class="text-end">₹<?= number_format($summary['deliveryCharge'], 2) ?></td>
@@ -443,61 +440,10 @@ foreach ($orderItems as $item) {
 $productIds = array_values(array_unique(array_filter($productIds)));
 $categoryIds = array_values(array_unique(array_filter($categoryIds)));
 
-$offerDiscount = (float)val($order, ['discount_amount', 'discount'], 0);
-$offerName = val($order, ['offer_name'], '');
-$offerType = val($order, ['offer_type'], '');
-$offerValue = (float)val($order, ['offer_value'], 0);
-
-if ($offerDiscount <= 0) {
-    $whereParts = [];
-    $params = [];
-
-    if (!empty($productIds)) {
-        $placeholders = implode(',', array_fill(0, count($productIds), '?'));
-        $whereParts[] = "product_id IN ($placeholders)";
-        $params = array_merge($params, $productIds);
-    }
-
-    if (!empty($categoryIds)) {
-        $placeholders = implode(',', array_fill(0, count($categoryIds), '?'));
-        $whereParts[] = "category_id IN ($placeholders)";
-        $params = array_merge($params, $categoryIds);
-    }
-
-    if (!empty($whereParts)) {
-        $sqlOffer = "
-            SELECT *
-            FROM offers
-            WHERE (" . implode(' OR ', $whereParts) . ")
-            AND (start_date IS NULL OR start_date <= CURDATE())
-            AND (end_date IS NULL OR end_date >= CURDATE())
-            ORDER BY priority DESC, id DESC
-            LIMIT 1
-        ";
-        $stmtOffer = $conn->prepare($sqlOffer);
-        $stmtOffer->execute($params);
-        $offer = $stmtOffer->fetch(PDO::FETCH_ASSOC);
-
-        if ($offer) {
-            $offerName = val($offer, ['offer_name'], 'Offer');
-            $offerType = val($offer, ['offer_type'], '');
-            $offerValue = (float)val($offer, ['offer_value'], 0);
-
-            if ($offerType === 'percent') {
-                $offerDiscount = ($itemsSubtotal * $offerValue) / 100;
-            } elseif ($offerType === 'flat') {
-                $offerDiscount = $offerValue;
-            }
-        }
-    }
-}
-
-if ($offerDiscount > $itemsSubtotal) {
-    $offerDiscount = $itemsSubtotal;
-}
-
 $deliveryCharge = (float)val($order, ['delivery_charge', 'shipping_charge'], 0);
-$grandTotal = $itemsSubtotal - $offerDiscount + $deliveryCharge;
+$grandTotal = isset($order['grand_total']) && (float)$order['grand_total'] > 0 
+    ? (float)$order['grand_total'] 
+    : ($itemsSubtotal + $deliveryCharge);
 
 $invoiceData = [
     'order' => [
@@ -516,7 +462,6 @@ $invoiceData = [
     'items' => $invoiceItems,
     'summary' => [
         'itemsSubtotal' => $itemsSubtotal,
-        'offerDiscount' => $offerDiscount,
         'deliveryCharge' => $deliveryCharge,
         'grandTotal' => $grandTotal
     ]
@@ -635,7 +580,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'downl
                 'items' => $invoiceItems,
                 'summary' => [
                     'itemsSubtotal' => $itemsSubtotal,
-                    'offerDiscount' => $offerDiscount,
                     'deliveryCharge' => $deliveryCharge,
                     'grandTotal' => $grandTotal
                 ]
@@ -734,12 +678,7 @@ $rawbt_html .= "</table>";
 
 $rawbt_html .= "<table style='border: none;'>";
 $rawbt_html .= "<tr><td>Subtotal:</td><td class='text-end'>" . number_format($itemsSubtotal, 2) . "</td></tr>";
-if ($offerName) {
-    $rawbt_html .= "<tr><td>Offer:</td><td class='text-end'>" . e($offerName) . "</td></tr>";
-}
-if ($offerDiscount > 0) {
-    $rawbt_html .= "<tr><td>Discount:</td><td class='text-end'>-" . number_format($offerDiscount, 2) . "</td></tr>";
-}
+
 if ($deliveryCharge > 0) {
     $rawbt_html .= "<tr><td>Delivery Charge:</td><td class='text-end'>" . number_format($deliveryCharge, 2) . "</td></tr>";
 }
@@ -976,8 +915,7 @@ $rawbt_text_json = json_encode($rawbt_html);
                     <div class="heading-mini">Bill Totals</div>
                     <div class="summary-row"><strong>Total Qty</strong><strong><?= (int)$totalQty ?></strong></div>
                     <div class="summary-row"><strong>Items Subtotal</strong><strong>₹<?= number_format($itemsSubtotal, 2) ?></strong></div>
-                    <div class="summary-row"><strong>Offer</strong><strong><?= e($offerName ?: 'No Offer') ?></strong></div>
-                    <div class="summary-row"><strong>Discount</strong><strong class="text-success">- ₹<?= number_format($offerDiscount, 2) ?></strong></div>
+
                     <div class="summary-row"><strong>Delivery</strong><strong>₹<?= number_format($deliveryCharge, 2) ?></strong></div>
                     <div class="summary-row grand-total"><strong>Grand Total</strong><strong>₹<?= number_format($grandTotal, 2) ?></strong></div>
                 </div>
@@ -1145,18 +1083,7 @@ $rawbt_text_json = json_encode($rawbt_html);
                                 <strong>Items Subtotal</strong>
                                 <strong>₹<?= number_format($itemsSubtotal, 2) ?></strong>
                             </div>
-                            <?php if ($offerName): ?>
-                            <div class="d-flex">
-                                <strong>Offer Name</strong>
-                                <span><?= e($offerName) ?></span>
-                            </div>
-                            <?php endif; ?>
-                            <?php if ($offerDiscount > 0): ?>
-                            <div class="d-flex">
-                                <strong>Discount</strong>
-                                <span>- ₹<?= number_format($offerDiscount, 2) ?></span>
-                            </div>
-                            <?php endif; ?>
+
                             <div class="d-flex">
                                 <strong>Delivery Charge</strong>
                                 <span>₹<?= number_format($deliveryCharge, 2) ?></span>

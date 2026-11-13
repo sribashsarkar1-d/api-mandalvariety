@@ -217,10 +217,7 @@ function buildInvoiceHtml($data)
                         <td>Items Subtotal</td>
                         <td class="text-end">₹<?= number_format($summary['itemsSubtotal'], 2) ?></td>
                     </tr>
-                    <tr>
-                        <td>Offer Discount</td>
-                        <td class="text-end">- ₹<?= number_format($summary['offerDiscount'], 2) ?></td>
-                    </tr>
+
                     <tr>
                         <td>Delivery Charge</td>
                         <td class="text-end">₹<?= number_format($summary['deliveryCharge'], 2) ?></td>
@@ -333,57 +330,10 @@ foreach ($orderItems as $item) {
 $productIds = array_values(array_unique(array_filter($productIds)));
 $categoryIds = array_values(array_unique(array_filter($categoryIds)));
 
-$offerDiscount = (float)val($order, ['discount_amount', 'discount'], 0);
-
-if ($offerDiscount <= 0) {
-    $whereParts = [];
-    $params = [];
-
-    if (!empty($productIds)) {
-        $placeholders = implode(',', array_fill(0, count($productIds), '?'));
-        $whereParts[] = "product_id IN ($placeholders)";
-        $params = array_merge($params, $productIds);
-    }
-
-    if (!empty($categoryIds)) {
-        $placeholders = implode(',', array_fill(0, count($categoryIds), '?'));
-        $whereParts[] = "category_id IN ($placeholders)";
-        $params = array_merge($params, $categoryIds);
-    }
-
-    if (!empty($whereParts)) {
-        $sqlOffer = "
-            SELECT *
-            FROM offers
-            WHERE (" . implode(' OR ', $whereParts) . ")
-            AND (start_date IS NULL OR start_date <= CURDATE())
-            AND (end_date IS NULL OR end_date >= CURDATE())
-            ORDER BY priority DESC, id DESC
-            LIMIT 1
-        ";
-        $stmtOffer = $conn->prepare($sqlOffer);
-        $stmtOffer->execute($params);
-        $offer = $stmtOffer->fetch(PDO::FETCH_ASSOC);
-
-        if ($offer) {
-            $offerType = val($offer, ['offer_type'], '');
-            $offerValue = (float)val($offer, ['offer_value'], 0);
-
-            if ($offerType === 'percent') {
-                $offerDiscount = ($itemsSubtotal * $offerValue) / 100;
-            } elseif ($offerType === 'flat') {
-                $offerDiscount = $offerValue;
-            }
-        }
-    }
-}
-
-if ($offerDiscount > $itemsSubtotal) {
-    $offerDiscount = $itemsSubtotal;
-}
-
 $deliveryCharge = (float)val($order, ['delivery_charge', 'shipping_charge'], 0);
-$grandTotal = $itemsSubtotal - $offerDiscount + $deliveryCharge;
+$grandTotal = isset($order['grand_total']) && (float)$order['grand_total'] > 0 
+    ? (float)$order['grand_total'] 
+    : ($itemsSubtotal + $deliveryCharge);
 
 $invoiceData = [
     'order' => [
@@ -402,7 +352,6 @@ $invoiceData = [
     'items' => $invoiceItems,
     'summary' => [
         'itemsSubtotal' => $itemsSubtotal,
-        'offerDiscount' => $offerDiscount,
         'deliveryCharge' => $deliveryCharge,
         'grandTotal' => $grandTotal
     ]
