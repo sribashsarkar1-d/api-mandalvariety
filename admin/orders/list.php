@@ -459,6 +459,26 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 </style>
     <div class="container-fluid mt-4 mb-5 orders-page">
+        <?php
+        $flashSuccess = $_SESSION['flash_success'] ?? null;
+        $flashError = $_SESSION['flash_error'] ?? null;
+        unset($_SESSION['flash_success'], $_SESSION['flash_error']);
+        ?>
+
+        <?php if ($flashSuccess): ?>
+            <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm border-0 mb-4" role="alert">
+                <i class="fa-solid fa-circle-check me-2"></i> <?= e($flashSuccess) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($flashError): ?>
+            <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm border-0 mb-4" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i> <?= e($flashError) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
             <div>
                 <h4 class="page-title">📦 Order Management</h4>
@@ -571,10 +591,16 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         <div class="card table-card">
             <div class="table-card-header">
-                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div>
                         <h6 class="table-title">Orders List</h6>
                         <div class="table-note">Showing <?= count($orders) ?> order(s) based on selected filters.</div>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-outline-danger btn-sm d-inline-flex align-items-center gap-1 shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#clearAllOrdersModal" <?= empty($stats['total_orders']) ? 'disabled' : '' ?>>
+                            <i class="fa-solid fa-trash-can"></i>
+                            <span>Clear All Orders</span>
+                        </button>
                     </div>
                 </div>
             </div>  
@@ -655,6 +681,9 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <div class="action-wrap">
                                                 <a href="view.php?id=<?= (int)$o['id'] ?>" class="btn btn-info btn-sm">View</a>
                                                 <a href="update_status.php?id=<?= (int)$o['id'] ?>" class="btn btn-warning btn-sm">Update</a>
+                                                <button type="button" class="btn btn-outline-danger btn-sm delete-order-btn" data-id="<?= (int)$o['id'] ?>" data-order="<?= e($o['order_number'] ?: ('#' . $o['id'])) ?>" title="Delete Order">
+                                                    <i class="fa-solid fa-trash-can"></i>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
@@ -671,5 +700,74 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
 </div>
+
+<!-- Modal: Clear All Orders -->
+<div class="modal fade" id="clearAllOrdersModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-body text-center p-4">
+                <div class="text-danger mb-3">
+                    <i class="fa-solid fa-triangle-exclamation fa-3x"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Clear All Orders?</h5>
+                <p class="text-muted mb-4">
+                    Are you sure you want to permanently delete <strong>ALL <?= (int)($stats['total_orders'] ?? 0) ?> orders</strong> and their ordered items from the database? <br><span class="text-danger fw-semibold">This action cannot be undone.</span>
+                </p>
+                <form action="clear_orders.php" method="POST" class="d-inline">
+                    <div class="d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger rounded-pill px-4 fw-semibold">
+                            <i class="fa-solid fa-trash-can me-1"></i> Yes, Clear All Orders
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Delete Single Order -->
+<div class="modal fade" id="deleteOrderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-body text-center p-4">
+                <div class="text-danger mb-3">
+                    <i class="fa-solid fa-trash-can fa-3x"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Delete Order?</h5>
+                <p class="text-muted mb-4">
+                    Are you sure you want to delete order <strong id="deleteOrderNumber"></strong>? <br>This will permanently remove this order and its ordered items.
+                </p>
+                <form action="delete.php" method="POST" id="deleteOrderForm" class="d-inline">
+                    <input type="hidden" name="id" id="deleteOrderId" value="">
+                    <div class="d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger rounded-pill px-4 fw-semibold">
+                            Yes, Delete
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteOrderModalEl = document.getElementById('deleteOrderModal');
+    if (deleteOrderModalEl) {
+        const deleteOrderModal = new bootstrap.Modal(deleteOrderModalEl);
+        document.querySelectorAll('.delete-order-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const orderNo = this.getAttribute('data-order');
+                document.getElementById('deleteOrderId').value = id;
+                document.getElementById('deleteOrderNumber').textContent = orderNo;
+                deleteOrderModal.show();
+            });
+        });
+    }
+});
+</script>
 
 <?php include '../includes/footer.php'; ?>
