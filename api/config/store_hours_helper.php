@@ -124,3 +124,4 @@ if (!function_exists('getStoreOperatingStatus')) {
         ];
     }
 }
+
