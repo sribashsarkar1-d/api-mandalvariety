@@ -1,6 +1,7 @@
 <?php
 header('Content-Type: application/json; charset=UTF-8');
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/store_hours_helper.php';
 
 $rawInput = file_get_contents('php://input');
 if (empty($rawInput) && php_sapi_name() === 'cli') {
@@ -27,6 +28,19 @@ if (empty($delivery_address)) {
 }
 $pincode = trim($input['pincode'] ?? $input['pin_code'] ?? '000000');
 $notes = trim($input['notes'] ?? $input['order_notes'] ?? '');
+
+// ── Server-Side Store Hours & Off-Days Validation ─────────────────────────────
+$storeStatus = getStoreOperatingStatus($pdo);
+if (!$storeStatus['is_open']) {
+    http_response_code(400);
+    echo json_encode([
+        'success' => false,
+        'store_closed' => true,
+        'message' => $storeStatus['message'],
+        'store_status' => $storeStatus
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 try {
     // ── 1. Begin Database Transaction ───────────────────────────────────────────

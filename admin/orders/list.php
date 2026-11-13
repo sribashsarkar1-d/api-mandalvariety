@@ -597,10 +597,10 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <div class="table-note">Showing <?= count($orders) ?> order(s) based on selected filters.</div>
                     </div>
                     <div>
-                        <button type="button" class="btn btn-outline-danger btn-sm d-inline-flex align-items-center gap-1 shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#clearAllOrdersModal" <?= empty($stats['total_orders']) ? 'disabled' : '' ?>>
+                        <!-- <button type="button" class="btn btn-outline-danger btn-sm d-inline-flex align-items-center gap-1 shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#clearAllOrdersModal" <?= empty($stats['total_orders']) ? 'disabled' : '' ?>>
                             <i class="fa-solid fa-trash-can"></i>
                             <span>Clear All Orders</span>
-                        </button>
+                        </button> -->
                     </div>
                 </div>
             </div>  
@@ -681,9 +681,9 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             <div class="action-wrap">
                                                 <a href="view.php?id=<?= (int)$o['id'] ?>" class="btn btn-info btn-sm">View</a>
                                                 <a href="update_status.php?id=<?= (int)$o['id'] ?>" class="btn btn-warning btn-sm">Update</a>
-                                                <button type="button" class="btn btn-outline-danger btn-sm delete-order-btn" data-id="<?= (int)$o['id'] ?>" data-order="<?= e($o['order_number'] ?: ('#' . $o['id'])) ?>" title="Delete Order">
+                                                <!-- <button type="button" class="btn btn-outline-danger btn-sm delete-order-btn" data-id="<?= (int)$o['id'] ?>" data-order="<?= e($o['order_number'] ?: ('#' . $o['id'])) ?>" title="Delete Order">
                                                     <i class="fa-solid fa-trash-can"></i>
-                                                </button>
+                                                </button> -->
                                             </div>
                                         </td>
                                     </tr>

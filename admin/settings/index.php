@@ -327,6 +327,12 @@ $defaultSettings = [
     'favicon' => '',
     'admin_per_page' => '10',
     'admin_theme' => 'light',
+    'store_order_status' => 'auto',
+    'store_open_time' => '07:00',
+    'store_close_time' => '20:00',
+    'store_off_days' => 'Monday',
+    'store_closed_message' => 'রাত ৮টা থেকে সকাল ৭টা পর্যন্ত কোনো অর্ডার গ্রহণ করা হবে না। অনুগ্রহ করে সকাল ৭টা থেকে রাত ৮টার মধ্যে অর্ডার করুন।',
+    'store_off_day_message' => 'আজ সোমবার আমাদের সাপ্তাহিক ছুটি। কোনো অর্ডার গ্রহণ করা হবে না। অনুগ্রহ করে পরবর্তী কার্যদিবসে অর্ডার করুন।',
 ];
 
 $settings = $defaultSettings;
@@ -397,13 +403,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'free_shipping_min_amount','razorpay_key_id','razorpay_key_secret','paypal_client_id','paypal_secret',
             'low_stock_limit','maintenance_message','seo_meta_title','seo_meta_keywords','seo_meta_description',
             'seo_og_image','smtp_host','smtp_port','smtp_username','smtp_password','smtp_encryption','invoice_prefix',
-            'footer_text','facebook_url','instagram_url','twitter_url','youtube_url','admin_per_page','admin_theme'
+            'footer_text','facebook_url','instagram_url','twitter_url','youtube_url','admin_per_page','admin_theme',
+            'store_order_status','store_open_time','store_close_time','store_closed_message','store_off_day_message'
         ];
 
         foreach ($postSettings as $key) {
             saveSetting($conn, $key, trim($_POST[$key] ?? ''));
             $settings[$key] = trim($_POST[$key] ?? '');
         }
+
+        if (isset($_POST['store_off_days']) && is_array($_POST['store_off_days'])) {
+            $offDaysStr = implode(',', array_map('trim', $_POST['store_off_days']));
+        } else {
+            $offDaysStr = trim($_POST['store_off_days_text'] ?? ($settings['store_off_days'] ?? 'Monday'));
+        }
+        saveSetting($conn, 'store_off_days', $offDaysStr);
+        $settings['store_off_days'] = $offDaysStr;
 
         $toggleSettings = [
             'cod_enabled','razorpay_enabled','paypal_enabled','order_auto_confirm',
@@ -462,22 +477,40 @@ $faviconPreview = !empty($settings['favicon']) ? '../uploads/' . $settings['favi
             <div class="alert alert-success"><?= e($success) ?></div>
         <?php endif; ?>
 
+        <?php
+        require_once __DIR__ . '/../../api/config/store_hours_helper.php';
+        $liveStoreStatus = getStoreOperatingStatus($conn);
+        $activeOffDays = explode(',', (string)($settings['store_off_days'] ?? 'Monday'));
+        $activeOffDays = array_map(function($d) { return ucfirst(strtolower(trim($d))); }, $activeOffDays);
+        $daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        ?>
+
         <div class="row g-3 mb-4">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="settings-summary-card">
-                    <span class="settings-summary-label">Saved Settings</span>
-                    <h3 class="settings-summary-value"><?= (int)$totalSettingsSaved ?></h3>
+                    <span class="settings-summary-label">Store Operating Status</span>
+                    <h3 class="settings-summary-value <?= $liveStoreStatus['is_open'] ? 'text-success' : 'text-danger' ?>">
+                        <?= $liveStoreStatus['is_open'] ? '🟢 Open' : '🔴 Closed' ?>
+                    </h3>
+                    <small class="text-muted"><?= e($liveStoreStatus['current_time']) ?> IST (<?= e($liveStoreStatus['current_day']) ?>)</small>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
+                <div class="settings-summary-card">
+                    <span class="settings-summary-label">Order Hours</span>
+                    <h3 class="settings-summary-value"><?= e($settings['store_open_time'] ?? '07:00') ?> - <?= e($settings['store_close_time'] ?? '20:00') ?></h3>
+                    <small class="text-muted">Off: <?= e($settings['store_off_days'] ?? 'Monday') ?></small>
+                </div>
+            </div>
+            <div class="col-md-3">
                 <div class="settings-summary-card">
                     <span class="settings-summary-label">Currency</span>
                     <h3 class="settings-summary-value"><?= e($settings['store_currency']) ?></h3>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="settings-summary-card">
-                    <span class="settings-summary-label">Maintenance Mode</span>
+                    <span class="settings-summary-label">Maintenance</span>
                     <h3 class="settings-summary-value"><?= !empty($settings['maintenance_mode']) ? 'ON' : 'OFF' ?></h3>
                 </div>
             </div>
@@ -490,6 +523,7 @@ $faviconPreview = !empty($settings['favicon']) ? '../uploads/' . $settings['favi
                         <div class="settings-nav-title">Settings Sections</div>
                         <div class="settings-nav">
                             <a href="#store-info">Store Info</a>
+                            <a href="#store-hours">⏰ Store Hours & Off-Days</a>
                             <a href="#location">Location</a>
                             <a href="#branding">Branding</a>
                             <a href="#order-checkout">Order & Checkout</a>
@@ -530,6 +564,72 @@ $faviconPreview = !empty($settings['favicon']) ? '../uploads/' . $settings['favi
                                 <div class="col-12">
                                     <label class="form-label">Footer Text</label>
                                     <input type="text" name="footer_text" class="form-control" value="<?= e($settings['footer_text']) ?>">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="store-hours" class="settings-card">
+                        <div class="settings-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <h5 class="settings-card-title mb-1">⏰ Store Operating Hours & Order Management</h5>
+                                <p class="text-muted small mb-0">Control when customers can place orders and configure weekly off-days.</p>
+                            </div>
+                            <div>
+                                <?php if ($liveStoreStatus['is_open']): ?>
+                                    <span class="badge bg-success px-3 py-2 fs-6 shadow-sm"><i class="fa fa-circle-check me-1"></i> Store Open (Accepting Orders)</span>
+                                <?php else: ?>
+                                    <span class="badge bg-danger px-3 py-2 fs-6 shadow-sm"><i class="fa fa-clock me-1"></i> Store Closed (Orders Paused)</span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <div class="settings-card-body">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Order Taking Mode</label>
+                                    <select name="store_order_status" class="form-select">
+                                        <option value="auto" <?= ($settings['store_order_status'] ?? 'auto') === 'auto' ? 'selected' : '' ?>>⏱️ Automatic (Based on Schedule & Off-Days)</option>
+                                        <option value="open" <?= ($settings['store_order_status'] ?? '') === 'open' ? 'selected' : '' ?>>🟢 Always Open (Override)</option>
+                                        <option value="closed" <?= ($settings['store_order_status'] ?? '') === 'closed' ? 'selected' : '' ?>>🔴 Force Closed (Pause All Orders)</option>
+                                    </select>
+                                    <div class="form-text">In Automatic mode, orders are only allowed during open hours on active working days.</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Daily Open Time (Start Taking Orders)</label>
+                                    <input type="time" name="store_open_time" class="form-control" value="<?= e($settings['store_open_time'] ?? '07:00') ?>" required>
+                                    <div class="form-text">Default: 07:00 AM (Orders allowed from this time).</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Daily Close Time (Stop Taking Orders)</label>
+                                    <input type="time" name="store_close_time" class="form-control" value="<?= e($settings['store_close_time'] ?? '20:00') ?>" required>
+                                    <div class="form-text">Default: 08:00 PM / 20:00 (No orders accepted after this time).</div>
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Weekly Off-Days (Store Closed / No Orders)</label>
+                                    <div class="d-flex flex-wrap gap-3 p-3 bg-light rounded-3 border">
+                                        <?php foreach ($daysOfWeek as $day): ?>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="checkbox" name="store_off_days[]" id="off_day_<?= strtolower($day) ?>" value="<?= $day ?>" <?= in_array($day, $activeOffDays) ? 'checked' : '' ?>>
+                                                <label class="form-check-label fw-semibold" for="off_day_<?= strtolower($day) ?>">
+                                                    <?= $day ?> <?= $day === 'Monday' ? '<span class="badge bg-secondary ms-1">Default Off</span>' : '' ?>
+                                                </label>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <div class="form-text">Checked days will be marked as weekly off. Customers will see an off-day notice banner and cannot place orders.</div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Night Closed Message (Outside Working Hours)</label>
+                                    <textarea name="store_closed_message" class="form-control" rows="3"><?= e($settings['store_closed_message'] ?? 'রাত ৮টা থেকে সকাল ৭টা পর্যন্ত কোনো অর্ডার গ্রহণ করা হবে না। অনুগ্রহ করে সকাল ৭টা থেকে রাত ৮টার মধ্যে অর্ডার করুন।') ?></textarea>
+                                    <div class="form-text">Shown in the app banner and checkout when orders are placed between closing and opening hours.</div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Weekly Off-Day Message (e.g. Monday)</label>
+                                    <textarea name="store_off_day_message" class="form-control" rows="3"><?= e($settings['store_off_day_message'] ?? 'আজ সোমবার আমাদের সাপ্তাহিক ছুটি। কোনো অর্ডার গ্রহণ করা হবে না। অনুগ্রহ করে পরবর্তী কার্যদিবসে অর্ডার করুন।') ?></textarea>
+                                    <div class="form-text">Shown in Home, Cart, and Checkout on weekly off days.</div>
                                 </div>
                             </div>
                         </div>

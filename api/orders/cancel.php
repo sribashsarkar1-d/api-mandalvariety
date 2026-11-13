@@ -91,8 +91,28 @@ try {
         }
     }
 
-    // Update status to cancelled
-    $stmtUpdate = $pdo->prepare("UPDATE orders SET status = 'cancelled' WHERE id = ?");
+    // Update status to cancelled and synchronize tracking, delivery and payment statuses
+    $colsStmt = $pdo->query("SHOW COLUMNS FROM orders");
+    $availableCols = $colsStmt->fetchAll(PDO::FETCH_COLUMN);
+
+    $setClauses = ["status = 'cancelled'"];
+    if (in_array('order_status', $availableCols)) {
+        $setClauses[] = "order_status = 'cancelled'";
+    }
+    if (in_array('tracking_status', $availableCols)) {
+        $setClauses[] = "tracking_status = 'cancelled'";
+    }
+    if (in_array('delivery_boy_status', $availableCols)) {
+        $setClauses[] = "delivery_boy_status = 'cancelled'";
+    }
+    if (in_array('payment_status', $availableCols)) {
+        $setClauses[] = "payment_status = CASE WHEN payment_status = 'paid' THEN 'refunded' ELSE 'failed' END";
+    }
+    if (in_array('updated_at', $availableCols)) {
+        $setClauses[] = "updated_at = NOW()";
+    }
+
+    $stmtUpdate = $pdo->prepare("UPDATE orders SET " . implode(', ', $setClauses) . " WHERE id = ?");
     $stmtUpdate->execute([$order_id]);
 
     $pdo->commit();
