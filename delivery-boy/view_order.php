@@ -26,9 +26,11 @@ try {
     try { $conn->exec("ALTER TABLE orders ADD COLUMN delivery_boy_status VARCHAR(50) DEFAULT 'assigned'"); } catch (\PDOException $e2) {}
 }
 
-// Fetch order verifying assignment
+// Fetch order verifying assignment (including user address fields as fallback)
 $stmt = $conn->prepare("
-    SELECT o.*, u.name as user_name, u.email as user_email, u.phone as user_phone 
+    SELECT o.*, 
+           u.name as user_name, u.email as user_email, u.phone as user_phone,
+           u.address as user_address, u.city as user_city, u.state as user_state, u.pincode as user_pincode
     FROM orders o
     LEFT JOIN users u ON o.user_id = u.id
     WHERE o.id = ? AND o.assigned_delivery_id = ?
@@ -208,17 +210,107 @@ $customer_name = $order['user_name'] ?? $order['customer_name'] ?? 'Customer';
 $customer_phone = $order['user_phone'] ?? $order['customer_phone'] ?? '';
 $customer_email = $order['user_email'] ?? $order['customer_email'] ?? '';
 
-$address = $order['shipping_address'] ?? $order['delivery_address'] ?? $order['address'] ?? 'Customer Delivery Address';
-$pincode = $order['shipping_pincode'] ?? $order['delivery_pincode'] ?? $order['pincode'] ?? '';
+// ------------------------------------------------------------------
+// 1. Separate Customer Delivery Coordinates, Address and PIN Code
+// ------------------------------------------------------------------
+$customer_lat = null;
+$customer_lng = null;
+
+// Inspect coordinates in dedicated orders columns
+if (isset($order['latitude']) && isset($order['longitude'])) {
+    $raw_lat = trim((string)$order['latitude']);
+    $raw_lng = trim((string)$order['longitude']);
+    if (is_numeric($raw_lat) && is_numeric($raw_lng)) {
+        $f_lat = (float)$raw_lat;
+        $f_lng = (float)$raw_lng;
+        // Validate coordinates (-90 <= lat <= 90, -180 <= lng <= 180, and non-zero)
+        if ($f_lat != 0.0 && $f_lng != 0.0 && $f_lat >= -90.0 && $f_lat <= 90.0 && $f_lng >= -180.0 && $f_lng <= 180.0) {
+            $customer_lat = $f_lat;
+            $customer_lng = $f_lng;
+        }
+    }
+}
+
+// Inspect raw delivery address
+$raw_address = trim((string)($order['delivery_address'] ?? $order['shipping_address'] ?? $order['address'] ?? ''));
+
+// If coordinates are missing from columns, check if embedded in raw text (e.g. legacy "Live Location: lat, lng" or "?q=lat,lng")
+if ($customer_lat === null || $customer_lng === null) {
+    if (preg_match('/(?:Live Location:\s*|maps\.google\.com\/(?:maps)?\?q=)([+-]?\d+(?:\.\d+)?)\s*,\s*([+-]?\d+(?:\.\d+)?)/iu', $raw_address, $matchCoords)) {
+        $f_lat = (float)$matchCoords[1];
+        $f_lng = (float)$matchCoords[2];
+        if ($f_lat != 0.0 && $f_lng != 0.0 && $f_lat >= -90.0 && $f_lat <= 90.0 && $f_lng >= -180.0 && $f_lng <= 180.0) {
+            $customer_lat = $f_lat;
+            $customer_lng = $f_lng;
+        }
+    }
+}
+
+// 2. Clean Delivery Address: Do not concatenate or display Live Location text, Google Maps URLs or metadata
+$clean_address = $raw_address;
+$clean_address = preg_replace('/[📍\x{1F4CD}]?\s*Live Location:.*?(?=(\r?\n|$))/ui', '', $clean_address);
+$clean_address = preg_replace('/https?:\/\/[^\s)]+/i', '', $clean_address);
+$clean_address = preg_replace('/\(\s*Map:\s*[^)]*\)/i', '', $clean_address);
+$clean_address = preg_replace('/\(\s*Map:\s*\)/i', '', $clean_address);
+$clean_address = preg_replace('/[ \t]+/', ' ', $clean_address);
+$clean_address = preg_replace('/(\r?\n)+/', "\n", $clean_address);
+$clean_address = preg_replace('/\s*,\s*,+/', ', ', $clean_address);
+$clean_address = trim($clean_address, " \t\n\r\0\x0B,");
+
+if (empty($clean_address) && !empty($order['user_address'])) {
+    $clean_address = trim((string)$order['user_address']);
+}
+
+// 3. Clean & Validate PIN Code: Remove placeholder PIN codes such as '000000', '111111', etc.
+$raw_pin = trim((string)($order['pincode'] ?? $order['shipping_pincode'] ?? $order['delivery_pincode'] ?? $order['user_pincode'] ?? ''));
+$clean_pincode = '';
+$digits_pin = preg_replace('/\D/', '', $raw_pin);
+if (strlen($digits_pin) === 6 && $digits_pin !== '000000' && $digits_pin !== '111111' && $digits_pin !== '999999' && $digits_pin[0] !== '0') {
+    $clean_pincode = $digits_pin;
+}
+
+$display_pincode = '';
+if (!empty($clean_pincode)) {
+    if (!preg_match('/\b' . preg_quote($clean_pincode, '/') . '\b/', $clean_address)) {
+        $display_pincode = $clean_pincode;
+    }
+}
+
+// 4. Generate Google Maps Directions API URL:
+// Format: https://www.google.com/maps/dir/?api=1&destination=LATITUDE,LONGITUDE&travelmode=driving
+// Omitting origin= lets Google Maps automatically detect the Delivery Boy's current live location.
+$maps_url = '';
+$has_valid_destination = false;
+
+if ($customer_lat !== null && $customer_lng !== null) {
+    // Priority: Use customer's actual delivery coordinates as destination
+    $dest_coords = sprintf('%.8f,%.8f', $customer_lat, $customer_lng);
+    $maps_url = "https://www.google.com/maps/dir/?api=1&destination=" . $dest_coords . "&travelmode=driving";
+    $has_valid_destination = true;
+} elseif (!empty($clean_address) && !in_array(strtolower($clean_address), ['n/a', 'na', 'none', 'customer delivery address'])) {
+    // Fallback: Use clean, properly encoded delivery address
+    $dest_str = $clean_address;
+    if (!empty($display_pincode)) {
+        $dest_str .= ", " . $display_pincode;
+    }
+    if (!empty($order['user_city']) && stripos($dest_str, $order['user_city']) === false) {
+        $dest_str .= ", " . $order['user_city'];
+    }
+    if (!empty($order['user_state']) && stripos($dest_str, $order['user_state']) === false) {
+        $dest_str .= ", " . $order['user_state'];
+    }
+
+    $maps_url = "https://www.google.com/maps/dir/?api=1&destination=" . rawurlencode($dest_str) . "&travelmode=driving";
+    $has_valid_destination = true;
+}
+
+$clean_phone = preg_replace('/[^0-9]/', '', $customer_phone);
+$whatsapp_url = "https://wa.me/91" . $clean_phone . "?text=" . urlencode("Hello $customer_name, I am your Mandal Variety delivery partner regarding order #$order_no.");
 
 $grand_total = (float)($order['grand_total'] ?? $order['total_amount'] ?? 0);
 $delivery_charge = (float)($order['delivery_charge'] ?? 0);
 $items_subtotal = (float)($order['total_amount'] ?? ($grand_total - $delivery_charge));
 if ($items_subtotal <= 0) $items_subtotal = $grand_total;
-
-$maps_url = "https://www.google.com/maps/dir/?api=1&destination=" . urlencode($address . ($pincode ? " $pincode" : "")) . "&travelmode=driving";
-$clean_phone = preg_replace('/[^0-9]/', '', $customer_phone);
-$whatsapp_url = "https://wa.me/91" . $clean_phone . "?text=" . urlencode("Hello $customer_name, I am your Mandal Variety delivery partner regarding order #$order_no.");
 
 // Status label and badge
 $status_badge_labels = [
@@ -559,6 +651,18 @@ $current_badge_label = $status_badge_labels[$current_step] ?? 'Assigned';
     .btn-open-map-pill:active {
         transform: scale(0.95);
         background: #DCFCE7;
+    }
+
+    .btn-open-map-pill.btn-map-disabled {
+        background: #F1F5F9;
+        color: #94A3B8;
+        border-color: #E2E8F0;
+        cursor: not-allowed;
+    }
+
+    .btn-open-map-pill.btn-map-disabled:active {
+        transform: none;
+        background: #F1F5F9;
     }
 
     /* SECTION 5: Ordered Products */
@@ -950,13 +1054,31 @@ $current_badge_label = $status_badge_labels[$current_step] ?? 'Assigned';
 
         <div class="address-content-row">
             <div class="address-text-left">
-                <?= nl2br(e($address)) ?><?php if ($pincode): ?>, <?= e($pincode) ?><?php endif; ?>
+                <?php if (!empty($clean_address)): ?>
+                    <?= nl2br(e($clean_address)) ?><?php if (!empty($display_pincode)): ?>, <?= e($display_pincode) ?><?php endif; ?>
+                <?php else: ?>
+                    <span style="color: #94A3B8; font-style: italic;">No specific delivery address recorded</span>
+                <?php endif; ?>
+
+                <?php if ($customer_lat !== null && $customer_lng !== null): ?>
+                    <div style="font-size: 11.5px; color: var(--primary-green); font-weight: 600; margin-top: 5px; display: flex; align-items: center; gap: 4px;">
+                        <i class="fa-solid fa-crosshairs"></i>
+                        <span>Coordinates: <?= sprintf('%.5f, %.5f', $customer_lat, $customer_lng) ?></span>
+                    </div>
+                <?php endif; ?>
             </div>
 
-            <a href="<?= e($maps_url) ?>" target="_blank" class="btn-open-map-pill" title="Open Google Maps">
-                <i class="fa-solid fa-location-dot"></i>
-                <span>Open in Map</span>
-            </a>
+            <?php if ($has_valid_destination): ?>
+                <a href="<?= e($maps_url) ?>" target="_blank" rel="noopener noreferrer" class="btn-open-map-pill" title="Open Google Maps Navigation">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <span>Open in Map</span>
+                </a>
+            <?php else: ?>
+                <button type="button" class="btn-open-map-pill btn-map-disabled" onclick="showMvToast('No valid customer delivery location or address found for this order.', false)" title="No valid address or coordinates">
+                    <i class="fa-solid fa-location-slash"></i>
+                    <span>No Location</span>
+                </button>
+            <?php endif; ?>
         </div>
     </div>
 

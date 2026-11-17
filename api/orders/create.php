@@ -247,14 +247,8 @@ try {
     $created_at = date('Y-m-d H:i:s');
 
     // ── 8. Insert Order Record ──────────────────────────────────────────────────
-    // If live GPS coordinates provided, append live location info & Google Maps link to delivery_address
-    if ($latitude !== null && $longitude !== null && $latitude != 0.0 && $longitude != 0.0) {
-        $mapLink = "https://maps.google.com/?q={$latitude},{$longitude}";
-        $gpsTag = "📍 Live Location: {$latitude}, {$longitude} (Map: {$mapLink})";
-        if (strpos($delivery_address, 'Live Location:') === false) {
-            $delivery_address = trim($delivery_address) . "\n" . $gpsTag;
-        }
-    }
+    // Keep delivery_address clean (coordinates are stored in dedicated latitude/longitude columns)
+    $delivery_address = trim((string)$delivery_address);
 
     $colsStmt = $pdo->query("SHOW COLUMNS FROM orders");
     $ordersCols = $colsStmt->fetchAll(PDO::FETCH_COLUMN);
