@@ -644,7 +644,17 @@ $grandTotal = isset($order['grand_total']) && (float)$order['grand_total'] > 0
                         <div class="info-list">
                             <div class="info-item">
                                 <div class="info-key">Address</div>
-                                <div class="info-value"><?= e($deliveryAddress) ?></div>
+                                <div class="info-value">
+                                    <?= nl2br(e($deliveryAddress)) ?>
+                                    <?php if (!empty($order['latitude']) && !empty($order['longitude'])): ?>
+                                        <div class="mt-2">
+                                            <a href="https://maps.google.com/?q=<?= urlencode($order['latitude'] . ',' . $order['longitude']) ?>" target="_blank" class="btn btn-sm btn-success d-inline-flex align-items-center gap-1 shadow-sm px-3 text-white">
+                                                <i class="fa-solid fa-location-dot"></i>
+                                                <span>Open Live GPS in Google Maps</span>
+                                            </a>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                             <div class="info-item">
                                 <div class="info-key">Landmark</div>

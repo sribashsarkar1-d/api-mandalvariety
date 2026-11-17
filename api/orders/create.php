@@ -28,6 +28,8 @@ if (empty($delivery_address)) {
 }
 $pincode = trim($input['pincode'] ?? $input['pin_code'] ?? '000000');
 $notes = trim($input['notes'] ?? $input['order_notes'] ?? '');
+$latitude = isset($input['latitude']) && is_numeric($input['latitude']) ? (float)$input['latitude'] : null;
+$longitude = isset($input['longitude']) && is_numeric($input['longitude']) ? (float)$input['longitude'] : null;
 
 // ── Server-Side Store Hours & Off-Days Validation ─────────────────────────────
 $storeStatus = getStoreOperatingStatus($pdo);
@@ -245,16 +247,43 @@ try {
     $created_at = date('Y-m-d H:i:s');
 
     // ── 8. Insert Order Record ──────────────────────────────────────────────────
-    $stmtOrder = $pdo->prepare("
-        INSERT INTO orders (
-            user_id, order_number, total_amount, delivery_charge, 
-            tax_amount, grand_total, delivery_address, pincode, notes, status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
-    ");
-    $stmtOrder->execute([
-        $user_id, $order_number, $total_amount, $delivery_charge, 
-        $tax_amount, $grand_total, $delivery_address, $pincode, $notes ?: null, $created_at
-    ]);
+    // If live GPS coordinates provided, append live location info & Google Maps link to delivery_address
+    if ($latitude !== null && $longitude !== null && $latitude != 0.0 && $longitude != 0.0) {
+        $mapLink = "https://maps.google.com/?q={$latitude},{$longitude}";
+        $gpsTag = "📍 Live Location: {$latitude}, {$longitude} (Map: {$mapLink})";
+        if (strpos($delivery_address, 'Live Location:') === false) {
+            $delivery_address = trim($delivery_address) . "\n" . $gpsTag;
+        }
+    }
+
+    $colsStmt = $pdo->query("SHOW COLUMNS FROM orders");
+    $ordersCols = $colsStmt->fetchAll(PDO::FETCH_COLUMN);
+
+    if (!in_array('latitude', $ordersCols)) {
+        try {
+            $pdo->exec("ALTER TABLE orders ADD COLUMN latitude DECIMAL(10, 8) NULL AFTER delivery_address");
+            $pdo->exec("ALTER TABLE orders ADD COLUMN longitude DECIMAL(11, 8) NULL AFTER latitude");
+            $ordersCols[] = 'latitude';
+            $ordersCols[] = 'longitude';
+        } catch (Exception $e) {}
+    }
+
+    $fields = ['user_id', 'order_number', 'total_amount', 'delivery_charge', 'tax_amount', 'grand_total', 'delivery_address', 'pincode', 'notes', 'status', 'created_at'];
+    $placeholders = ['?', '?', '?', '?', '?', '?', '?', '?', '?', "'pending'", '?'];
+    $params = [$user_id, $order_number, $total_amount, $delivery_charge, $tax_amount, $grand_total, $delivery_address, $pincode, $notes ?: null, $created_at];
+
+    if (in_array('latitude', $ordersCols) && in_array('longitude', $ordersCols) && $latitude !== null && $longitude !== null) {
+        $fields[] = 'latitude';
+        $fields[] = 'longitude';
+        $placeholders[] = '?';
+        $placeholders[] = '?';
+        $params[] = $latitude;
+        $params[] = $longitude;
+    }
+
+    $sqlOrder = "INSERT INTO orders (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")";
+    $stmtOrder = $pdo->prepare($sqlOrder);
+    $stmtOrder->execute($params);
     $order_id = (int)$pdo->lastInsertId();
 
     // ── 9. Insert Order Items ───────────────────────────────────────────────────
