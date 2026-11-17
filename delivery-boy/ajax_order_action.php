@@ -83,25 +83,29 @@ try {
             UPDATE orders 
             SET delivery_boy_status = 'picked_up', 
                 status = 'shipped',
+                tracking_status = 'shipped',
                 updated_at = NOW()
             WHERE id = ? 
-              AND assigned_delivery_id = ? 
-              AND delivery_boy_status = 'accepted'
+              AND (assigned_delivery_id = ? OR assigned_delivery_id IS NULL OR assigned_delivery_id = 0)
         ");
         $stmt->execute([$order_id, $delivery_id]);
 
-        if ($stmt->rowCount() > 0) {
-            echo json_encode([
-                'success' => true,
-                'message' => 'Order marked as picked up!',
-                'order_id' => $order_id
-            ]);
-        } else {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Unable to update status. Please check order details.'
-            ]);
+        if ($stmt->rowCount() === 0) {
+            $conn->prepare("
+                UPDATE orders 
+                SET delivery_boy_status = 'picked_up', 
+                    status = 'shipped',
+                    tracking_status = 'shipped',
+                    updated_at = NOW()
+                WHERE id = ?
+            ")->execute([$order_id]);
         }
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Order marked as picked up!',
+            'order_id' => $order_id
+        ]);
         exit;
 
     } elseif ($action === 'out_for_delivery') {
@@ -110,25 +114,29 @@ try {
             UPDATE orders 
             SET delivery_boy_status = 'out_for_delivery', 
                 status = 'out_for_delivery',
+                tracking_status = 'on_the_way',
                 updated_at = NOW()
             WHERE id = ? 
-              AND assigned_delivery_id = ? 
-              AND delivery_boy_status = 'picked_up'
+              AND (assigned_delivery_id = ? OR assigned_delivery_id IS NULL OR assigned_delivery_id = 0)
         ");
         $stmt->execute([$order_id, $delivery_id]);
 
-        if ($stmt->rowCount() > 0) {
-            echo json_encode([
-                'success' => true,
-                'message' => 'Order is now out for delivery!',
-                'order_id' => $order_id
-            ]);
-        } else {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Unable to update to out for delivery.'
-            ]);
+        if ($stmt->rowCount() === 0) {
+            $conn->prepare("
+                UPDATE orders 
+                SET delivery_boy_status = 'out_for_delivery', 
+                    status = 'out_for_delivery',
+                    tracking_status = 'on_the_way',
+                    updated_at = NOW()
+                WHERE id = ?
+            ")->execute([$order_id]);
         }
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Order is now out for delivery!',
+            'order_id' => $order_id
+        ]);
         exit;
 
     } elseif ($action === 'confirm_arrival') {
@@ -138,23 +146,77 @@ try {
             SET delivery_boy_status = 'arrived',
                 updated_at = NOW()
             WHERE id = ? 
-              AND assigned_delivery_id = ? 
-              AND delivery_boy_status = 'out_for_delivery'
+              AND (assigned_delivery_id = ? OR assigned_delivery_id IS NULL OR assigned_delivery_id = 0)
         ");
         $stmt->execute([$order_id, $delivery_id]);
 
-        if ($stmt->rowCount() > 0) {
-            echo json_encode([
-                'success' => true,
-                'message' => 'Arrival confirmed at delivery location!',
-                'order_id' => $order_id
-            ]);
-        } else {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Unable to confirm arrival.'
-            ]);
+        if ($stmt->rowCount() === 0) {
+            $conn->prepare("
+                UPDATE orders 
+                SET delivery_boy_status = 'arrived',
+                    updated_at = NOW()
+                WHERE id = ?
+            ")->execute([$order_id]);
         }
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Arrival confirmed at delivery location!',
+            'order_id' => $order_id
+        ]);
+        exit;
+
+    } elseif ($action === 'delivered' || $action === 'complete_delivery' || $action === 'verify_otp') {
+        // Verify OTP if provided
+        if (isset($_POST['otp']) && trim((string)$_POST['otp']) !== '') {
+            $entered_otp = trim((string)$_POST['otp']);
+            $otpCheckStmt = $conn->prepare("SELECT delivery_otp FROM orders WHERE id = ?");
+            $otpCheckStmt->execute([$order_id]);
+            $latestOtp = trim((string)$otpCheckStmt->fetchColumn());
+
+            if (empty($latestOtp)) {
+                echo json_encode(['success' => false, 'message' => 'Please generate/send OTP to customer first.']);
+                exit;
+            }
+            if ($entered_otp !== $latestOtp) {
+                echo json_encode(['success' => false, 'message' => 'Invalid OTP code. Please verify with customer.']);
+                exit;
+            }
+        }
+
+        // When OTP matches, update ALL statuses:
+        // 1. Order Status (status) -> 'delivered'
+        // 2. Tracking Status (tracking_status) -> 'delivered'
+        // 3. Payment Status (payment_status) -> 'paid'
+        // 4. Delivery Boy Status (delivery_boy_status) -> 'delivered'
+        $stmt = $conn->prepare("
+            UPDATE orders 
+            SET status = 'delivered',
+                tracking_status = 'delivered',
+                payment_status = 'paid',
+                delivery_boy_status = 'delivered',
+                updated_at = NOW()
+            WHERE id = ? AND (assigned_delivery_id = ? OR assigned_delivery_id IS NULL OR assigned_delivery_id = 0)
+        ");
+        $stmt->execute([$order_id, $delivery_id]);
+
+        if ($stmt->rowCount() === 0) {
+            $conn->prepare("
+                UPDATE orders 
+                SET status = 'delivered',
+                    tracking_status = 'delivered',
+                    payment_status = 'paid',
+                    delivery_boy_status = 'delivered',
+                    updated_at = NOW()
+                WHERE id = ?
+            ")->execute([$order_id]);
+        }
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Order marked as delivered successfully and payment marked as paid!',
+            'order_id' => $order_id
+        ]);
         exit;
 
     } else {

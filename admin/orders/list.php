@@ -597,10 +597,10 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <div class="table-note">Showing <?= count($orders) ?> order(s) based on selected filters.</div>
                     </div>
                     <div>
-                        <!-- <button type="button" class="btn btn-outline-danger btn-sm d-inline-flex align-items-center gap-1 shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#clearAllOrdersModal" <?= empty($stats['total_orders']) ? 'disabled' : '' ?>>
+                        <button type="button" class="btn btn-outline-danger btn-sm d-inline-flex align-items-center gap-1 shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#clearAllOrdersModal" <?= empty($stats['total_orders']) ? 'disabled' : '' ?>>
                             <i class="fa-solid fa-trash-can"></i>
                             <span>Clear All Orders</span>
-                        </button> -->
+                        </button>
                     </div>
                 </div>
             </div>  

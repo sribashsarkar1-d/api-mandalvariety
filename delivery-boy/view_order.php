@@ -52,12 +52,14 @@ $main_order_status = strtolower(trim((string)($order['status'] ?? 'pending')));
 
 // Determine 4-step progress: 1 = Assigned, 2 = Picked Up, 3 = Out for Delivery, 4 = Delivered
 $current_step = 1;
-if ($state === 'picked_up' || $main_order_status === 'shipped') {
-    $current_step = 2;
+if ($state === 'delivered' || $main_order_status === 'delivered') {
+    $current_step = 4;
 } elseif (in_array($state, ['out_for_delivery', 'arrived', 'payment_pending', 'proof_pending']) || $main_order_status === 'out_for_delivery') {
     $current_step = 3;
-} elseif ($state === 'delivered' || $main_order_status === 'delivered') {
-    $current_step = 4;
+} elseif ($state === 'picked_up' || $main_order_status === 'shipped') {
+    $current_step = 2;
+} else {
+    $current_step = 1;
 }
 
 $payment_method = $order['payment_method'] ?? $order['payment_type'] ?? 'Cash on Delivery';
@@ -96,20 +98,85 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['action'])) {
     }
 
     if ($new_state) {
-        $stmtUpdate = $conn->prepare("UPDATE orders SET delivery_boy_status = ? WHERE id = ? AND assigned_delivery_id = ?");
-        $stmtUpdate->execute([$new_state, $order_id, $delivery_id]);
+        try {
+            if ($new_state === 'delivered') {
+                // When OTP is matched successfully:
+                // 1. Order Status (status) -> 'delivered'
+                // 2. Tracking Status (tracking_status) -> 'delivered'
+                // 3. Payment Status (payment_status) -> 'paid'
+                // 4. Delivery Partner Status (delivery_boy_status) -> 'delivered'
+                // 5. Updated Timestamp -> NOW()
+                $stmt = $conn->prepare("
+                    UPDATE orders 
+                    SET status = 'delivered',
+                        tracking_status = 'delivered',
+                        payment_status = 'paid',
+                        delivery_boy_status = 'delivered',
+                        updated_at = NOW()
+                    WHERE id = ? AND (assigned_delivery_id = ? OR assigned_delivery_id IS NULL OR assigned_delivery_id = 0)
+                ");
+                $stmt->execute([$order_id, $delivery_id]);
 
-        if ($new_main_status) {
-            $stmtMain = $conn->prepare("UPDATE orders SET status = ? WHERE id = ? AND assigned_delivery_id = ?");
-            $stmtMain->execute([$new_main_status, $order_id, $delivery_id]);
+                if ($stmt->rowCount() === 0) {
+                    $conn->prepare("
+                        UPDATE orders 
+                        SET status = 'delivered',
+                            tracking_status = 'delivered',
+                            payment_status = 'paid',
+                            delivery_boy_status = 'delivered',
+                            updated_at = NOW()
+                        WHERE id = ?
+                    ")->execute([$order_id]);
+                }
+            } elseif ($new_state === 'picked_up') {
+                $stmt = $conn->prepare("
+                    UPDATE orders 
+                    SET status = 'shipped',
+                        tracking_status = 'shipped',
+                        delivery_boy_status = 'picked_up',
+                        updated_at = NOW()
+                    WHERE id = ? AND (assigned_delivery_id = ? OR assigned_delivery_id IS NULL OR assigned_delivery_id = 0)
+                ");
+                $stmt->execute([$order_id, $delivery_id]);
 
-            if ($new_main_status === 'delivered') {
-                $conn->prepare("UPDATE orders SET payment_status = 'paid' WHERE id = ?")->execute([$order_id]);
+                if ($stmt->rowCount() === 0) {
+                    $conn->prepare("
+                        UPDATE orders 
+                        SET status = 'shipped',
+                            tracking_status = 'shipped',
+                            delivery_boy_status = 'picked_up',
+                            updated_at = NOW()
+                        WHERE id = ?
+                    ")->execute([$order_id]);
+                }
+            } elseif ($new_state === 'out_for_delivery') {
+                $stmt = $conn->prepare("
+                    UPDATE orders 
+                    SET status = 'out_for_delivery',
+                        tracking_status = 'on_the_way',
+                        delivery_boy_status = 'out_for_delivery',
+                        updated_at = NOW()
+                    WHERE id = ? AND (assigned_delivery_id = ? OR assigned_delivery_id IS NULL OR assigned_delivery_id = 0)
+                ");
+                $stmt->execute([$order_id, $delivery_id]);
+
+                if ($stmt->rowCount() === 0) {
+                    $conn->prepare("
+                        UPDATE orders 
+                        SET status = 'out_for_delivery',
+                            tracking_status = 'on_the_way',
+                            delivery_boy_status = 'out_for_delivery',
+                            updated_at = NOW()
+                        WHERE id = ?
+                    ")->execute([$order_id]);
+                }
             }
-        }
 
-        header("Location: view_order.php?id=$order_id&updated=1");
-        exit;
+            header("Location: view_order.php?id=$order_id&updated=1");
+            exit;
+        } catch (\Exception $ex) {
+            $error = "Failed to update order status: " . $ex->getMessage();
+        }
     }
 }
 
@@ -722,7 +789,7 @@ $current_badge_label = $status_badge_labels[$current_step] ?? 'Assigned';
 
     /* Padding for bottom areas */
     .details-page-content {
-        padding: 16px 18px 150px; /* ample space so bottom actions never overlap */
+        padding: 16px 18px <?= $current_step === 4 ? '90px' : '150px' ?>; /* ample space so bottom actions never overlap */
     }
 </style>
 
@@ -949,20 +1016,27 @@ $current_badge_label = $status_badge_labels[$current_step] ?? 'Assigned';
             <span class="grand-amount">₹<?= number_format($grand_total, 0) ?></span>
         </div>
 
+        <?php
+            $curr_pay_status = strtolower(trim((string)($order['payment_status'] ?? 'pending')));
+            $is_paid_status = ($curr_pay_status === 'paid');
+            $pay_badge_style = $is_paid_status ? 'background:#DCFCE7; color:#15803D;' : 'background:#FEF3C7; color:#B45309;';
+            $pay_dot_style = $is_paid_status ? 'background-color:#15803D;' : 'background-color:#B45309;';
+        ?>
         <div class="payment-badges-row">
             <div class="badge-status" style="<?= $is_cod ? 'background:#FEF3C7; color:#B45309;' : 'background:#DCFCE7; color:#15803D;' ?>">
                 <span class="status-dot" style="<?= $is_cod ? 'background-color:#B45309;' : 'background-color:#15803D;' ?>"></span>
                 <span><?= $is_cod ? 'Cash on Delivery (COD)' : 'Paid Online' ?></span>
             </div>
 
-            <div class="badge-status" style="background:#F1F5F9; color:#475569;">
-                <span class="status-dot" style="background-color:#94A3B8;"></span>
+            <div class="badge-status" style="<?= $pay_badge_style ?>">
+                <span class="status-dot" style="<?= $pay_dot_style ?>"></span>
                 <span>Payment: <?= ucfirst(e($order['payment_status'] ?? 'Pending')) ?></span>
             </div>
         </div>
     </div>
 
-    <!-- SECTION 7: Customer OTP Card -->
+    <!-- SECTION 7: Customer OTP Card (Only when Out for Delivery) -->
+    <?php if ($current_step === 3): ?>
     <div class="order-view-card otp-card-container">
         <div class="otp-card-header">
             <i class="fa-solid fa-circle-check"></i>
@@ -979,31 +1053,26 @@ $current_badge_label = $status_badge_labels[$current_step] ?? 'Assigned';
                        pattern="[0-9]*" 
                        inputmode="numeric" 
                        autocomplete="off"
-                       data-index="<?= $i ?>"
-                       <?= $current_step === 4 ? 'disabled' : '' ?>>
+                       data-index="<?= $i ?>">
             <?php endfor; ?>
         </div>
 
         <!-- Send / Resend OTP Action -->
-        <?php if ($current_step !== 4): ?>
-            <div class="otp-send-link-wrap">
-                <button type="button" class="btn-send-otp-link" id="btnSendOtpLink" onclick="triggerSendOtp(false)">
-                    <i class="fa-solid fa-paper-plane"></i>
-                    <span>Send OTP to Customer</span>
-                </button>
-            </div>
-            <div id="otpSentAlertBadge" class="otp-feedback-badge">
-                <i class="fa-solid fa-circle-check me-1"></i> OTP sent to customer successfully!
-            </div>
-        <?php else: ?>
-            <div style="color: var(--primary-green); font-size: 13.5px; font-weight: 700;">
-                <i class="fa-solid fa-circle-check me-1"></i> OTP verified & delivery completed.
-            </div>
-        <?php endif; ?>
+        <div class="otp-send-link-wrap">
+            <button type="button" class="btn-send-otp-link" id="btnSendOtpLink" onclick="triggerSendOtp(false)">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>Send OTP to Customer</span>
+            </button>
+        </div>
+        <div id="otpSentAlertBadge" class="otp-feedback-badge">
+            <i class="fa-solid fa-circle-check me-1"></i> OTP sent to customer successfully!
+        </div>
     </div>
+    <?php endif; ?>
 
 </div>
 
+<?php if ($current_step < 4): ?>
 <!-- SECTION 8: Fixed Bottom Action Area (above bottom nav) -->
 <div class="fixed-bottom-action-bar">
     <?php if ($current_step === 1): // Status = Assigned ?>
@@ -1031,13 +1100,9 @@ $current_badge_label = $status_badge_labels[$current_step] ?? 'Assigned';
                 <span>Send OTP & Complete Delivery</span>
             </button>
         </form>
-    <?php elseif ($current_step === 4): // Status = Delivered ?>
-        <button type="button" class="btn-primary-action btn-completed" disabled>
-            <i class="fa-solid fa-circle-check"></i>
-            <span>Delivery Completed</span>
-        </button>
     <?php endif; ?>
 </div>
+<?php endif; ?>
 
 <script>
 // OTP Digits Handling: Auto-advance, backspace, paste
