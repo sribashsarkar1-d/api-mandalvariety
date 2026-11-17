@@ -2,292 +2,393 @@
 require_once 'includes/config.php';
 checkDeliveryLogin();
 
-$delivery_id = $_SESSION['delivery_id'];
-
-// Fetch delivered orders
-$stmt = $conn->prepare("
-    SELECT *
-    FROM orders 
-    WHERE assigned_delivery_id = ? AND status = 'delivered'
-    ORDER BY created_at DESC
-");
-$stmt->execute([$delivery_id]);
-$completed_orders = $stmt->fetchAll();
-
-$total_delivered = count($completed_orders);
-$total_cash_collected = 0;
-
-foreach ($completed_orders as $order) {
-    $pm = strtolower($order['payment_method'] ?? '');
-    if ($pm === 'cod') {
-        $total_cash_collected += (float)($order['grand_total'] ?? $order['total_amount'] ?? 0);
-    }
+$delivery_id = (int)$_SESSION['delivery_id'];
+$period = $_GET['period'] ?? 'today'; // 'today', 'weekly', 'monthly'
+if (!in_array($period, ['today', 'weekly', 'monthly'])) {
+    $period = 'today';
 }
+
+// 1. Calculate Period Specific Earnings & Stats
+$period_sql = match ($period) {
+    'weekly' => "AND updated_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)",
+    'monthly' => "AND updated_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)",
+    default => "AND DATE(updated_at) = CURDATE()"
+};
+
+$stmtPeriod = $conn->prepare("
+    SELECT 
+        COUNT(*) as total_count,
+        COALESCE(SUM(grand_total), 0) as total_earnings,
+        COALESCE(SUM(CASE WHEN LOWER(payment_method) LIKE '%cod%' OR LOWER(payment_method) LIKE '%cash%' THEN grand_total ELSE 0 END), 0) as cod_cash,
+        COALESCE(SUM(CASE WHEN LOWER(payment_method) NOT LIKE '%cod%' AND LOWER(payment_method) NOT LIKE '%cash%' THEN grand_total ELSE 0 END), 0) as online_cash
+    FROM orders
+    WHERE assigned_delivery_id = ? 
+      AND (delivery_boy_status = 'delivered' OR status = 'delivered')
+      $period_sql
+");
+$stmtPeriod->execute([$delivery_id]);
+$periodStats = $stmtPeriod->fetch();
+
+// 2. All-Time Stats
+$stmtAll = $conn->prepare("
+    SELECT 
+        COUNT(*) as all_time_deliveries,
+        COALESCE(SUM(grand_total), 0) as all_time_earnings
+    FROM orders
+    WHERE assigned_delivery_id = ? 
+      AND (delivery_boy_status = 'delivered' OR status = 'delivered')
+");
+$stmtAll->execute([$delivery_id]);
+$allStats = $stmtAll->fetch();
+
+// 3. Completed Deliveries History
+$stmtHistory = $conn->prepare("
+    SELECT o.*, u.name as user_name
+    FROM orders o
+    LEFT JOIN users u ON o.user_id = u.id
+    WHERE o.assigned_delivery_id = ? 
+      AND (o.delivery_boy_status = 'delivered' OR o.status = 'delivered')
+    ORDER BY o.updated_at DESC, o.id DESC
+    LIMIT 30
+");
+$stmtHistory->execute([$delivery_id]);
+$completed_orders = $stmtHistory->fetchAll();
+
+$period_labels = [
+    'today' => "Today's Earnings",
+    'weekly' => "Last 7 Days Earnings",
+    'monthly' => "Last 30 Days Earnings"
+];
 ?>
 
 <?php include 'includes/header.php'; ?>
 
 <style>
-    body {
-        background-color: #f8fafc;
-    }
-    .earnings-container {
-        padding: 24px 20px;
-        padding-bottom: 100px;
-    }
-    
-    .page-header {
+    .earnings-header {
         display: flex;
         align-items: center;
-        gap: 15px;
-        margin-bottom: 24px;
+        gap: 12px;
+        margin-bottom: 20px;
     }
-    
-    .back-btn {
-        color: var(--text-dark);
+
+    .btn-back-circle {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: #FFFFFF;
+        border: 1px solid var(--border-color);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-text);
         text-decoration: none;
-        font-size: 1.2rem;
+        font-size: 14px;
+        transition: background 0.15s;
     }
-    
-    .page-title {
+
+    .btn-back-circle:active {
+        background: var(--light-green);
+    }
+
+    .earnings-title {
+        font-size: 20px;
         font-weight: 800;
-        font-size: 1.25rem;
-        margin: 0;
-        color: var(--text-dark);
+        color: var(--primary-text);
+        letter-spacing: -0.3px;
     }
 
-    .earnings-card {
-        background: #ffffff;
-        border-radius: 20px;
-        padding: 24px 20px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-        margin-bottom: 24px;
-        border: 1px solid rgba(0,0,0,0.02);
-        text-align: center;
-    }
-
-    .tabs {
+    /* Pill Tabs for Period selection */
+    .period-tabs-wrap {
         display: flex;
-        background: #f1f5f9;
-        border-radius: 12px;
-        padding: 4px;
-        margin-bottom: 24px;
+        gap: 8px;
+        background: #F1F5F9;
+        padding: 5px;
+        border-radius: var(--pill-radius);
+        margin-bottom: 20px;
     }
 
-    .tab {
+    .period-tab-btn {
         flex: 1;
-        text-align: center;
-        padding: 10px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--text-muted);
-        border-radius: 8px;
-        cursor: pointer;
-    }
-    .tab.active {
-        background: var(--mandal-green);
-        color: white;
-    }
-
-    .today-badge {
-        display: inline-block;
-        background: #e8f7f0;
-        color: var(--mandal-green);
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 0.75rem;
+        padding: 9px 12px;
+        border-radius: var(--pill-radius);
+        font-size: 13px;
         font-weight: 700;
-        margin-bottom: 12px;
+        text-align: center;
+        color: var(--secondary-text);
+        text-decoration: none;
+        transition: all 0.2s ease;
     }
 
-    .amount {
-        font-size: 3rem;
-        font-weight: 800;
-        color: var(--text-dark);
-        line-height: 1;
+    .period-tab-btn.active {
+        background: #FFFFFF;
+        color: var(--primary-green);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Hero Summary Card */
+    .earnings-hero-card {
+        background: #FFFFFF;
+        border-radius: var(--card-radius);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--card-shadow);
+        padding: 24px 20px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .hero-period-label {
+        font-size: 12.5px;
+        font-weight: 700;
+        color: var(--secondary-text);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
         margin-bottom: 8px;
     }
 
-    .completed-text {
-        font-size: 0.85rem;
-        color: var(--text-muted);
+    .hero-amount {
+        font-size: 34px;
+        font-weight: 800;
+        color: var(--primary-text);
+        letter-spacing: -0.8px;
+        line-height: 1.1;
+        margin-bottom: 6px;
+    }
+
+    .hero-currency {
+        font-size: 24px;
+        vertical-align: super;
+        color: var(--primary-green);
+    }
+
+    .hero-completed-sub {
+        font-size: 13px;
+        color: var(--secondary-text);
         font-weight: 500;
-        margin-bottom: 24px;
+        margin-bottom: 20px;
     }
 
-    .breakdown {
+    /* Mini Stats Grid */
+    .stats-breakdown-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
         text-align: left;
+        border-top: 1px solid var(--divider-color);
+        padding-top: 18px;
     }
 
-    .breakdown-row {
+    .stat-pill-box {
+        background: #F8FAFC;
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        padding: 12px 14px;
+    }
+
+    .stat-pill-label {
+        font-size: 11.5px;
+        color: var(--secondary-text);
+        font-weight: 600;
+        margin-bottom: 3px;
+    }
+
+    .stat-pill-val {
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--primary-text);
+    }
+
+    /* Section Header */
+    .section-title {
+        font-size: 15.5px;
+        font-weight: 800;
+        color: var(--primary-text);
+        margin-bottom: 14px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 12px 0;
-        border-bottom: 1px solid #f1f5f9;
-        font-size: 0.9rem;
-    }
-    .breakdown-row:last-child {
-        border-bottom: none;
     }
 
-    .bd-label {
-        color: var(--text-dark);
-        font-weight: 500;
+    .section-subtitle {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--secondary-text);
     }
 
-    .bd-value {
-        color: var(--text-dark);
-        font-weight: 700;
-    }
-
-    .btn-details {
-        background: var(--mandal-green);
-        color: white;
-        border: none;
-        border-radius: 12px;
-        padding: 14px;
-        width: 100%;
-        font-size: 0.95rem;
-        font-weight: 700;
-        margin-top: 20px;
-        display: block;
+    /* Completed Deliveries Card */
+    .history-order-card {
+        background: #FFFFFF;
+        border-radius: var(--card-radius);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--card-shadow);
+        padding: 14px 16px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
         text-decoration: none;
-        transition: transform 0.2s;
+        color: inherit;
+        transition: transform 0.15s;
     }
-    .btn-details:active {
+
+    .history-order-card:active {
         transform: scale(0.98);
     }
 
-    .section-title {
-        font-weight: 800;
-        font-size: 1.1rem;
-        margin-bottom: 16px;
-        color: var(--text-dark);
-    }
-
-    .history-card {
-        background: #ffffff;
-        border-radius: 16px;
-        padding: 16px;
-        margin-bottom: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-        border: 1px solid rgba(0,0,0,0.02);
+    .history-card-left {
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        gap: 12px;
+        min-width: 0;
     }
 
-    .history-icon {
-        width: 44px;
-        height: 44px;
-        border-radius: 12px;
-        background: #f0fdf4;
-        color: var(--mandal-green);
+    .history-badge-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #DCFCE7;
+        color: #15803D;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.2rem;
+        font-size: 16px;
         flex-shrink: 0;
-        margin-right: 15px;
     }
 
-    .history-details {
-        flex: 1;
+    .history-order-meta {
+        min-width: 0;
     }
-    
-    .history-id {
+
+    .history-order-id {
+        font-size: 14px;
         font-weight: 800;
-        font-size: 0.95rem;
-        color: var(--text-dark);
+        color: var(--primary-text);
+        letter-spacing: -0.2px;
         margin-bottom: 2px;
     }
-    
-    .history-date {
-        font-size: 0.75rem;
-        color: var(--text-muted);
+
+    .history-order-date {
+        font-size: 11.5px;
+        color: var(--secondary-text);
         font-weight: 500;
     }
 
-    .history-amount {
-        font-weight: 800;
-        font-size: 1.1rem;
-        color: var(--text-dark);
+    .history-card-right {
         text-align: right;
+        flex-shrink: 0;
     }
-    .history-pm {
-        font-size: 0.7rem;
-        color: var(--mandal-green);
-        text-transform: uppercase;
+
+    .history-order-amount {
+        font-size: 15.5px;
+        font-weight: 800;
+        color: var(--primary-text);
+    }
+
+    .history-order-pm {
+        font-size: 11px;
         font-weight: 700;
-        text-align: right;
+        color: var(--primary-green);
+        text-transform: uppercase;
+    }
+
+    /* Empty State */
+    .empty-card-state {
+        text-align: center;
+        padding: 40px 20px;
+        background: #FFFFFF;
+        border-radius: var(--card-radius);
+        border: 1px dashed var(--border-color);
+        margin: 16px 0;
     }
 </style>
 
-<div class="earnings-container">
-    <div class="page-header">
-        <a href="index.php" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
-        <h4 class="page-title">My Earnings</h4>
+<div class="page-content">
+
+    <div class="earnings-header">
+        <a href="index.php" class="btn-back-circle">
+            <i class="fa-solid fa-chevron-left"></i>
+        </a>
+        <h2 class="earnings-title">My Earnings</h2>
     </div>
 
-    <div class="earnings-card">
-        <div class="tabs">
-            <div class="tab active">Daily</div>
-            <div class="tab">Weekly</div>
-            <div class="tab">Monthly</div>
-        </div>
-        
-        <div class="today-badge">Today</div>
-        
-        <div class="amount">₹<?= number_format($total_cash_collected, 2) ?></div>
-        <div class="completed-text">Completed Deliveries: <?= $total_delivered ?></div>
-        
-        <div class="breakdown">
-            <div class="breakdown-row">
-                <span class="bd-label">COD Cash Collected</span>
-                <span class="bd-value">₹<?= number_format($total_cash_collected, 2) ?></span>
-            </div>
-            <!-- Simulating breakdown structure as per mockup -->
-            <div class="breakdown-row">
-                <span class="bd-label">Base Delivery Charge</span>
-                <span class="bd-value">₹0</span>
-            </div>
-            <div class="breakdown-row">
-                <span class="bd-label">Incentives</span>
-                <span class="bd-value">₹0</span>
-            </div>
-        </div>
-        
-        <a href="#" class="btn-details">View Details</a>
+    <!-- Period Tabs (Today / Weekly / Monthly) -->
+    <div class="period-tabs-wrap">
+        <a href="earnings.php?period=today" class="period-tab-btn <?= $period === 'today' ? 'active' : '' ?>">Today</a>
+        <a href="earnings.php?period=weekly" class="period-tab-btn <?= $period === 'weekly' ? 'active' : '' ?>">Weekly</a>
+        <a href="earnings.php?period=monthly" class="period-tab-btn <?= $period === 'monthly' ? 'active' : '' ?>">Monthly</a>
     </div>
 
-    <h5 class="section-title">Delivery History</h5>
-
-    <?php if (empty($completed_orders)): ?>
-        <div class="text-center py-4 text-muted">
-            <i class="fa-solid fa-receipt fa-2x mb-3" style="color: #cbd5e1;"></i>
-            <p class="fw-bold mb-0" style="font-size: 0.9rem;">No delivered orders yet.</p>
+    <!-- Hero Earnings Summary Card -->
+    <div class="earnings-hero-card">
+        <div class="hero-period-label"><?= $period_labels[$period] ?></div>
+        <div class="hero-amount">
+            <span class="hero-currency">₹</span><?= number_format((float)$periodStats['total_earnings'], 0) ?>
         </div>
-    <?php else: ?>
+        <div class="hero-completed-sub">
+            <i class="fa-solid fa-circle-check text-success me-1"></i>
+            <?= (int)$periodStats['total_count'] ?> Completed Deliveries
+        </div>
+
+        <div class="stats-breakdown-grid">
+            <div class="stat-pill-box">
+                <div class="stat-pill-label">Cash on Delivery</div>
+                <div class="stat-pill-val">₹<?= number_format((float)$periodStats['cod_cash'], 0) ?></div>
+            </div>
+            <div class="stat-pill-box">
+                <div class="stat-pill-label">Paid Online</div>
+                <div class="stat-pill-val">₹<?= number_format((float)$periodStats['online_cash'], 0) ?></div>
+            </div>
+            <div class="stat-pill-box">
+                <div class="stat-pill-label">Total All-Time</div>
+                <div class="stat-pill-val">₹<?= number_format((float)$allStats['all_time_earnings'], 0) ?></div>
+            </div>
+            <div class="stat-pill-box">
+                <div class="stat-pill-label">Lifetime Deliveries</div>
+                <div class="stat-pill-val"><?= (int)$allStats['all_time_deliveries'] ?></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Completed Deliveries List -->
+    <div class="section-title">
+        <span>Delivery History</span>
+        <span class="section-subtitle">Showing <?= count($completed_orders) ?> orders</span>
+    </div>
+
+    <?php if (!empty($completed_orders)): ?>
         <?php foreach ($completed_orders as $order): ?>
-            <?php 
-                $amount = (float)($order['grand_total'] ?? $order['total_amount'] ?? 0); 
-                $pm = $order['payment_method'] ?? 'unknown';
+            <?php
+                $order_no = $order['order_number'] ?? $order['order_no'] ?? ('ORD-' . $order['id']);
+                $cust_name = $order['user_name'] ?? 'Customer';
+                $total = (float)($order['grand_total'] ?? $order['total_amount'] ?? 0);
+                $pm = $order['payment_method'] ?? 'COD';
+                $is_cod = (strpos(strtolower($pm), 'cash') !== false || strpos(strtolower($pm), 'cod') !== false);
+                $date_str = !empty($order['updated_at']) ? date('M d, Y • h:i A', strtotime($order['updated_at'])) : date('M d, Y', strtotime($order['created_at']));
             ?>
-            <div class="history-card">
-                <div class="history-icon">
-                    <i class="fa-solid fa-check"></i>
+            <a href="view_order.php?id=<?= (int)$order['id'] ?>" class="history-order-card">
+                <div class="history-card-left">
+                    <div class="history-badge-icon">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <div class="history-order-meta">
+                        <div class="history-order-id">#<?= e($order_no) ?></div>
+                        <div class="history-order-date"><?= e($date_str) ?> &bull; <?= e($cust_name) ?></div>
+                    </div>
                 </div>
-                <div class="history-details">
-                    <div class="history-id">#<?= e($order['order_number'] ?? $order['order_no'] ?? 'N/A') ?></div>
-                    <div class="history-date"><?= !empty($order['created_at']) ? date('M d, Y • h:i A', strtotime($order['created_at'])) : '' ?></div>
+                <div class="history-card-right">
+                    <div class="history-order-amount">₹<?= number_format($total, 0) ?></div>
+                    <div class="history-order-pm"><?= $is_cod ? 'COD' : 'Paid' ?></div>
                 </div>
-                <div>
-                    <div class="history-amount">₹<?= number_format($amount, 0) ?></div>
-                    <div class="history-pm"><?= e($pm) ?></div>
-                </div>
-            </div>
+            </a>
         <?php endforeach; ?>
+    <?php else: ?>
+        <div class="empty-card-state">
+            <div style="font-size: 28px; color: #94A3B8; margin-bottom: 8px;">
+                <i class="fa-solid fa-receipt"></i>
+            </div>
+            <h4 style="font-size: 15px; font-weight: 700; color: var(--primary-text); margin-bottom: 4px;">No Delivered Orders Yet</h4>
+            <p style="font-size: 13px; color: var(--secondary-text); margin: 0;">Completed orders will appear here automatically.</p>
+        </div>
     <?php endif; ?>
 
 </div>

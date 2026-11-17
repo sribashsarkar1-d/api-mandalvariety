@@ -2,7 +2,7 @@
 require_once 'includes/config.php';
 checkDeliveryLogin();
 
-$delivery_id = $_SESSION['delivery_id'];
+$delivery_id = (int)$_SESSION['delivery_id'];
 $order_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 if ($order_id <= 0) {
@@ -13,7 +13,7 @@ if ($order_id <= 0) {
 $error = '';
 $success = '';
 
-// Auto-add delivery_otp and delivery_boy_status columns
+// Auto-add delivery_otp and delivery_boy_status columns if missing
 try {
     $conn->query("SELECT delivery_otp FROM orders LIMIT 1");
 } catch (\PDOException $e) {
@@ -75,11 +75,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     } elseif ($action === 'verify_otp') {
         $entered_otp = $_POST['otp'] ?? '';
         if (empty($order['delivery_otp'])) {
-            $error = "Please resend OTP to customer.";
+            $error = "Please click 'Send OTP to Customer' first.";
         } elseif ($entered_otp !== $order['delivery_otp']) {
-            $error = "Invalid OTP. Try again.";
+            $error = "Invalid OTP. Please enter the correct code.";
         } else {
-            // Check if payment is needed
             if ($is_cod && $order['payment_status'] !== 'paid') {
                 $new_state = 'payment_pending';
             } else {
@@ -111,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-// Fetch items with fallback for missing image column on live DB
+// Fetch ordered items
 try {
     $stmtItems = $conn->prepare("
         SELECT oi.*, p.name as product_name, p.images
@@ -132,488 +131,804 @@ try {
     $items = $stmtItems->fetchAll();
 }
 
-$order_no = $order['order_number'] ?? $order['order_no'] ?? 'N/A';
+$order_no = $order['order_number'] ?? $order['order_no'] ?? ('ORD-' . $order['id']);
 $customer_name = $order['user_name'] ?? $order['customer_name'] ?? $order['name'] ?? 'Customer';
-$customer_phone = $order['user_phone'] ?? $order['customer_phone'] ?? $order['phone'] ?? 'N/A';
+$customer_phone = $order['user_phone'] ?? $order['customer_phone'] ?? $order['phone'] ?? '';
 $address = $order['shipping_address'] ?? $order['delivery_address'] ?? $order['address'] ?? '';
 $pincode = $order['shipping_pincode'] ?? $order['delivery_pincode'] ?? $order['pincode'] ?? '';
 $grand_total = (float)($order['grand_total'] ?? $order['total_amount'] ?? 0);
+$delivery_charge = (float)($order['delivery_charge'] ?? 0);
+$items_subtotal = (float)($order['total_amount'] ?? ($grand_total - $delivery_charge));
+if ($items_subtotal <= 0) $items_subtotal = $grand_total;
 
+$maps_url = "https://www.google.com/maps/dir/?api=1&destination=" . urlencode($address . ' ' . $pincode) . "&travelmode=driving";
 ?>
 
 <?php include 'includes/header.php'; ?>
 
 <style>
-    body { background-color: #ffffff; }
-    .page-container { padding: 24px 20px; padding-bottom: 100px; display: flex; flex-direction: column; min-height: 100vh; }
-    
-    .page-header { display: flex; align-items: center; gap: 15px; margin-bottom: 24px; }
-    .back-btn { color: var(--text-dark); text-decoration: none; font-size: 1.2rem; }
-    .page-title { font-weight: 800; font-size: 1.25rem; margin: 0; color: var(--text-dark); }
-    
-    .btn-bottom {
-        background: var(--mandal-green);
-        color: white; border: none; border-radius: 12px; padding: 16px; width: 100%;
-        font-size: 1rem; font-weight: 700; text-align: center; display: block;
-        text-decoration: none; transition: transform 0.2s; cursor: pointer; margin-top: auto;
+    .order-details-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
     }
-    .btn-bottom:active { transform: scale(0.98); }
-    
-    .btn-reject { background: #fee2e2; color: #ef4444; }
-    
-    /* Assigned / Accepted State */
-    .order-card { background: #ffffff; border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 24px; border: 1px solid rgba(0,0,0,0.02); }
-    .cod-badge { background: #f59e0b; color: white; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; }
-    
-    /* Illustration States */
-    .state-illustration { text-align: center; margin-top: 40px; margin-bottom: 40px; }
-    .state-icon-circle { width: 120px; height: 120px; border-radius: 50%; background: #e8f7f0; color: var(--mandal-green); display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 0 auto 20px; box-shadow: 0 10px 25px rgba(7, 161, 88, 0.2); }
-    .state-title { font-size: 1.4rem; font-weight: 800; color: var(--text-dark); margin-bottom: 8px; }
-    .state-subtitle { font-size: 0.95rem; color: var(--text-muted); font-weight: 500; margin-bottom: 20px; }
 
-    /* OTP State */
-    .otp-inputs { display: flex; gap: 10px; justify-content: center; margin: 30px 0; }
-    .otp-box { width: 50px; height: 60px; border: 2px solid #e2e8f0; border-radius: 12px; text-align: center; font-size: 1.5rem; font-weight: 800; color: var(--text-dark); }
-    .otp-box:focus { border-color: var(--mandal-green); outline: none; }
+    .header-left-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
 
-    /* Payment State */
-    .payment-box { background: #f8fafc; border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 30px; border: 1px solid #e2e8f0; }
-    .payment-amount { font-size: 2.5rem; font-weight: 800; color: var(--text-dark); margin: 10px 0; }
-    
-    /* Proof State */
-    .photo-placeholder { background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 16px; height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #64748b; margin-bottom: 20px; cursor: pointer; }
-    .photo-placeholder i { font-size: 2.5rem; margin-bottom: 10px; }
+    .btn-back-circle {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: #FFFFFF;
+        border: 1px solid var(--border-color);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-text);
+        text-decoration: none;
+        font-size: 14px;
+        transition: background 0.15s;
+    }
 
-    /* Success State */
-    .success-circle { width: 100px; height: 100px; background: var(--mandal-green); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 40px auto 20px; box-shadow: 0 10px 30px rgba(7, 161, 88, 0.3); }
+    .btn-back-circle:active {
+        background: var(--light-green);
+    }
 
+    .order-details-title {
+        font-size: 18.5px;
+        font-weight: 800;
+        color: var(--primary-text);
+        letter-spacing: -0.3px;
+        line-height: 1.2;
+    }
+
+    .order-details-sub {
+        font-size: 12px;
+        color: var(--secondary-text);
+        font-weight: 500;
+    }
+
+    /* Status Progress Tracker */
+    .status-tracker-card {
+        background: #FFFFFF;
+        border-radius: var(--card-radius);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--card-shadow);
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    .tracker-steps {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        padding: 6px 10px 0;
+    }
+
+    .tracker-steps::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: 30px;
+        right: 30px;
+        height: 3px;
+        background: #E5E7EB;
+        z-index: 1;
+    }
+
+    .tracker-step {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .step-circle {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #FFFFFF;
+        border: 2px solid #CBD5E1;
+        color: #94A3B8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        transition: all 0.2s ease;
+    }
+
+    .tracker-step.active .step-circle {
+        background: var(--primary-green);
+        border-color: var(--primary-green);
+        color: #FFFFFF;
+        box-shadow: 0 0 0 4px rgba(0, 155, 85, 0.18);
+    }
+
+    .tracker-step.completed .step-circle {
+        background: var(--primary-green);
+        border-color: var(--primary-green);
+        color: #FFFFFF;
+    }
+
+    .step-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--secondary-text);
+        text-align: center;
+    }
+
+    .tracker-step.active .step-label {
+        color: var(--primary-green);
+        font-weight: 700;
+    }
+
+    /* Section Card */
+    .detail-card {
+        background: #FFFFFF;
+        border-radius: var(--card-radius);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--card-shadow);
+        padding: 18px;
+        margin-bottom: 16px;
+    }
+
+    .detail-card-title {
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: var(--secondary-text);
+        letter-spacing: 0.5px;
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .detail-card-title i {
+        color: var(--primary-green);
+        font-size: 14px;
+    }
+
+    /* Customer Quick Actions */
+    .customer-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .customer-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .customer-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--light-green);
+        color: var(--primary-green);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+    .customer-name {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--primary-text);
+        line-height: 1.2;
+    }
+
+    .customer-phone {
+        font-size: 13px;
+        color: var(--secondary-text);
+        font-weight: 500;
+        margin-top: 2px;
+    }
+
+    .quick-action-buttons {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-quick-action {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        text-decoration: none;
+        transition: transform 0.15s, background-color 0.15s;
+        border: 1px solid var(--border-color);
+    }
+
+    .btn-quick-call {
+        background: #EFF6FF;
+        color: #2563EB;
+        border-color: #DBEAFE;
+    }
+
+    .btn-quick-maps {
+        background: var(--light-green);
+        color: var(--primary-green);
+        border-color: #C6F0DC;
+    }
+
+    .btn-quick-action:active {
+        transform: scale(0.93);
+    }
+
+    /* Address Text */
+    .address-box {
+        background: #F8FAFC;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-size: 13.5px;
+        color: var(--primary-text);
+        line-height: 1.45;
+        font-weight: 500;
+    }
+
+    /* Product Item */
+    .product-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--divider-color);
+    }
+    .product-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .product-thumb {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        object-fit: cover;
+        background: #F8FAFC;
+        border: 1px solid var(--border-color);
+        flex-shrink: 0;
+    }
+
+    .product-thumb-placeholder {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        background: var(--light-green);
+        color: var(--primary-green);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+    .product-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .product-title {
+        font-size: 13.5px;
+        font-weight: 700;
+        color: var(--primary-text);
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .product-qty-badge {
+        font-size: 12px;
+        color: var(--secondary-text);
+        margin-top: 2px;
+        font-weight: 500;
+    }
+
+    .product-price {
+        font-size: 14.5px;
+        font-weight: 800;
+        color: var(--primary-text);
+        letter-spacing: -0.2px;
+    }
+
+    /* Bill Breakdown */
+    .bill-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13.5px;
+        color: var(--secondary-text);
+        margin-bottom: 8px;
+    }
+
+    .bill-row.total-row {
+        border-top: 1px dashed var(--border-color);
+        padding-top: 12px;
+        margin-top: 10px;
+        margin-bottom: 0;
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--primary-text);
+    }
+
+    /* Fixed Bottom Action Bar */
+    .fixed-action-bar {
+        position: fixed;
+        bottom: 68px; /* sits right above bottom nav */
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        max-width: 480px;
+        background: #FFFFFF;
+        padding: 12px 18px;
+        border-top: 1px solid var(--border-color);
+        box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.05);
+        z-index: 990;
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-action-full {
+        flex: 1;
+        background: var(--primary-green);
+        color: #FFFFFF;
+        border: none;
+        border-radius: var(--pill-radius);
+        padding: 13px 20px;
+        font-size: 14.5px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .btn-action-full:hover {
+        background: var(--dark-green);
+        color: #FFFFFF;
+    }
+
+    .btn-action-full:active {
+        transform: scale(0.98);
+    }
+
+    .btn-action-danger {
+        background: #FEE2E2;
+        color: #DC2626;
+    }
+
+    .btn-action-danger:hover {
+        background: #FCA5A5;
+        color: #991B1B;
+    }
+
+    /* OTP Inputs */
+    .otp-grid {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin: 20px 0;
+    }
+
+    .otp-digit-input {
+        width: 46px;
+        height: 54px;
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--primary-text);
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+    .otp-digit-input:focus {
+        border-color: var(--primary-green);
+        box-shadow: 0 0 0 3px rgba(0, 155, 85, 0.15);
+    }
+
+    /* Big Success Checkmark */
+    .success-hero {
+        text-align: center;
+        padding: 30px 10px 10px;
+    }
+
+    .success-hero-circle {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: var(--primary-green);
+        color: #FFFFFF;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 34px;
+        margin-bottom: 16px;
+        box-shadow: 0 8px 24px rgba(0, 155, 85, 0.3);
+    }
 </style>
 
-<div class="page-container">
+<div class="page-content" style="padding-bottom: 90px;">
 
+    <!-- 1. Header with Back Button and Order Number -->
+    <div class="order-details-header">
+        <div class="header-left-title">
+            <a href="index.php" class="btn-back-circle">
+                <i class="fa-solid fa-chevron-left"></i>
+            </a>
+            <div>
+                <h2 class="order-details-title">Order #<?= e($order_no) ?></h2>
+                <div class="order-details-sub"><?= date('d M Y, h:i A', strtotime($order['created_at'])) ?></div>
+            </div>
+        </div>
+
+        <div class="badge-status">
+            <span class="status-dot"></span>
+            <span><?= e(ucwords(str_replace('_', ' ', $state))) ?></span>
+        </div>
+    </div>
+
+    <!-- Error Alert if any -->
     <?php if ($error): ?>
-        <div class="alert alert-danger border-0 rounded-3 shadow-sm mb-4"><i class="fa-solid fa-circle-exclamation me-2"></i><?= e($error) ?></div>
+        <div class="detail-card" style="background:#FEF2F2; border-color:#FECACA; color:#B91C1C; padding:12px 16px; margin-bottom:14px;">
+            <i class="fa-solid fa-circle-exclamation me-2"></i><?= e($error) ?>
+        </div>
     <?php endif; ?>
 
-    <!-- STATE: ASSIGNED (New Request) -->
-    <?php if ($state === 'assigned'): ?>
-        <div class="page-header">
-            <a href="index.php" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
-            <h4 class="page-title">New Delivery Request</h4>
-        </div>
-        
-        <div class="order-card">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div class="fw-bold fs-5">#<?= e($order_no) ?></div>
-                <div class="cod-badge"><?= $is_cod ? 'COD' : 'PAID' ?></div>
-            </div>
-            
-            <div class="d-flex align-items-center mb-4">
-                <div class="customer-avatar me-3" style="width: 40px; height: 40px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #94a3b8;"><i class="fa-solid fa-user"></i></div>
-                <div class="flex-grow-1">
-                    <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase;">Customer</div>
-                    <div class="fw-bold text-dark"><?= e($customer_name) ?></div>
-                    <div style="font-size:0.85rem; color:var(--text-muted);"><?= e($customer_phone) ?></div>
-                </div>
-            </div>
-
-            <div class="fw-bold mb-3 mt-2">Items (<?= count($items) ?>)</div>
-            <div class="items-list" style="padding-right: 5px;">
-            <?php foreach ($items as $item): 
-                $imgUrl = getDeliveryProductImageUrl($item['images'] ?? '');
-                $fallbackUrl = !empty($imgUrl) && strpos($imgUrl, 'http') === 0 ? 'https://admin.mandal-variety.com/uploads/' . rawurlencode(basename($imgUrl)) : 'https://via.placeholder.com/50?text=Item';
-            ?>
-                <div class="d-flex align-items-center mb-3">
-                    <?php if (!empty($imgUrl)): ?>
-                        <img src="<?= e($imgUrl) ?>" 
-                             alt="Product" 
-                             onerror="if (this.src.indexOf('admin.mandal-variety.com') === -1) { this.src='<?= e($fallbackUrl) ?>'; } else { this.onerror=null; this.src='https://via.placeholder.com/50?text=Item'; }" 
-                             style="width: 45px; height: 45px; border-radius: 10px; object-fit: cover; border: 1px solid #e2e8f0; margin-right: 12px; background: #f8fafc;">
-                    <?php else: ?>
-                        <div style="width: 45px; height: 45px; border-radius: 10px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 1.2rem; margin-right: 12px; flex-shrink: 0; border: 1px solid #e2e8f0;">
-                            <i class="fa-solid fa-box-open"></i>
-                        </div>
-                    <?php endif; ?>
-                    <div class="flex-grow-1">
-                        <div class="fw-bold text-dark fs-6" style="line-height: 1.2;"><?= e($item['product_name']) ?></div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted);">Qty: <?= (int)$item['quantity'] ?></div>
+    <!-- 2. Status Tracker Card -->
+    <?php
+        $steps = ['assigned', 'picked_up', 'out_for_delivery', 'delivered'];
+        $step_labels = ['Assigned', 'Picked Up', 'Out for Delivery', 'Delivered'];
+        $current_step_idx = 0;
+        if ($state === 'picked_up') $current_step_idx = 1;
+        elseif (in_array($state, ['out_for_delivery', 'arrived', 'payment_pending', 'proof_pending'])) $current_step_idx = 2;
+        elseif ($state === 'delivered') $current_step_idx = 3;
+    ?>
+    <div class="status-tracker-card">
+        <div class="tracker-steps">
+            <?php foreach ($steps as $idx => $s): ?>
+                <?php
+                    $is_active = ($idx === $current_step_idx);
+                    $is_completed = ($idx < $current_step_idx);
+                ?>
+                <div class="tracker-step <?= $is_active ? 'active' : '' ?> <?= $is_completed ? 'completed' : '' ?>">
+                    <div class="step-circle">
+                        <?php if ($is_completed): ?>
+                            <i class="fa-solid fa-check"></i>
+                        <?php else: ?>
+                            <?= $idx + 1 ?>
+                        <?php endif; ?>
                     </div>
-                    <div class="fw-bold text-dark">₹<?= number_format((float)$item['price'] * (int)$item['quantity'], 0) ?></div>
+                    <span class="step-label"><?= $step_labels[$idx] ?></span>
                 </div>
             <?php endforeach; ?>
-            </div>
+        </div>
+    </div>
 
-            <div style="background:#f8fafc; border-radius:12px; padding:15px; margin-top:20px;">
-                <div class="d-flex justify-content-between text-muted small mb-2"><span>Subtotal</span><span>₹<?= number_format($grand_total, 0) ?></span></div>
-                <div class="d-flex justify-content-between text-muted small mb-3"><span>Delivery Charge</span><span>₹0</span></div>
-                <div class="d-flex justify-content-between fw-bold text-dark pt-2" style="border-top:1px dashed #cbd5e1;"><span>Total Amount</span><span>₹<?= number_format($grand_total, 0) ?></span></div>
-            </div>
-
-            <div class="mt-4 pt-3" style="border-top:1px dashed #e2e8f0;">
-                <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:5px;">Delivery Address</div>
-                <div class="fw-bold text-dark small" style="line-height:1.4;">
-                    <?= nl2br(e($address)) ?>
-                    <?php if ($pincode): ?> - <?= e($pincode) ?><?php endif; ?>
+    <!-- 3. Customer Info Card with Call & Map buttons -->
+    <div class="detail-card">
+        <div class="detail-card-title">
+            <i class="fa-solid fa-user"></i>
+            <span>Customer Details</span>
+        </div>
+        <div class="customer-row">
+            <div class="customer-meta">
+                <div class="customer-avatar">
+                    <i class="fa-solid fa-user"></i>
                 </div>
-            </div>
-        </div>
-
-        <form method="POST" class="mt-auto d-flex gap-3">
-            <button type="submit" name="action" value="reject" class="btn-bottom btn-reject w-50">Reject</button>
-            <button type="submit" name="action" value="accept" class="btn-bottom w-50">Accept</button>
-        </form>
-
-    <!-- STATE: ACCEPTED (Navigation/Map View) -->
-    <?php elseif ($state === 'accepted'): ?>
-        <div class="page-header" style="margin-bottom: 15px;">
-            <a href="index.php" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
-            <h4 class="page-title">Live Navigation</h4>
-        </div>
-        
-        <!-- Map Placeholder styling -->
-        <div style="background: #e2e8f0; height: 250px; border-radius: 20px; position: relative; overflow: hidden; margin-bottom: 20px; box-shadow: inset 0 0 10px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center;">
-            <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.3; background-image: radial-gradient(#94a3b8 1px, transparent 1px); background-size: 20px 20px;"></div>
-            
-            <!-- Route Line -->
-            <svg style="position: absolute; width: 100%; height: 100%; z-index: 1;" viewBox="0 0 100 100" preserveAspectRatio="none">
-                <path d="M 30 70 Q 50 30 80 40" fill="none" stroke="#3b82f6" stroke-width="3" stroke-dasharray="5,5" stroke-linecap="round"/>
-            </svg>
-            
-            <!-- Bike Icon (Origin) -->
-            <div style="position: absolute; bottom: 20%; left: 25%; z-index: 2; width: 40px; height: 40px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 2px solid var(--mandal-green);">
-                <i class="fa-solid fa-motorcycle" style="color: var(--mandal-green); font-size: 1.2rem;"></i>
-            </div>
-            
-            <!-- Destination Pin -->
-            <div style="position: absolute; top: 30%; right: 15%; z-index: 2; width: 40px; height: 40px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 2px solid #ef4444;">
-                <i class="fa-solid fa-location-dot" style="color: #ef4444; font-size: 1.2rem;"></i>
-            </div>
-            
-            <a href="https://www.google.com/maps/dir/?api=1&destination=<?= urlencode($address . ' ' . $pincode) ?>&travelmode=driving" target="_blank" class="btn btn-primary shadow-sm" style="position: absolute; z-index: 3; bottom: 15px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; padding: 8px 16px; background: #3b82f6; border: none;">
-                <i class="fa-solid fa-location-arrow me-2"></i>Open in Maps
-            </a>
-        </div>
-
-        <div class="order-card" style="padding: 15px;">
-            <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:10px;">Drop Details</div>
-            
-            <div class="d-flex align-items-center mb-3">
-                <div class="customer-avatar me-3" style="width: 50px; height: 50px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #94a3b8;"><i class="fa-solid fa-user"></i></div>
-                <div class="flex-grow-1">
-                    <div class="fw-bold text-dark fs-6"><?= e($customer_name) ?></div>
-                    <div style="font-size:0.85rem; color:var(--text-muted);"><?= e($customer_phone) ?></div>
-                </div>
-                <div class="d-flex gap-2">
-                    <a href="tel:<?= e($customer_phone) ?>" style="width: 45px; height: 45px; border-radius: 50%; background: #eff6ff; color: #3b82f6; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 1.2rem;"><i class="fa-solid fa-phone"></i></a>
-                    <a href="https://www.google.com/maps/dir/?api=1&destination=<?= urlencode($address . ' ' . $pincode) ?>&travelmode=driving" target="_blank" style="width: 45px; height: 45px; border-radius: 50%; background: #e8f7f0; color: var(--mandal-green); display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 1.2rem;"><i class="fa-solid fa-location-arrow"></i></a>
-                </div>
-            </div>
-            
-            <div class="fw-bold text-dark small" style="line-height:1.4; background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                <i class="fa-solid fa-location-dot text-danger me-2"></i>
-                <?= nl2br(e($address)) ?>
-                <?php if ($pincode): ?> - <?= e($pincode) ?><?php endif; ?>
-            </div>
-        </div>
-
-        <form method="POST" class="mt-auto">
-            <button type="submit" name="action" value="confirm_pickup" class="btn-bottom">Confirm Pickup</button>
-        </form>
-
-    <!-- STATE: PICKED UP (En route) -->
-    <?php elseif ($state === 'picked_up'): ?>
-        <div class="page-header">
-            <a href="index.php" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
-            <h4 class="page-title">Out for Delivery</h4>
-        </div>
-        <div class="state-illustration">
-            <div class="state-icon-circle"><i class="fa-solid fa-motorcycle"></i></div>
-            <div class="state-title">Order is Out for Delivery</div>
-            <div class="state-subtitle">#<?= e($order_no) ?></div>
-        </div>
-        <form method="POST" class="mt-auto">
-            <button type="submit" name="action" value="update_status" class="btn-bottom">Update Status</button>
-        </form>
-
-    <!-- STATE: OUT FOR DELIVERY (Arrived) -->
-    <?php elseif ($state === 'out_for_delivery'): ?>
-        <div class="page-header">
-            <a href="index.php" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
-            <h4 class="page-title">Arrived at Location</h4>
-        </div>
-        <div class="state-illustration">
-            <div class="state-icon-circle" style="background:#eff6ff; color:#3b82f6;"><i class="fa-solid fa-location-dot"></i></div>
-            <div class="state-title">You have arrived</div>
-            <div class="state-subtitle">at the customer location</div>
-        </div>
-        <form method="POST" class="mt-auto">
-            <button type="submit" name="action" value="confirm_arrival" class="btn-bottom">Confirm Arrival</button>
-        </form>
-
-    <!-- STATE: ARRIVED (Customer OTP) -->
-    <?php elseif ($state === 'arrived'): ?>
-        <div class="page-header">
-            <a href="index.php" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
-            <h4 class="page-title">Customer OTP</h4>
-        </div>
-        <div class="order-card" style="padding: 15px; margin-bottom: 20px;">
-            <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; margin-bottom:10px;">Drop Details</div>
-            
-            <div class="d-flex align-items-center mb-3">
-                <div class="customer-avatar me-3" style="width: 50px; height: 50px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: #94a3b8;"><i class="fa-solid fa-user"></i></div>
-                <div class="flex-grow-1">
-                    <div class="fw-bold text-dark fs-6"><?= e($customer_name) ?></div>
-                    <div style="font-size:0.85rem; color:var(--text-muted);"><?= e($customer_phone) ?></div>
-                </div>
-                <div class="d-flex gap-2">
-                    <a href="tel:<?= e($customer_phone) ?>" style="width: 45px; height: 45px; border-radius: 50%; background: #eff6ff; color: #3b82f6; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 1.2rem;"><i class="fa-solid fa-phone"></i></a>
-                    <a href="https://www.google.com/maps/dir/?api=1&destination=<?= urlencode($address . ' ' . $pincode) ?>&travelmode=driving" target="_blank" style="width: 45px; height: 45px; border-radius: 50%; background: #e8f7f0; color: var(--mandal-green); display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 1.2rem;"><i class="fa-solid fa-location-arrow"></i></a>
-                </div>
-            </div>
-            
-            <div class="fw-bold text-dark small mb-3" style="line-height:1.4; background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                <i class="fa-solid fa-location-dot text-danger me-2"></i>
-                <?= nl2br(e($address)) ?>
-                <?php if ($pincode): ?> - <?= e($pincode) ?><?php endif; ?>
-            </div>
-
-            <div class="d-flex justify-content-between align-items-center mb-3" style="background: #f1f5f9; padding: 12px; border-radius: 12px;">
                 <div>
-                    <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Payment</div>
-                    <div class="fw-bold text-dark" style="font-size: 1.1rem;">₹<?= number_format($grand_total, 0) ?></div>
-                </div>
-                <div style="background: <?= $is_cod ? '#f59e0b' : '#058547' ?>; color: white; padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 700;">
-                    <?= $is_cod ? 'TO COLLECT (COD)' : 'PAID' ?>
+                    <div class="customer-name"><?= e($customer_name) ?></div>
+                    <div class="customer-phone"><?= e($customer_phone ?: 'No Phone Number') ?></div>
                 </div>
             </div>
 
-            <div class="fw-bold mb-3 mt-2" style="font-size:0.85rem;">Items to Deliver (<?= count($items) ?>)</div>
-            <div class="items-list" style="padding-right: 5px;">
-            <?php foreach ($items as $item): 
-                $imgUrl = getDeliveryProductImageUrl($item['images'] ?? '');
-                $fallbackUrl = !empty($imgUrl) && strpos($imgUrl, 'http') === 0 ? 'https://admin.mandal-variety.com/uploads/' . rawurlencode(basename($imgUrl)) : 'https://via.placeholder.com/50?text=Item';
-            ?>
-                <div class="d-flex align-items-center mb-2">
-                    <?php if (!empty($imgUrl)): ?>
-                        <img src="<?= e($imgUrl) ?>" 
-                             alt="Product" 
-                             onerror="if (this.src.indexOf('admin.mandal-variety.com') === -1) { this.src='<?= e($fallbackUrl) ?>'; } else { this.onerror=null; this.src='https://via.placeholder.com/50?text=Item'; }" 
-                             style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid #e2e8f0; margin-right: 10px; background: #f8fafc;">
-                    <?php else: ?>
-                        <div style="width: 40px; height: 40px; border-radius: 8px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 1.1rem; margin-right: 10px; flex-shrink: 0; border: 1px solid #e2e8f0;">
-                            <i class="fa-solid fa-box-open"></i>
-                        </div>
-                    <?php endif; ?>
-                    <div class="flex-grow-1">
-                        <div class="fw-bold text-dark" style="font-size: 0.85rem; line-height: 1.2;"><?= e($item['product_name']) ?></div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted);">Qty: <?= (int)$item['quantity'] ?></div>
-                    </div>
-                </div>
-            <?php endforeach; ?>
+            <div class="quick-action-buttons">
+                <?php if ($customer_phone): ?>
+                    <a href="tel:<?= e($customer_phone) ?>" class="btn-quick-action btn-quick-call" title="Call Customer">
+                        <i class="fa-solid fa-phone"></i>
+                    </a>
+                <?php endif; ?>
+                <a href="<?= e($maps_url) ?>" target="_blank" class="btn-quick-action btn-quick-maps" title="Open in Maps">
+                    <i class="fa-solid fa-location-arrow"></i>
+                </a>
             </div>
         </div>
+    </div>
 
-        <div class="text-center mt-4">
-            <div style="width:70px; height:70px; background:#f1f5f9; border-radius:18px; display:flex; align-items:center; justify-content:center; color:var(--mandal-green); font-size:1.8rem; margin:0 auto 15px;"><i class="fa-solid fa-shield-halved"></i></div>
-            <div class="state-title" style="font-size:1.3rem;">Enter Customer OTP</div>
-            
-            <button type="button" class="btn btn-outline-success fw-bold rounded-pill px-4 py-2 mt-3" id="btnSendOtp">
-                Send OTP to Customer
-            </button>
-            <div class="text-success fw-bold small mt-2 d-none" id="otpSentMsg">OTP Sent Successfully!</div>
+    <!-- 4. Complete Delivery Address Card -->
+    <div class="detail-card">
+        <div class="detail-card-title">
+            <i class="fa-solid fa-location-dot"></i>
+            <span>Delivery Address</span>
+        </div>
+        <div class="address-box">
+            <?= nl2br(e($address)) ?>
+            <?php if ($pincode): ?> - <?= e($pincode) ?><?php endif; ?>
+        </div>
+    </div>
 
-            <form method="POST" class="mt-4" id="customerOtpForm" onsubmit="return handleCustomerOtpSubmit(event)">
-                <input type="hidden" name="action" value="verify_otp">
-                <div class="otp-inputs" id="customerOtpContainer">
-                    <input type="tel" class="otp-box customer-otp-box" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="one-time-code" required autofocus>
-                    <input type="tel" class="otp-box customer-otp-box" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" required>
-                    <input type="tel" class="otp-box customer-otp-box" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" required>
-                    <input type="tel" class="otp-box customer-otp-box" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" required>
-                    <input type="tel" class="otp-box customer-otp-box" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" required>
-                    <input type="tel" class="otp-box customer-otp-box" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" required>
-                    <input type="hidden" name="otp" id="hiddenOtp">
+    <!-- 5. Ordered Products Card -->
+    <div class="detail-card">
+        <div class="detail-card-title">
+            <i class="fa-solid fa-bag-shopping"></i>
+            <span>Ordered Products (<?= count($items) ?>)</span>
+        </div>
+        <div class="products-list">
+            <?php foreach ($items as $item): ?>
+                <?php
+                    $imgUrl = getDeliveryProductImageUrl($item['images'] ?? '');
+                    $fallbackUrl = !empty($imgUrl) && strpos($imgUrl, 'http') === 0 ? 'https://admin.mandal-variety.com/uploads/' . rawurlencode(basename($imgUrl)) : '';
+                    $itemQty = (int)$item['quantity'];
+                    $itemPrice = (float)$item['price'];
+                ?>
+                <div class="product-item">
+                    <?php if (!empty($imgUrl)): ?>
+                        <img src="<?= e($imgUrl) ?>" alt="Product" class="product-thumb" onerror="if (this.src.indexOf('admin.mandal-variety.com') === -1 && '<?= e($fallbackUrl) ?>') { this.src='<?= e($fallbackUrl) ?>'; } else { this.onerror=null; this.style.display='none'; }">
+                    <?php else: ?>
+                        <div class="product-thumb-placeholder">
+                            <i class="fa-solid fa-box"></i>
+                        </div>
+                    <?php endif; ?>
+                    <div class="product-info">
+                        <div class="product-title"><?= e($item['product_name'] ?? 'Product') ?></div>
+                        <div class="product-qty-badge">Qty: <?= $itemQty ?> &times; ₹<?= number_format($itemPrice, 0) ?></div>
+                    </div>
+                    <div class="product-price">₹<?= number_format($itemPrice * $itemQty, 0) ?></div>
                 </div>
-                <button type="submit" id="btnVerifyCustomerOtp" class="btn-bottom" style="margin-top:35px;">Verify OTP</button>
+            <?php endforeach; ?>
+        </div>
+    </div>
+
+    <!-- 6. Payment & Billing Details Card -->
+    <div class="detail-card">
+        <div class="detail-card-title">
+            <i class="fa-solid fa-receipt"></i>
+            <span>Payment Summary</span>
+        </div>
+        <div class="bill-row">
+            <span>Items Subtotal</span>
+            <span>₹<?= number_format($items_subtotal, 0) ?></span>
+        </div>
+        <div class="bill-row">
+            <span>Delivery Charge</span>
+            <span>₹<?= number_format($delivery_charge, 0) ?></span>
+        </div>
+        <div class="bill-row total-row">
+            <span>Grand Total</span>
+            <span style="color:var(--primary-green);">₹<?= number_format($grand_total, 0) ?></span>
+        </div>
+        <div style="margin-top: 14px; display: flex; gap: 8px;">
+            <div class="badge-status" style="<?= $is_cod ? 'background:#FEF3C7; color:#B45309;' : 'background:#DCFCE7; color:#15803D;' ?>">
+                <span class="status-dot" style="<?= $is_cod ? 'background:#B45309;' : 'background:#15803D;' ?>"></span>
+                <span><?= $is_cod ? 'Cash on Delivery (COD)' : 'Paid Online' ?></span>
+            </div>
+            <div class="badge-status" style="background:#F1F5F9; color:#475569;">
+                <span>Payment: <?= e(ucfirst($order['payment_status'] ?? 'Pending')) ?></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. Interactive State Actions & Modals -->
+    <?php if ($state === 'arrived'): ?>
+        <!-- Customer OTP Input Modal/Card -->
+        <div class="detail-card" style="text-align: center; padding: 24px 18px;">
+            <div style="width: 54px; height: 54px; border-radius: 50%; background: var(--light-green); color: var(--primary-green); display: inline-flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 12px;">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h3 style="font-size: 17px; font-weight: 800; color: var(--primary-text); margin-bottom: 4px;">Enter Customer OTP</h3>
+            <p style="font-size: 13px; color: var(--secondary-text); margin-bottom: 16px;">Ask the customer for the 6-digit delivery verification code.</p>
+
+            <button type="button" class="btn-outline" id="btnSendCustomerOtp" onclick="sendOtpToCustomer()">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>Send OTP to Customer</span>
+            </button>
+            <div id="otpSentBadge" style="display: none; margin-top: 8px; color: var(--primary-green); font-size: 12.5px; font-weight: 700;">
+                <i class="fa-solid fa-circle-check me-1"></i> OTP sent successfully!
+            </div>
+
+            <form method="POST" id="otpSubmitForm" class="mt-3">
+                <input type="hidden" name="action" value="verify_otp">
+                <input type="hidden" name="otp" id="fullOtpHidden">
+                <div class="otp-grid">
+                    <?php for ($i = 0; $i < 6; $i++): ?>
+                        <input type="tel" class="otp-digit-input" maxlength="1" pattern="[0-9]*" inputmode="numeric" required>
+                    <?php endfor; ?>
+                </div>
             </form>
         </div>
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script>
-            $('#btnSendOtp').click(function() {
-                let btn = $(this); btn.prop('disabled', true).text('Sending...');
-                $.ajax({
-                    url: 'ajax_send_otp.php', type: 'POST', data: { order_id: <?= $order_id ?> }, dataType: 'json',
-                    success: function(r) { 
-                        if(r.success) { 
-                            btn.hide(); 
-                            $('#otpSentMsg').removeClass('d-none'); 
-                            cInputs[0].focus();
-                        } else { 
-                            alert(r.message); 
-                            btn.prop('disabled', false).text('Send OTP to Customer'); 
-                        } 
-                    },
-                    error: function() { 
-                        alert("Network error sending OTP. Please try again."); 
-                        btn.prop('disabled', false).text('Send OTP to Customer'); 
-                    }
-                });
-            });
-
-            const cInputs = Array.from(document.querySelectorAll('.customer-otp-box'));
-            const hiddenOtp = document.getElementById('hiddenOtp');
-            let isCustomerSubmitting = false;
-
-            function syncCustomerOtp() {
-                const otpVal = cInputs.map(i => i.value.trim()).join('');
-                if (hiddenOtp) hiddenOtp.value = otpVal;
-                return otpVal;
-            }
-
-            function distributeCustomerDigits(str, startIndex = 0) {
-                const digits = str.replace(/\D/g, '');
-                if (!digits) return;
-                let idx = startIndex;
-                for (let i = 0; i < digits.length && idx < cInputs.length; i++) {
-                    cInputs[idx].value = digits[i];
-                    idx++;
-                }
-                syncCustomerOtp();
-                const nextEmpty = cInputs.findIndex(i => !i.value.trim());
-                if (nextEmpty !== -1) {
-                    cInputs[nextEmpty].focus();
-                    cInputs[nextEmpty].select();
-                } else {
-                    cInputs[cInputs.length - 1].focus();
-                    if (syncCustomerOtp().length === 6 && !isCustomerSubmitting) {
-                        document.getElementById('customerOtpForm').requestSubmit();
-                    }
-                }
-            }
-
-            cInputs.forEach((input, index) => {
-                input.addEventListener('focus', () => input.select());
-                input.addEventListener('input', () => {
-                    const val = input.value;
-                    if (val.length > 1) {
-                        distributeCustomerDigits(val, index);
-                        return;
-                    }
-                    const cleanVal = val.replace(/\D/g, '');
-                    input.value = cleanVal;
-                    syncCustomerOtp();
-                    if (cleanVal) {
-                        if (index < cInputs.length - 1) {
-                            cInputs[index + 1].focus();
-                            cInputs[index + 1].select();
-                        } else {
-                            if (syncCustomerOtp().length === 6 && !isCustomerSubmitting) {
-                                input.blur();
-                                document.getElementById('customerOtpForm').requestSubmit();
-                            }
-                        }
-                    }
-                });
-                input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Backspace' || e.keyCode === 8) {
-                        if (!input.value && index > 0) {
-                            e.preventDefault();
-                            cInputs[index - 1].value = '';
-                            syncCustomerOtp();
-                            cInputs[index - 1].focus();
-                        }
-                    } else if (e.key === 'ArrowLeft' && index > 0) {
-                        e.preventDefault();
-                        cInputs[index - 1].focus();
-                    } else if (e.key === 'ArrowRight' && index < cInputs.length - 1) {
-                        e.preventDefault();
-                        cInputs[index + 1].focus();
-                    }
-                });
-                input.addEventListener('paste', (e) => {
-                    e.preventDefault();
-                    const text = (e.clipboardData || window.clipboardData).getData('text');
-                    distributeCustomerDigits(text, index);
-                });
-            });
-
-            function handleCustomerOtpSubmit(e) {
-                const otp = syncCustomerOtp();
-                if (otp.length !== 6 || !/^\d{6}$/.test(otp)) {
-                    e.preventDefault();
-                    alert('Please enter a complete 6-digit OTP.');
-                    return false;
-                }
-                if (isCustomerSubmitting) {
-                    e.preventDefault();
-                    return false;
-                }
-                isCustomerSubmitting = true;
-                const btn = document.getElementById('btnVerifyCustomerOtp');
-                btn.disabled = true;
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Verifying...';
-                return true;
-            }
-
-    <!-- STATE: PAYMENT COLLECTED (COD ONLY) -->
     <?php elseif ($state === 'payment_pending'): ?>
-        <div class="page-header">
-            <a href="index.php" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
-            <h4 class="page-title">Collect Payment</h4>
-        </div>
-        <div class="payment-box mt-4">
-            <div class="fw-bold text-muted text-uppercase small">Order Amount</div>
-            <div class="payment-amount">₹<?= number_format($grand_total, 0) ?></div>
-            <div class="d-inline-flex align-items-center gap-2 bg-white px-3 py-2 rounded-pill shadow-sm mt-2 border">
-                <i class="fa-solid fa-money-bill-wave text-success"></i>
-                <span class="fw-bold text-dark small">Cash on Delivery (COD)</span>
+        <!-- Cash Collection Card -->
+        <div class="detail-card" style="text-align: center; padding: 24px 18px;">
+            <div style="width: 54px; height: 54px; border-radius: 50%; background: #FEF3C7; color: #B45309; display: inline-flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 12px;">
+                <i class="fa-solid fa-money-bill-wave"></i>
             </div>
+            <h3 style="font-size: 17px; font-weight: 800; color: var(--primary-text); margin-bottom: 4px;">Collect Cash on Delivery</h3>
+            <div style="font-size: 28px; font-weight: 800; color: var(--primary-green); margin: 10px 0;">₹<?= number_format($grand_total, 0) ?></div>
+            <p style="font-size: 13px; color: var(--secondary-text);">Please collect exact cash from customer before marking complete.</p>
         </div>
-        <form method="POST" class="mt-auto">
-            <button type="submit" name="action" value="confirm_payment" class="btn-bottom">Confirm Payment</button>
-        </form>
-
-    <!-- STATE: PROOF SUBMITTED -->
-    <?php elseif ($state === 'proof_pending'): ?>
-        <div class="page-header">
-            <a href="index.php" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
-            <h4 class="page-title">Proof of Delivery</h4>
-        </div>
-        
-        <div class="d-flex gap-2 mb-4">
-            <div class="flex-grow-1 text-center pb-2 border-bottom border-success border-3 fw-bold text-success">Take Photo</div>
-            <div class="flex-grow-1 text-center pb-2 border-bottom fw-bold text-muted">Signature</div>
-        </div>
-
-        <div class="photo-placeholder">
-            <i class="fa-solid fa-camera"></i>
-            <div class="fw-bold">Tap to capture photo</div>
-        </div>
-
-        <form method="POST" class="mt-auto">
-            <button type="submit" name="action" value="submit_proof" class="btn-bottom">Use Photo</button>
-        </form>
-
-    <!-- STATE: DELIVERED -->
     <?php elseif ($state === 'delivered'): ?>
-        <div class="text-center mt-5">
-            <div class="success-circle"><i class="fa-solid fa-check"></i></div>
-            <div class="state-title mt-4">Delivery Successful!</div>
-            <div class="state-subtitle mb-4">Order #<?= e($order_no) ?></div>
-            
-            <?php if ($is_cod): ?>
-                <div class="fs-2 fw-bold text-dark mb-5">₹<?= number_format($grand_total, 0) ?> Collected</div>
-            <?php else: ?>
-                <div class="fs-2 fw-bold text-dark mb-5">Paid Online</div>
-            <?php endif; ?>
-
-            <div class="fw-bold text-muted mb-2">Rate Customer (Optional)</div>
-            <div class="d-flex justify-content-center gap-3 text-warning fs-1 mb-5">
-                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i>
+        <!-- Success Screen -->
+        <div class="success-hero">
+            <div class="success-hero-circle">
+                <i class="fa-solid fa-check"></i>
             </div>
+            <h2 style="font-size: 22px; font-weight: 800; color: var(--primary-text); margin-bottom: 4px;">Delivered Successfully!</h2>
+            <p style="font-size: 14px; color: var(--secondary-text); margin-bottom: 20px;">This order has been completed and added to your delivery history.</p>
         </div>
-        <a href="index.php" class="btn-bottom" style="margin-top:auto;">Done</a>
     <?php endif; ?>
 
 </div>
+
+<!-- 8. Fixed Bottom Action Buttons -->
+<div class="fixed-action-bar">
+    <?php if ($state === 'assigned'): ?>
+        <form method="POST" class="w-100 d-flex gap-2 m-0" style="display: flex; width: 100%; gap: 10px;">
+            <button type="submit" name="action" value="reject" class="btn-action-full btn-action-danger">
+                <i class="fa-solid fa-xmark"></i>
+                <span>Reject</span>
+            </button>
+            <button type="submit" name="action" value="accept" class="btn-action-full">
+                <i class="fa-solid fa-check"></i>
+                <span>Accept Delivery</span>
+            </button>
+        </form>
+    <?php elseif ($state === 'accepted'): ?>
+        <form method="POST" class="w-100 m-0" style="width: 100%;">
+            <button type="submit" name="action" value="confirm_pickup" class="btn-action-full w-100">
+                <i class="fa-solid fa-box"></i>
+                <span>Confirm Pickup & Start Delivery</span>
+            </button>
+        </form>
+    <?php elseif ($state === 'picked_up'): ?>
+        <form method="POST" class="w-100 m-0" style="width: 100%;">
+            <button type="submit" name="action" value="update_status" class="btn-action-full w-100">
+                <i class="fa-solid fa-motorcycle"></i>
+                <span>Out for Delivery</span>
+            </button>
+        </form>
+    <?php elseif ($state === 'out_for_delivery'): ?>
+        <form method="POST" class="w-100 m-0" style="width: 100%;">
+            <button type="submit" name="action" value="confirm_arrival" class="btn-action-full w-100">
+                <i class="fa-solid fa-location-dot"></i>
+                <span>Confirm Arrival</span>
+            </button>
+        </form>
+    <?php elseif ($state === 'arrived'): ?>
+        <button type="button" class="btn-action-full w-100" onclick="submitCustomerOtp()">
+            <i class="fa-solid fa-check-double"></i>
+            <span>Verify OTP & Proceed</span>
+        </button>
+    <?php elseif ($state === 'payment_pending'): ?>
+        <form method="POST" class="w-100 m-0" style="width: 100%;">
+            <button type="submit" name="action" value="confirm_payment" class="btn-action-full w-100">
+                <i class="fa-solid fa-hand-holding-dollar"></i>
+                <span>Cash Received & Continue</span>
+            </button>
+        </form>
+    <?php elseif ($state === 'proof_pending'): ?>
+        <form method="POST" class="w-100 m-0" style="width: 100%;">
+            <button type="submit" name="action" value="submit_proof" class="btn-action-full w-100">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Mark as Delivered</span>
+            </button>
+        </form>
+    <?php elseif ($state === 'delivered'): ?>
+        <a href="index.php" class="btn-action-full w-100">
+            <i class="fa-solid fa-house"></i>
+            <span>Back to Home</span>
+        </a>
+    <?php endif; ?>
+</div>
+
+<script>
+// OTP Auto-focus & digit handling
+const otpInputs = Array.from(document.querySelectorAll('.otp-digit-input'));
+const hiddenOtpInput = document.getElementById('fullOtpHidden');
+
+if (otpInputs.length > 0) {
+    otpInputs.forEach((input, index) => {
+        input.addEventListener('input', () => {
+            const val = input.value.replace(/\D/g, '');
+            input.value = val;
+            if (val && index < otpInputs.length - 1) {
+                otpInputs[index + 1].focus();
+            }
+            syncOtpHidden();
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && !input.value && index > 0) {
+                otpInputs[index - 1].focus();
+                otpInputs[index - 1].value = '';
+                syncOtpHidden();
+            }
+        });
+
+        input.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+            for (let i = 0; i < text.length && i < otpInputs.length; i++) {
+                otpInputs[i].value = text[i];
+            }
+            syncOtpHidden();
+            if (text.length >= otpInputs.length) {
+                otpInputs[otpInputs.length - 1].focus();
+            }
+        });
+    });
+}
+
+function syncOtpHidden() {
+    if (!hiddenOtpInput) return '';
+    const full = otpInputs.map(i => i.value.trim()).join('');
+    hiddenOtpInput.value = full;
+    return full;
+}
+
+function submitCustomerOtp() {
+    const otp = syncOtpHidden();
+    if (otp.length !== 6) {
+        showMvToast('Please enter the 6-digit OTP', false);
+        return;
+    }
+    document.getElementById('otpSubmitForm').submit();
+}
+
+function sendOtpToCustomer() {
+    const btn = document.getElementById('btnSendCustomerOtp');
+    const badge = document.getElementById('otpSentBadge');
+    if (!btn) return;
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Sending...</span>';
+
+    const formData = new FormData();
+    formData.append('order_id', <?= $order_id ?>);
+
+    fetch('ajax_send_otp.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> <span>Resend OTP</span>';
+        if (data.success) {
+            badge.style.display = 'block';
+            showMvToast('OTP sent to customer successfully', true);
+            if (otpInputs.length > 0) otpInputs[0].focus();
+        } else {
+            showMvToast(data.message || 'Failed to send OTP', false);
+        }
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> <span>Send OTP to Customer</span>';
+        showMvToast('Network connection error', false);
+    });
+}
+</script>
 
 <?php include 'includes/footer.php'; ?>
